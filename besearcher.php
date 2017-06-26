@@ -140,10 +140,12 @@ function createTask($theCommitHash, $thePermutationHash, $theCmd, $theContext) {
 
     $aDataDir = get_ini('data_dir', $theContext);
     $aLogFile = $aDataDir . DIRECTORY_SEPARATOR . $aUid . '.log';
+    $aInfoFile = $aDataDir . DIRECTORY_SEPARATOR . $aUid . '.json';
 
     $aTask = array(
         'cmd' => $theCmd,
         'log_file' => $aLogFile,
+        'info_file' => $aInfoFile,
         'working_dir' => get_ini('task_cmd_working_dir', $theContext),
         'hash' => $theCommitHash,
         'permutation' => $thePermutationHash,
@@ -228,6 +230,10 @@ function createTasksFromCommit($theHash, $theContext) {
     return $aTasks;
 }
 
+function writeTaskInfoFile($theTask) {
+    file_put_contents($theTask['info_file'], json_encode($theTask, JSON_PRETTY_PRINT));
+}
+
 function runTask($theTask, $theMaxParallel, $theContext) {
     say('Running task (hash=' . $theTask['hash'] . ', permutation=' . $theTask['permutation'] . ')', SAY_INFO, $theContext);
 
@@ -239,6 +245,7 @@ function runTask($theTask, $theMaxParallel, $theContext) {
         say($aTaskCmd, SAY_INFO, $theContext);
     }
 
+    writeTaskInfoFile($theTask);
     execCommand($aTaskCmd, $aTaskLogFile, $aParallel);
 }
 
