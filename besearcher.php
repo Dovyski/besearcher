@@ -33,6 +33,28 @@ function get_ini($theKey, $theContext, $theDefault = null) {
     return $aRet;
 }
 
+function addSearchAndReplaceEntries(& $theSearch, & $theReplaces, $theSource) {
+    foreach($theSource as $aKey => $aValue) {
+        if(is_array($aValue)) {
+            foreach($aValue as $aValueKey => $aValueValue) {
+                if(is_array($aValueValue)) {
+                    foreach($aValueValue as $aSubKey => $aSubValue) {
+                        $theSearch[] = '{@' . $aKey . '.' .  $aValueKey . '.' . $aSubKey . '}';
+                        $theReplaces[] = $aSubValue;
+                    }
+                } else {
+                    $theSearch[] = '{@' . $aKey . '.' .  $aValueKey . '}';
+                    $theReplaces[] = $aValueValue;
+                }
+
+            }
+        } else {
+            $theSearch[] = '{@' . $aKey . '}';
+            $theReplaces[] = $aValue;
+        }
+    }
+}
+
 function replaceConfigVars($theString, $theSubject, $theINIJob, $theINI) {
     $aSearch = array();
     $aReplaces = array();
@@ -57,6 +79,80 @@ function replaceConfigVars($theString, $theSubject, $theINIJob, $theINI) {
     addSearchAndReplaceEntries($aSearch, $aReplaces, $aINI);
 
     return str_replace($aSearch, $aReplaces, $theString);
+}
+
+function execCommand($theCmd, $theLogFile, $theParallel) {
+    $aCmdTemplate = $theParallel ? 'start "Job" /b cmd.exe /c "%s > "%s""' : '%s > "%s"';
+    $aFinalCmd = sprintf($aCmdTemplate, $theCmd, $theLogFile);
+
+    pclose(popen($aFinalCmd, 'r'));
+}
+
+function generateJobCmd($theSubject, $theConfig) {
+    $aApp = get_ini('app', $theConfig);
+
+    if(!isset($aApp)) {
+        echo '[ERROR] No app was specified to run. Add an "app" entry in the appropriate action of your INI file.';
+        exit(4);
+    }
+
+    $aAction = $theConfig['action'];
+    $aINI = $theConfig['ini'];
+    $aINIJob = $aINI[$aAction];
+
+    $aCmd = replaceConfigVars($aApp, $theSubject, $aINIJob, $aINI);
+
+    if(preg_match_all('/.*\{@.*\}/i', $aCmd)) {
+        echo '[ERROR] Unreplaced value in command: ' . $aCmd . "\n";
+        exit(4);
+    }
+
+    return $aCmd;
+}
+
+function countRunningTasks($theTaskCmdApp) {
+    $aCount = 0;
+    $aLines = array();
+    $aProcesses = exec("tasklist", $aLines);
+
+    foreach($aLines as $aProcess) {
+        if(stripos($aProcess, $theTaskCmdApp) !== FALSE) {
+            $aCount++;
+        }
+    }
+
+    return $aCount;
+}
+
+function shouldWaitForUnfinishedTasks($theTaskCmdApp, $theMaxParallel) {
+    $aShouldWait = false;
+    $aCount = countRunningTasks($theTaskCmdApp);
+
+    // If there are tasks running, we must wait if we are at full capacity
+    if($aCount != 0 && $aCount >= $theMaxParallel) {
+        $aShouldWait = true;
+    }
+
+    return $aShouldWait;
+}
+
+function processQueuedTasks(& $theContext) {
+    $aSpawnedNewTask = false;
+
+    $aCmdName = get_ini('cmd_list_name', $theContext, '');
+    $aMaxParallelJobs = get_ini('max_parallel_tasks', $theContext, 1);
+
+    $aWait = shouldWaitForUnfinishedTasks($aCmdName, $aMaxParallelJobs);
+
+    if(!$aWait && count($theContext['tasks_queue']) > 0) {
+        // There is room for another job. Let's spawn it.
+        $aTask = array_shift($theContext['tasks_queue']);
+        runTask($aTask, $aMaxParallelJobs, $theContext);
+
+        $aSpawnedNewTask = true;
+    }
+
+    return $aSpawnedNewTask;
 }
 
 function loadLastKnownCommitFromFile($theContext) {
@@ -103,24 +199,56 @@ function findNewCommits($theWatchDir, $theGitExe, $theLastCommitHash) {
     return $aNewCommits;
 }
 
-function execCommitTask($theWatchDir, $theHash, $theContext) {
-    $aTaskCmd = get_ini('cmd', $theContext);
-    $aDataDir = get_ini('data_dir', $theContext);
-    $aLogFile = $aDataDir . DIRECTORY_SEPARATOR . $theHash . '.log';
-    $aFinalCmd = 'cd ' . $theWatchDir . ' & ' . $aTaskCmd . ' > ' . $aLogFile;
-
-    say("Issuing task: '" . $aFinalCmd . "'", SAY_INFO, $theContext);
-    exec($aFinalCmd, $aOutput);
+function enqueTask($theTask, & $theContext) {
+    array_push($theContext['tasks_queue'], $theTask);
+    say("Enqueing task " . $theTask['hash'], SAY_INFO, $theContext);
 }
 
-function run(& $theContext) {
+function createTask($theHash, $theContext) {
+    $aDataDir = get_ini('data_dir', $theContext);
+    $aLogFile = $aDataDir . DIRECTORY_SEPARATOR . $theHash . '.log';
+
+    // TODO: generateJobCmd($aTask, $theConfig);
+
+    $aTask = array(
+        'cmd' => get_ini('cmd', $theContext),
+        'log_file' => $aLogFile,
+        'working_dir' => get_ini('cmd_working_dir', $theContext),
+        'hash' => $theHash,
+        'time' => time()
+    );
+
+    return $aTask;
+}
+
+function runTask($theTask, $theMaxParallel, $theContext) {
+    say("Issuing task: '" . $theTask['hash'] . "'", SAY_INFO, $theContext);
+
+    $aParallel = $theMaxParallel > 1;
+    $aTaskCmd = $theTask['cmd'];
+    $aTaskLogFile = $theTask['log_file'];
+
+    if(get_ini('verbose', $theContext, false)) {
+        say($aTaskCmd, SAY_INFO, $theContext);
+    }
+
+    execCommand($aTaskCmd, $aTaskLogFile, $aParallel);
+}
+
+function handleNewCommit($theHash, $theMessage, & $theContext) {
+    $aTask = createTask($theHash, $theContext);
+    enqueTask($aTask, $theContext);
+}
+
+function processNewCommits(& $theContext) {
     $aWatchDir = get_ini('watch_dir', $theContext);
     $aGitExe = get_ini('git', $theContext);
 
     $aTasks = findNewCommits($aWatchDir, $aGitExe, $theContext['last_commit']);
     $aLastHash = '';
+    $aTasksCount = count($aTasks);
 
-    if(count($aTasks) > 0) {
+    if($aTasksCount > 0) {
         foreach($aTasks as $aCommit) {
             $aDivider = strpos($aCommit, ' ');
             $aHash = substr($aCommit, 0, $aDivider);
@@ -128,10 +256,21 @@ function run(& $theContext) {
             $aLastHash = $aHash;
 
             say("New commit (" . $aHash . "): " . $aMessage, SAY_INFO, $theContext);
-            execCommitTask($aWatchDir, $aHash, $theContext);
+            handleNewCommit($aHash, $aMessage, $theContext);
         }
 
         setLastKnownCommit($theContext, $aLastHash);
+    }
+
+    return $aTasksCount > 0;
+}
+
+function run(& $theContext) {
+    $aAnyNewTask = processNewCommits($theContext);
+    $aProcessQueue = true;
+
+    while($aProcessQueue) {
+        $aProcessQueue = processQueuedTasks($theContext);
     }
 
     return true;
@@ -201,7 +340,8 @@ $aContext = array(
     'ini_hash' => '',
     'ini_values' => '',
     'last_commit' => '',
-    'log_file' => isset($aArgs['log']) ? $aArgs['log'] : ''
+    'log_file' => isset($aArgs['log']) ? $aArgs['log'] : '',
+    'tasks_queue' => array()
 );
 
 performConfigHotReload($aContext);
