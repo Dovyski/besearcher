@@ -139,8 +139,9 @@ function createTask($theCommitHash, $thePermutation, $theContext) {
     $aUid = $theCommitHash . '-' . $thePermutation['hash'];
 
     $aDataDir = get_ini('data_dir', $theContext);
-    $aLogFile = $aDataDir . DIRECTORY_SEPARATOR . $aUid . '.log';
-    $aInfoFile = $aDataDir . DIRECTORY_SEPARATOR . $aUid . '.json';
+    $aTaskDir = $aDataDir . DIRECTORY_SEPARATOR . $theCommitHash . DIRECTORY_SEPARATOR;
+    $aLogFile = $aTaskDir . $aUid . '.log';
+    $aInfoFile = $aTaskDir . $aUid . '.json';
 
     $aTask = array(
         'cmd' => $thePermutation['cmd'],
@@ -251,8 +252,21 @@ function runTask($theTask, $theMaxParallel, $theContext) {
     execCommand($aTaskCmd, $aTaskLogFile, $aParallel);
 }
 
+function createTaskResultsFolder($theCommitHash, $theContext) {
+    $aDataDir = get_ini('data_dir', $theContext);
+    $aCommitDir = $aDataDir . DIRECTORY_SEPARATOR . $theCommitHash;
+
+    if(!file_exists($aCommitDir)) {
+        mkdir($aCommitDir);
+    }
+}
+
 function handleNewCommit($theHash, $theMessage, & $theContext) {
     $aTasks = createTasksFromCommit($theHash, $theContext);
+
+    // Create a folder to house the results of the tasks
+    // originated from the present commit
+    createTaskResultsFolder($theHash, $theContext);
 
     if(count($aTasks) > 0) {
         foreach($aTasks as  $aTask) {
