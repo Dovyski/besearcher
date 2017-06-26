@@ -139,7 +139,7 @@ function shouldWaitForUnfinishedTasks($theTaskCmdApp, $theMaxParallel) {
 function processQueuedTasks(& $theContext) {
     $aSpawnedNewTask = false;
 
-    $aCmdName = get_ini('cmd_list_name', $theContext, '');
+    $aCmdName = get_ini('task_cmd_list_name', $theContext, '');
     $aMaxParallelJobs = get_ini('max_parallel_tasks', $theContext, 1);
 
     $aWait = shouldWaitForUnfinishedTasks($aCmdName, $aMaxParallelJobs);
@@ -211,9 +211,9 @@ function createTask($theHash, $theContext) {
     // TODO: generateJobCmd($aTask, $theConfig);
 
     $aTask = array(
-        'cmd' => get_ini('cmd', $theContext),
+        'cmd' => get_ini('task_cmd', $theContext),
         'log_file' => $aLogFile,
-        'working_dir' => get_ini('cmd_working_dir', $theContext),
+        'working_dir' => get_ini('task_cmd_working_dir', $theContext),
         'hash' => $theHash,
         'time' => time()
     );
@@ -266,12 +266,22 @@ function processNewCommits(& $theContext) {
 }
 
 function run(& $theContext) {
-    $aAnyNewTask = processNewCommits($theContext);
-    $aProcessQueue = true;
+    $aPullInterval = get_ini('git_pull_interval', $theContext, 10);
+    $aShouldPull = time() - $theContext['time_last_pull'] >= $aPullInterval;
 
+    if($aShouldPull) {
+        $aAnyNewTask = processNewCommits($theContext);
+        $theContext['time_last_pull'] = time();
+    }
+
+    $aProcessQueue = true;
     while($aProcessQueue) {
         $aProcessQueue = processQueuedTasks($theContext);
     }
+
+    // Wait for the next check
+    $aRefreshInterval = get_ini('refresh_interval', $theContext, 1);
+    sleep($aRefreshInterval);
 
     return true;
 }
@@ -312,11 +322,6 @@ function say($theMessage, $theType, $theContext) {
     echo date('[Y-m-d H:i:s]') . ' [' . $theType . '] ' . $theMessage . "\n";
 }
 
-function rest($theContext) {
-    $aDuration = get_ini('sleep_time', $theContext, 1);
-    sleep($aDuration);
-}
-
 $aOptions = array(
     "log:",
     "ini:",
@@ -341,7 +346,8 @@ $aContext = array(
     'ini_values' => '',
     'last_commit' => '',
     'log_file' => isset($aArgs['log']) ? $aArgs['log'] : '',
-    'tasks_queue' => array()
+    'tasks_queue' => array(),
+    'time_last_pull' => 0
 );
 
 performConfigHotReload($aContext);
@@ -350,7 +356,6 @@ $aActive = true;
 
 while($aActive) {
     $aActive = run($aContext);
-    rest($aContext);
     performConfigHotReload($aContext);
 }
 
