@@ -240,15 +240,28 @@ function writeTaskInfoFile($theTask) {
 function runTask($theTask, $theMaxParallel, $theContext) {
     say('Running task (hash=' . $theTask['hash'] . ', permutation=' . $theTask['permutation'] . ')', SAY_INFO, $theContext);
 
+    $aVerbose = get_ini('verbose', $theContext, false);
     $aParallel = $theMaxParallel > 1;
     $aTaskCmd = $theTask['cmd'];
     $aTaskLogFile = $theTask['log_file'];
 
-    if(get_ini('verbose', $theContext, false)) {
+    writeTaskInfoFile($theTask);
+
+    $aSkipPerformedTasks = get_ini('skip_performed_tasks', $theContext, false);
+    $aTaskAlreadyPerformed = file_exists($theTask['info_file']);
+
+    if($aSkipPerformedTasks && $aTaskAlreadyPerformed) {
+        // It seems the task at hand already has already
+        // been executed in the past. Since we were instructed
+        // to skip already performed tasks, we stop here.
+        say('Skipping already performed task (hash=' . $theTask['hash'] . ', permutation=' . $theTask['permutation'] . ')', SAY_WARN, $theContext);
+        return;
+    }
+
+    if($aVerbose) {
         say($aTaskCmd, SAY_INFO, $theContext);
     }
 
-    writeTaskInfoFile($theTask);
     execCommand($aTaskCmd, $aTaskLogFile, $aParallel);
 }
 
