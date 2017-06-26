@@ -88,28 +88,6 @@ function execCommand($theCmd, $theLogFile, $theParallel) {
     pclose(popen($aFinalCmd, 'r'));
 }
 
-function generateJobCmd($theSubject, $theConfig) {
-    $aApp = get_ini('app', $theConfig);
-
-    if(!isset($aApp)) {
-        echo '[ERROR] No app was specified to run. Add an "app" entry in the appropriate action of your INI file.';
-        exit(4);
-    }
-
-    $aAction = $theConfig['action'];
-    $aINI = $theConfig['ini'];
-    $aINIJob = $aINI[$aAction];
-
-    $aCmd = replaceConfigVars($aApp, $theSubject, $aINIJob, $aINI);
-
-    if(preg_match_all('/.*\{@.*\}/i', $aCmd)) {
-        echo '[ERROR] Unreplaced value in command: ' . $aCmd . "\n";
-        exit(4);
-    }
-
-    return $aCmd;
-}
-
 function countRunningTasks($theContext) {
     $aTaskCmdApp = get_ini('task_cmd_list_name', $theContext, '');
     $aCount = 0;
@@ -205,21 +183,49 @@ function enqueTask($theTask, & $theContext) {
     say("Enqueing task " . $theTask['hash'], SAY_INFO, $theContext);
 }
 
-function createTask($theHash, $theContext) {
-    $aDataDir = get_ini('data_dir', $theContext);
-    $aLogFile = $aDataDir . DIRECTORY_SEPARATOR . $theHash . '.log';
+function createTask($theCommitHash, $thePermutationHash, $theCmd, $theContext) {
+    $aUid = $theCommitHash . '-' . $thePermutationHash;
 
-    // TODO: generateJobCmd($aTask, $theConfig);
+    $aDataDir = get_ini('data_dir', $theContext);
+    $aLogFile = $aDataDir . DIRECTORY_SEPARATOR . $aUid . '.log';
 
     $aTask = array(
-        'cmd' => get_ini('task_cmd', $theContext),
+        'cmd' => $theCmd,
         'log_file' => $aLogFile,
         'working_dir' => get_ini('task_cmd_working_dir', $theContext),
-        'hash' => $theHash,
+        'hash' => $theCommitHash,
+        'permutation' => $thePermutationHash,
         'time' => time()
     );
 
     return $aTask;
+}
+
+function generateTaskCmdPermutations($theContext) {
+    $aPermutations = array();
+    $aCmd = get_ini('task_cmd', $theContext);
+
+    if(!isset($aCmd)) {
+        say('Empty or invalid "task_cmd" directive provided in INI file.', SAY_ERROR, $theContext);
+        exit(4);
+    }
+
+    $aPermutations = array(array('cmd' => $aCmd, 'hash' => md5($aCmd)));
+
+    return $aPermutations;
+}
+
+function createTasksFromCommit($theHash, $theContext) {
+    $aTasks = array();
+    $aPermutations = generateTaskCmdPermutations($theContext);
+
+    if(count($aPermutations) > 0) {
+        foreach($aPermutations as $aPermutation) {
+            $aTasks[] = createTask($theHash, $aPermutation['hash'], $aPermutation['cmd'], $theContext);
+        }
+    }
+
+    return $aTasks;
 }
 
 function runTask($theTask, $theMaxParallel, $theContext) {
@@ -237,8 +243,13 @@ function runTask($theTask, $theMaxParallel, $theContext) {
 }
 
 function handleNewCommit($theHash, $theMessage, & $theContext) {
-    $aTask = createTask($theHash, $theContext);
-    enqueTask($aTask, $theContext);
+    $aTasks = createTasksFromCommit($theHash, $theContext);
+
+    if(count($aTasks) > 0) {
+        foreach($aTasks as  $aTask) {
+            enqueTask($aTask, $theContext);
+        }
+    }
 }
 
 function processNewCommits(& $theContext) {
