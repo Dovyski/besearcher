@@ -110,13 +110,14 @@ function generateJobCmd($theSubject, $theConfig) {
     return $aCmd;
 }
 
-function countRunningTasks($theTaskCmdApp) {
+function countRunningTasks($theContext) {
+    $aTaskCmdApp = get_ini('task_cmd_list_name', $theContext, '');
     $aCount = 0;
     $aLines = array();
     $aProcesses = exec("tasklist", $aLines);
 
     foreach($aLines as $aProcess) {
-        if(stripos($aProcess, $theTaskCmdApp) !== FALSE) {
+        if(stripos($aProcess, $aTaskCmdApp) !== FALSE) {
             $aCount++;
         }
     }
@@ -124,9 +125,9 @@ function countRunningTasks($theTaskCmdApp) {
     return $aCount;
 }
 
-function shouldWaitForUnfinishedTasks($theTaskCmdApp, $theMaxParallel) {
+function shouldWaitForUnfinishedTasks($theMaxParallel, $theContext) {
     $aShouldWait = false;
-    $aCount = countRunningTasks($theTaskCmdApp);
+    $aCount = countRunningTasks($theContext);
 
     // If there are tasks running, we must wait if we are at full capacity
     if($aCount != 0 && $aCount >= $theMaxParallel) {
@@ -142,7 +143,7 @@ function processQueuedTasks(& $theContext) {
     $aCmdName = get_ini('task_cmd_list_name', $theContext, '');
     $aMaxParallelJobs = get_ini('max_parallel_tasks', $theContext, 1);
 
-    $aWait = shouldWaitForUnfinishedTasks($aCmdName, $aMaxParallelJobs);
+    $aWait = shouldWaitForUnfinishedTasks($aMaxParallelJobs, $theContext);
 
     if(!$aWait && count($theContext['tasks_queue']) > 0) {
         // There is room for another job. Let's spawn it.
@@ -265,7 +266,22 @@ function processNewCommits(& $theContext) {
     return $aTasksCount > 0;
 }
 
-function run(& $theContext) {
+function monitorRunningTasks(& $theContext) {
+    $aTasksNow = countRunningTasks($theContext);
+
+    if($theContext['running_tasks'] != $aTasksNow) {
+        if($aTasksNow > 0) {
+            say('Tasks running now: ' . $aTasksNow, SAY_INFO, $theContext);
+        }
+
+        if($aTasksNow == 0 && $theContext['running_tasks'] > 0) {
+            say('All runnings tasks finished!', SAY_INFO, $theContext);
+        }
+        $theContext['running_tasks'] = $aTasksNow;
+    }
+}
+
+function processGitPulls(& $theContext) {
     $aPullInterval = get_ini('git_pull_interval', $theContext, 10);
     $aShouldPull = time() - $theContext['time_last_pull'] >= $aPullInterval;
 
@@ -273,15 +289,21 @@ function run(& $theContext) {
         $aAnyNewTask = processNewCommits($theContext);
         $theContext['time_last_pull'] = time();
     }
+}
+
+function run(& $theContext) {
+    processGitPulls($theContext);
 
     $aProcessQueue = true;
     while($aProcessQueue) {
         $aProcessQueue = processQueuedTasks($theContext);
     }
 
+    monitorRunningTasks($theContext);
+
     // Wait for the next check
-    $aRefreshInterval = get_ini('refresh_interval', $theContext, 1);
-    sleep($aRefreshInterval);
+    $aWaitTime = get_ini('refresh_interval', $theContext, 1);
+    sleep($aWaitTime);
 
     return true;
 }
@@ -347,7 +369,8 @@ $aContext = array(
     'last_commit' => '',
     'log_file' => isset($aArgs['log']) ? $aArgs['log'] : '',
     'tasks_queue' => array(),
-    'time_last_pull' => 0
+    'time_last_pull' => 0,
+    'running_tasks' => 0
 );
 
 performConfigHotReload($aContext);
