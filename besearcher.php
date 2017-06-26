@@ -8,9 +8,17 @@
  Author: Fernando Bevilacqua <fernando.bevilacqua@his.se>
  */
 
-define('SAY_ERROR', 'ERROR');
-define('SAY_INFO', 'INFO');
-define('SAY_WARN', 'WARN');
+define('SAY_ERROR', 3);
+define('SAY_WARN', 2);
+define('SAY_INFO', 1);
+define('SAY_DEBUG', 0);
+
+$gSayStrings = array(
+    SAY_ERROR => 'ERROR',
+    SAY_WARN => 'WARN',
+    SAY_INFO => 'INFO',
+    SAY_DEBUG => 'DEBUG'
+);
 
 /**
   * Get a value from the INI file. The key is first looked up
@@ -132,7 +140,7 @@ function findNewCommits($theWatchDir, $theGitExe, $theLastCommitHash) {
 
 function enqueTask($theTask, & $theContext) {
     array_push($theContext['tasks_queue'], $theTask);
-    say("Enqueing task " . $theTask['hash'], SAY_INFO, $theContext);
+    say("Enqueing task " . $theTask['hash'], SAY_DEBUG, $theContext);
 }
 
 function createTask($theCommitHash, $thePermutation, $theContext) {
@@ -240,7 +248,6 @@ function writeTaskInfoFile($theTask) {
 function runTask($theTask, $theMaxParallel, $theContext) {
     say('Running task (hash=' . $theTask['hash'] . ', permutation=' . $theTask['permutation'] . ')', SAY_INFO, $theContext);
 
-    $aVerbose = get_ini('verbose', $theContext, false);
     $aParallel = $theMaxParallel > 1;
     $aTaskCmd = $theTask['cmd'];
     $aTaskLogFile = $theTask['log_file'];
@@ -258,10 +265,7 @@ function runTask($theTask, $theMaxParallel, $theContext) {
         return;
     }
 
-    if($aVerbose) {
-        say($aTaskCmd, SAY_INFO, $theContext);
-    }
-
+    say($aTaskCmd, SAY_DEBUG, $theContext);
     execCommand($aTaskCmd, $aTaskLogFile, $aParallel);
 }
 
@@ -303,7 +307,7 @@ function processNewCommits(& $theContext) {
             $aMessage = substr($aCommit, $aDivider);
             $aLastHash = $aHash;
 
-            say("New commit (" . $aHash . "): " . $aMessage, SAY_INFO, $theContext);
+            say("New commit (hash=" . $aHash . ", msg=" . trim($aMessage) . ")", SAY_INFO, $theContext);
             handleNewCommit($aHash, $aMessage, $theContext);
         }
 
@@ -382,13 +386,26 @@ function performConfigHotReload(& $theContext) {
     }
 
     if($aLastCommitDisk != $theContext['last_commit']) {
-        say("Info regarding last commit has changed: old=" . $theContext['last_commit'] . ", new=" . $aLastCommitDisk, SAY_INFO, $theContext);
+        say("Info regarding last commit has changed: old=" . $theContext['last_commit'] . ", new=" . $aLastCommitDisk, SAY_DEBUG, $theContext);
         setLastKnownCommit($theContext, $aLastCommitDisk);
     }
 }
 
 function say($theMessage, $theType, $theContext) {
-    echo date('[Y-m-d H:i:s]') . ' [' . $theType . '] ' . $theMessage . "\n";
+    global $gSayStrings;
+
+    $aLogLevel = get_ini('log_level', $theContext, 0);
+    $aLabel = isset($gSayStrings[$theType]) ? $gSayStrings[$theType] : 'UNKNOWN';
+    $aMessage = date('[Y-m-d H:i:s]') . ' [' . $aLabel . '] ' . $theMessage . "\n";
+
+    if($theType >= $aLogLevel) {
+        echo $aMessage;
+        fwrite($theContext['log_file_stream'], $aMessage);
+    }
+}
+
+function shutdown($theContext) {
+    say('Abrupt shutdown. Please check if everything is OK.', SAY_WARN, $theContext);
 }
 
 $aOptions = array(
@@ -414,14 +431,22 @@ $aContext = array(
     'ini_hash' => '',
     'ini_values' => '',
     'last_commit' => '',
-    'log_file' => isset($aArgs['log']) ? $aArgs['log'] : '',
+    'path_log_file' => isset($aArgs['log']) ? $aArgs['log'] : '',
+    'log_file_stream' => null,
     'tasks_queue' => array(),
     'time_last_pull' => 0,
     'running_tasks' => 0
 );
 
-performConfigHotReload($aContext);
+// Register shutdown handler to deal with last minute stuff
+register_shutdown_function('shutdown', $aContext);
 
+// Open the log file. Program messages will be printed to stdout
+// and to that file.
+$aContext['log_file_stream'] = fopen($aContext['path_log_file'], 'a');
+
+say('Besearcher starting up. What a great day for science!', SAY_INFO, $aContext);
+performConfigHotReload($aContext);
 $aActive = true;
 
 while($aActive) {
@@ -429,5 +454,8 @@ while($aActive) {
     performConfigHotReload($aContext);
 }
 
+fclose($aContext['log_file_stream']);
+
+say('All done. Over and out!', SAY_INFO, $aContext);
 exit(0);
 ?>
