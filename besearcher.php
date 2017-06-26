@@ -33,54 +33,6 @@ function get_ini($theKey, $theContext, $theDefault = null) {
     return $aRet;
 }
 
-function addSearchAndReplaceEntries(& $theSearch, & $theReplaces, $theSource) {
-    foreach($theSource as $aKey => $aValue) {
-        if(is_array($aValue)) {
-            foreach($aValue as $aValueKey => $aValueValue) {
-                if(is_array($aValueValue)) {
-                    foreach($aValueValue as $aSubKey => $aSubValue) {
-                        $theSearch[] = '{@' . $aKey . '.' .  $aValueKey . '.' . $aSubKey . '}';
-                        $theReplaces[] = $aSubValue;
-                    }
-                } else {
-                    $theSearch[] = '{@' . $aKey . '.' .  $aValueKey . '}';
-                    $theReplaces[] = $aValueValue;
-                }
-
-            }
-        } else {
-            $theSearch[] = '{@' . $aKey . '}';
-            $theReplaces[] = $aValue;
-        }
-    }
-}
-
-function replaceConfigVars($theString, $theSubject, $theINIJob, $theINI) {
-    $aSearch = array();
-    $aReplaces = array();
-    $aINI = $theINI;
-
-    // Add meta keys
-    foreach($theINI as $aKey => $aValue) {
-        if(strpos($aKey, 'hcidb_') !== false) {
-            $aINI[$aKey] = $aValue;
-        }
-    }
-
-    // Add action keys
-    foreach($theINIJob as $aKey => $aValue) {
-        $aINI[$aKey] = $aValue;
-    }
-
-    unset($aINI['files']);
-    unset($aINI['app']);
-
-    addSearchAndReplaceEntries($aSearch, $aReplaces, $theSubject);
-    addSearchAndReplaceEntries($aSearch, $aReplaces, $aINI);
-
-    return str_replace($aSearch, $aReplaces, $theString);
-}
-
 function execCommand($theCmd, $theLogFile, $theParallel) {
     $aCmdTemplate = $theParallel ? 'start "Job" /b cmd.exe /c "%s > "%s""' : '%s > "%s"';
     $aFinalCmd = sprintf($aCmdTemplate, $theCmd, $theLogFile);
@@ -201,17 +153,65 @@ function createTask($theCommitHash, $thePermutationHash, $theCmd, $theContext) {
     return $aTask;
 }
 
+function replaceTolken($theString, $theSearches, $theReplaces, $theIdx, & $theOutputs) {
+    if($theIdx >= count($theSearches)) {
+        // Nothing else to replace, we found the final string.
+        $theOutputs[] = $theString;
+
+    } else {
+        // Still work to do.
+        $aSearch = '{@' . $theSearches[$theIdx] . '}';
+        $aReplace = $theReplaces[$theIdx];
+
+        if(is_array($aReplace)) {
+            foreach($aReplace as $aReplacePiece) {
+                $aString = str_ireplace($aSearch, $aReplacePiece, $theString);
+                replaceTolken($aString, $theSearches, $theReplaces, $theIdx + 1, $theOutputs);
+            }
+        } else {
+            $aString = str_ireplace($aSearch, $aReplace, $theString);
+            replaceTolken($aString, $theSearches, $theReplaces, $theIdx + 1, $theOutputs);
+        }
+    }
+}
+
+function checkNonReplacedValues($thePermutations, $theContext) {
+    if(count($thePermutations) > 0) {
+        foreach($thePermutations as $aItem) {
+            if(preg_match_all('/.*\{@.*\}/i', $aItem['cmd'])) {
+                say('Unreplaced value in command: ' . $aItem['cmd'], SAY_ERROR, $theContext);
+                exit(4);
+            }
+        }
+    }
+}
+
 function generateTaskCmdPermutations($theContext) {
     $aPermutations = array();
-    $aCmd = get_ini('task_cmd', $theContext);
+    $aTaskCmd = get_ini('task_cmd', $theContext);
 
-    if(!isset($aCmd)) {
+    if(!isset($aTaskCmd)) {
         say('Empty or invalid "task_cmd" directive provided in INI file.', SAY_ERROR, $theContext);
         exit(4);
     }
 
-    $aPermutations = array(array('cmd' => $aCmd, 'hash' => md5($aCmd)));
+    $aTaskCmdParams = isset($theContext['ini_values']['task_cmd_params']) ? $theContext['ini_values']['task_cmd_params'] : array();
 
+    if(count($aTaskCmdParams) > 0) {
+        $aCmds = array();
+        replaceTolken($aTaskCmd, array_keys($aTaskCmdParams), array_values($aTaskCmdParams), 0, $aCmds);
+
+        if(count($aCmds) > 0) {
+            foreach($aCmds as $aCmd) {
+                $aPermutations[] = array('cmd' => $aCmd, 'hash' => md5($aCmd));
+            }
+        }
+
+    } else {
+        $aPermutations[] = array('cmd' => $aTaskCmd, 'hash' => md5($aTaskCmd));
+    }
+
+    checkNonReplacedValues($aPermutations, $theContext);
     return $aPermutations;
 }
 
@@ -229,7 +229,7 @@ function createTasksFromCommit($theHash, $theContext) {
 }
 
 function runTask($theTask, $theMaxParallel, $theContext) {
-    say("Issuing task: '" . $theTask['hash'] . "'", SAY_INFO, $theContext);
+    say('Running task (hash=' . $theTask['hash'] . ', permutation=' . $theTask['permutation'] . ')', SAY_INFO, $theContext);
 
     $aParallel = $theMaxParallel > 1;
     $aTaskCmd = $theTask['cmd'];
