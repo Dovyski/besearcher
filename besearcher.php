@@ -135,44 +135,47 @@ function enqueTask($theTask, & $theContext) {
     say("Enqueing task " . $theTask['hash'], SAY_INFO, $theContext);
 }
 
-function createTask($theCommitHash, $thePermutationHash, $theCmd, $theContext) {
-    $aUid = $theCommitHash . '-' . $thePermutationHash;
+function createTask($theCommitHash, $thePermutation, $theContext) {
+    $aUid = $theCommitHash . '-' . $thePermutation['hash'];
 
     $aDataDir = get_ini('data_dir', $theContext);
     $aLogFile = $aDataDir . DIRECTORY_SEPARATOR . $aUid . '.log';
     $aInfoFile = $aDataDir . DIRECTORY_SEPARATOR . $aUid . '.json';
 
     $aTask = array(
-        'cmd' => $theCmd,
+        'cmd' => $thePermutation['cmd'],
         'log_file' => $aLogFile,
         'info_file' => $aInfoFile,
         'working_dir' => get_ini('task_cmd_working_dir', $theContext),
         'hash' => $theCommitHash,
-        'permutation' => $thePermutationHash,
+        'permutation' => $thePermutation['hash'],
+        'params' => $thePermutation['params'],
         'time' => time()
     );
 
     return $aTask;
 }
 
-function replaceTolken($theString, $theSearches, $theReplaces, $theIdx, & $theOutputs) {
+function replaceTolken($theString, $theSearches, $theReplaces, $theIdx, & $theOutputs, $theParamsString = '') {
     if($theIdx >= count($theSearches)) {
         // Nothing else to replace, we found the final string.
-        $theOutputs[] = $theString;
-
+        $theOutputs[] = array('text' => $theString, 'params' => substr($theParamsString, 0, strlen($theParamsString) - 2));
     } else {
         // Still work to do.
-        $aSearch = '{@' . $theSearches[$theIdx] . '}';
+        $aKey = $theSearches[$theIdx];
+        $aSearch = '{@' . $aKey . '}';
         $aReplace = $theReplaces[$theIdx];
 
         if(is_array($aReplace)) {
             foreach($aReplace as $aReplacePiece) {
                 $aString = str_ireplace($aSearch, $aReplacePiece, $theString);
-                replaceTolken($aString, $theSearches, $theReplaces, $theIdx + 1, $theOutputs);
+                $aParamsString = $theParamsString . $aKey . '=' . $aReplacePiece . ', ';
+                replaceTolken($aString, $theSearches, $theReplaces, $theIdx + 1, $theOutputs, $aParamsString);
             }
         } else {
             $aString = str_ireplace($aSearch, $aReplace, $theString);
-            replaceTolken($aString, $theSearches, $theReplaces, $theIdx + 1, $theOutputs);
+            $aParamsString = $theParamsString . $aKey . '=' . $aReplace . ', ' ;
+            replaceTolken($aString, $theSearches, $theReplaces, $theIdx + 1, $theOutputs, $aParamsString);
         }
     }
 }
@@ -205,12 +208,11 @@ function generateTaskCmdPermutations($theContext) {
 
         if(count($aCmds) > 0) {
             foreach($aCmds as $aCmd) {
-                $aPermutations[] = array('cmd' => $aCmd, 'hash' => md5($aCmd));
+                $aPermutations[] = array('cmd' => $aCmd['text'], 'hash' => md5($aCmd['text']), 'params' => $aCmd['params']);
             }
         }
-
     } else {
-        $aPermutations[] = array('cmd' => $aTaskCmd, 'hash' => md5($aTaskCmd));
+        $aPermutations[] = array('cmd' => $aTaskCmd, 'hash' => md5($aTaskCmd), 'params' => 'NONE');
     }
 
     checkNonReplacedValues($aPermutations, $theContext);
@@ -223,7 +225,7 @@ function createTasksFromCommit($theHash, $theContext) {
 
     if(count($aPermutations) > 0) {
         foreach($aPermutations as $aPermutation) {
-            $aTasks[] = createTask($theHash, $aPermutation['hash'], $aPermutation['cmd'], $theContext);
+            $aTasks[] = createTask($theHash, $aPermutation, $theContext);
         }
     }
 
