@@ -20,6 +20,12 @@ $gSayStrings = array(
     SAY_DEBUG => 'DEBUG'
 );
 
+// Below are the definitions of the expressions that are
+// expandable in the INI file.
+
+// E.g. 0..10:1, which generates 0,1,2,...,10
+define('INI_EXP_START_END_INC', '/(\d*[.]?\d*)[[:blank:]]*\.\.[[:blank:]]*(\d*[.]?\d*)[[:blank:]]*:[[:blank:]]*(\d*[.]?\d*)/i');
+
 /**
   * Get a value from the INI file. The key is first looked up
   * at the action section. If nothing is found, the key is
@@ -359,6 +365,62 @@ function run(& $theContext) {
     return true;
 }
 
+function expandStartEndIncExpression($theMatches) {
+    $aRet = array();
+
+    $aStart = $theMatches[1][0] + 0;
+    $aEnd = $theMatches[2][0] + 0;
+    $aInc = $theMatches[3][0] + 0;
+
+    // TODO: check for infinite loops
+    for($i = $aStart; $i <= $aEnd; $i += $aInc) {
+        $aRet[] = $i;
+
+        if($i + $aInc > $aEnd) {
+            break;
+        }
+    }
+
+    return $aRet;
+}
+
+function expandExpressions($theINIValues) {
+    $aCount = count($theINIValues);
+
+    if(!is_array($theINIValues) || $aCount == 0) {
+        return $theINIValues;
+    }
+
+    if($aCount == 1) {
+        // Arrays with a single elements are expandable
+        $aValue = reset($theINIValues);
+        $aMatches = array();
+
+        // Check for expressions like "0..10:1"
+        if(preg_match_all(INI_EXP_START_END_INC, $aValue, $aMatches)) {
+            $theINIValues = expandStartEndIncExpression($aMatches);
+        }
+    } else {
+        // There is more than one element in the array,
+        // so we must check each one.
+        foreach($theINIValues as $aKey => $aValue) {
+            if(is_array($aValue)) {
+                $theINIValues[$aKey] = expandExpressions($aValue);
+            }
+        }
+    }
+
+    return $theINIValues;
+}
+
+function loadINI($theINIFilePath, & $theContext) {
+    $theContext['ini_values'] = parse_ini_file($theINIFilePath, true);
+
+    // Interpret the special syntax in the INI file
+    // to expand expressions, e.g. 0..10:1 becomes 0,1,2,3,..,10
+    $theContext['ini_values'] = expandExpressions($theContext['ini_values']);
+}
+
 function performConfigHotReload(& $theContext) {
     $aPath = $theContext['ini_path'];
 
@@ -372,8 +434,8 @@ function performConfigHotReload(& $theContext) {
     if($aContentHash != $theContext['ini_hash']) {
         say("Content of INI file has changed. Reloading it.", SAY_INFO, $theContext);
 
-        $theContext['ini_values'] = parse_ini_file($aPath, true);
         $theContext['ini_hash'] = $aContentHash;
+        loadINI($aPath, $theContext);
     }
 
     $aLastCommitDisk = loadLastKnownCommitFromFile($theContext);
