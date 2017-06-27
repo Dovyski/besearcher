@@ -13,6 +13,15 @@
         <!-- /.col-lg-12 -->
     </div>
     <!-- /.row -->
+
+    <?php if(!$aData['loaded']) { ?>
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="alert alert-danger" role="alert"><strong>Unable to load data!</strong> Check the <em>config.php</em> file and make sure <em>PATH_BESERCHER_INI_FILE</em> contains the right path to the INI file being used by Besearcher.</div>
+            </div>
+        </div>
+    <?php } ?>
+
     <div class="row">
         <div class="col-lg-12">
             <div class="panel panel-default">
@@ -24,31 +33,26 @@
                     <table width="100%" class="table table-striped table-bordered table-hover" id="dataTables-example">
                         <thead>
                             <tr>
-                                <th></th>
-                                <th>Id</th>
-                                <th style="width: 50%;">Name</th>
-                                <th>Type</th>
-                                <th>Modified</th>
-                                <th>Created</th>
-                                <th>Active</th>
+                                <th>Status</th>
+                                <th>Commit</th>
+                                <th>Permutation</th>
+                                <th>Date</th>
+                                <th>Params</th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php
                                 $aNum = 0;
-                                foreach($aTasks as $aRow) {
-                                    echo '<tr class="'.($aNum++ % 2 == 0 ? 'even' : 'odd').'">';
-                                        echo '<td>';
-                                            echo '<a href="entry.php?id='.$aRow->id.'"><i class="fa fa-edit"></i></a> &bull; ';
-                                            echo '<a href="entry.php?id='.$aRow->id.'&delete=1" onclick="return confirm(\'Delete?\')"><i class="fa fa-trash"></i></a>';
-                                        echo '</td>';
-                                        echo '<td>'.$aRow->id.'</td>';
-                                        echo '<td>'.$aRow->name.'</td>';
-                                        echo '<td>'.$aRow->type.'</td>';
-                                        echo '<td>'.date('Y-m-d H:i:s', $aRow->modified).'</td>';
-                                        echo '<td>'.date('Y-m-d H:i:s', $aRow->created).'</td>';
-                                        echo '<td>'.$aRow->active.'</td>';
-                                    echo '</tr>';
+                                foreach($aTasks as $aTask) {
+                                    foreach($aTask as $aPermutation) {
+                                        echo '<tr class="'.($aNum++ % 2 == 0 ? 'even' : 'odd').'">';
+                                            echo '<td><i class="fa fa-warning"></i> Running</td>';
+                                            echo '<td>'.substr($aPermutation['commit'], 0, 16).'</td>';
+                                            echo '<td>'.substr($aPermutation['permutation'], 0, 16).'</td>';
+                                            echo '<td>'.$aPermutation['date'].'</td>';
+                                            echo '<td>'.$aPermutation['params'].'</td>';
+                                        echo '</tr>';
+                                    }
                                 }
                             ?>
                         </tbody>

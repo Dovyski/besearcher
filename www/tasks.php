@@ -1,10 +1,11 @@
 <?php
     require_once(dirname(__FILE__) . '/inc/globals.php');
 
-    // TODO: load data here
-    $aTasks = array();
+    $aLoaded = Besearcher\Data::init();
+    $aTasks = Besearcher\Data::tasks();
 
     Besearcher\View::render('tasks', array(
+        'loaded' => $aLoaded,
         'tasks' => $aTasks
     ));
 ?>
