@@ -13,6 +13,10 @@ class View {
 	public static function data() {
 		return self::$mData;
 	}
+
+	public static function out($theText) {
+		return htmlspecialchars($theText);
+	}
 }
 
 ?>

@@ -44,13 +44,13 @@
                             <?php
                                 $aNum = 0;
                                 foreach($aTasks as $aTask) {
-                                    foreach($aTask as $aPermutation) {
+                                    foreach($aTask as $aItem) {
                                         echo '<tr class="'.($aNum++ % 2 == 0 ? 'even' : 'odd').'">';
                                             echo '<td><i class="fa fa-warning"></i> Running</td>';
-                                            echo '<td>'.substr($aPermutation['commit'], 0, 16).'</td>';
-                                            echo '<td>'.substr($aPermutation['permutation'], 0, 16).'</td>';
-                                            echo '<td>'.$aPermutation['date'].'</td>';
-                                            echo '<td>'.$aPermutation['params'].'</td>';
+                                            echo '<td>'.substr($aItem['commit'], 0, 16).'</td>';
+                                            echo '<td><a href="permutation.php?commit='.$aItem['commit'].'&permutation='.$aItem['permutation'].'" title="Click to view more information">'.substr($aItem['permutation'], 0, 16).'</a></td>';
+                                            echo '<td>'.$aItem['date'].'</td>';
+                                            echo '<td>'.$aItem['params'].'</td>';
                                         echo '</tr>';
                                     }
                                 }
