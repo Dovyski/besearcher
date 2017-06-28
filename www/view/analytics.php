@@ -23,41 +23,33 @@
     </div>
     <?php } ?>
 
-    <?php foreach($aSummary as $aMetric => $aEntry) { ?>
-        <div class="row">
-            <div class="col-lg-12" style="text-align: center;">
-                <strong><?php echo $aMetric; ?></strong>
-            </div>
-            <!-- /.col-lg-12 -->
+    <div class="row">
+        <div class="col-lg-12">
+            <table width="100%" class="table table-striped table-bordered table-hover">
+                <thead>
+                    <tr>
+                        <th>Metric</th>
+                        <th>Min</th>
+                        <th>Max</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php
+                        foreach($aSummary as $aMetric => $aEntry) {
+                            echo '<tr>';
+                                echo '<td>'.$aMetric.'</td>';
+                                echo '<td><a href="result.php?commit='.$aEntry['min']['commit'].'&permutation='.$aEntry['min']['permutation'].'" title="Click to view more information">'.$aEntry['min']['value'].'</a></td>';
+                                echo '<td><a href="result.php?commit='.$aEntry['max']['commit'].'&permutation='.$aEntry['max']['permutation'].'" title="Click to view more information">'.$aEntry['max']['value'].'</a></td>';
+                            echo '</tr>';
+                        }
+                    ?>
+                </tbody>
+            </table>
+            <!-- /.table-responsive -->
         </div>
-        <div class="row">
-            <div class="col-lg-12">
-                <table width="100%" class="table table-striped table-bordered table-hover">
-                    <thead>
-                        <tr>
-                            <th>Analysis</th>
-                            <th>Value</th>
-                            <th>Commit-permutation</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php
-                            foreach($aEntry as $aName => $aData) {
-                                echo '<tr>';
-                                    echo '<td>'.$aName.'</td>';
-                                    echo '<td>'.$aData['value'].'</td>';
-                                    echo '<td><a href="result.php?commit='.$aData['commit'].'&permutation='.$aData['permutation'].'" title="Click to view more information">'.$aData['commit'].'-'.$aData['permutation'].'</a></td>';
-                                echo '</tr>';
-                            }
-                        ?>
-                    </tbody>
-                </table>
-                <!-- /.table-responsive -->
-            </div>
-            <!-- /.col-lg-12 -->
-        </div>
-        <!-- /.row -->
-    <?php } ?>
+        <!-- /.col-lg-12 -->
+    </div>
+    <!-- /.row -->
 </div>
 <!-- /#page-wrapper -->
 
