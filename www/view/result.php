@@ -39,7 +39,7 @@
                             echo '<td>'.$aInfo['commit'].'</td>';
                             echo '<td>'.$aInfo['permutation'].'</td>';
                             echo '<td>'.$aInfo['date'].'</td>';
-                            echo '<td>'.sprintf('%.1f', $aInfo['progress'] * 100).'%</td>';
+                            echo '<td>'.Besearcher\View::prettyProgressValue($aInfo['progress']).'</td>';
                         echo '</tr>';
                     ?>
                 </tbody>

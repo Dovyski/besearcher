@@ -51,7 +51,7 @@ function calculateTaskProgressFromTags(array $theBesearcherLogTags) {
     $aProgresses = findTagsByType($theBesearcherLogTags, BESEARCHER_TAG_TYPE_PROGRESS);
     $aCount = count($aProgresses);
 
-    $aProgress =  $aCount > 0 ? $aProgresses[$aCount - 1]['data'] : 0.;
+    $aProgress =  $aCount > 0 ? $aProgresses[$aCount - 1]['data'] : -1;
     return $aProgress;
 }
 
