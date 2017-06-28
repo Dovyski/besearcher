@@ -16,7 +16,7 @@
     <?php if(!$aData['loaded']) { ?>
         <div class="row">
             <div class="col-lg-12">
-                <div class="alert alert-danger" role="alert"><strong>Unable to load data!</strong> Check the <em>config.php</em> file and make sure <em>PATH_BESERCHER_INI_FILE</em> contains the right path to the INI file being used by Besearcher.</div>
+                <div class="alert alert-danger" role="alert"><strong>Unable to load data!</strong> Check the <em>config.ini</em> file and make sure <em>besearcher_ini_file</em> contains the right path to the INI file being used by Besearcher.</div>
             </div>
         </div>
     <?php } ?>

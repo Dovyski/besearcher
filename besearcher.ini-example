@@ -4,6 +4,9 @@
 ; levels are: 0 (debug), 1 (infos), 2 (warnings) and 3 (errors)
 log_level = 0
 
+; Specify the path to the file that will be used as log.
+log_file = "C:\wamp\www\besearcher\data\besearcher.log"
+
 ; Number of seconds to wait to check for task to run or changes in this INI file
 refresh_interval = 1
 
@@ -42,7 +45,7 @@ watch_dir = "C:\temp\cvui\learnopencv\"
 
 ; Directory the app will use to store results produced by issued
 ; commands, as well as internal info.
-data_dir = "C:\temp\PhD\besearcher\data\"
+data_dir = "C:\wamp\www\besearcher\data\"
 
 ; The hash of the commit that the app should use as a starting point
 ; in the analysis (exclusive). If nothing is specified, the app will process
