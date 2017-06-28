@@ -76,23 +76,25 @@
 
     <div class="row">
         <div class="col-lg-12">
-            <strong>Results</strong>
+            <strong>Meta</strong>
         </div>
     </div>
     <div class="row">
         <div class="col-lg-12">
-            <?php if(count($aData['results']) > 0) { ?>
+            <?php if(count($aData['meta']) > 0) { ?>
                 <table width="100%" class="table table-striped table-bordered table-hover">
                     <thead>
                         <tr>
+                            <th>Type</th>
                             <th>Name</th>
                             <th>Data</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php
-                            foreach($aData['results'] as $aItem) {
+                            foreach($aData['meta'] as $aItem) {
                                 echo '<tr>';
+                                    echo '<td>'.$aItem['type'].'</td>';
                                     echo '<td>'.$aItem['name'].'</td>';
                                     echo '<td>'.print_r($aItem['data'], true).'</td>';
                                 echo '</tr>';
@@ -102,7 +104,7 @@
                 </table>
                 <!-- /.table-responsive -->
             <?php } else { ?>
-                <div class="alert alert-info" role="alert">No result information was found in the log file. Check out <em><a href="#">Besearcher log marks</a></em> to learn how to generate result information.</div>
+                <div class="alert alert-info" role="alert">No meta information was found in the log file. Check out <em><a href="#">Besearcher log marks</a></em> to learn how to generate meta information.</div>
             <?php } ?>
         </div>
         <!-- /.col-lg-12 -->

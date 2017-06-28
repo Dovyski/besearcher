@@ -27,9 +27,16 @@
         $aLogContent = file_get_contents($aLogPath);
     }
 
+    $aMeta = array();
+    foreach($aData['meta'] as $aItem) {
+        if($aItem['type'] != BESEARCHER_TAG_TYPE_PROGRESS) {
+            $aMeta[] = $aItem;
+        }
+    }
+
     Besearcher\View::render('result', array(
         'info' => $aData,
-        'results' => $aData['results'],
+        'meta' => $aMeta,
         'log_content' => $aLogContent,
         'error' => $aError,
     ));

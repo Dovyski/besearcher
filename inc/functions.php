@@ -73,7 +73,7 @@ function aggredateTaskInfos($theTaskJsonFiles) {
             'params'        => $aInfo['params'],
             'cmd'           => $aInfo['cmd'],
             'progress'      => calculateTaskProgressFromTags($aTags),
-            'results'       => findTagsByType($aTags, BESEARCHER_TAG_TYPE_RESULT),
+            'meta'          => $aTags,
             'raw'           => $aInfo
         );
     }
