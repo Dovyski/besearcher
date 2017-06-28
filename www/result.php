@@ -14,7 +14,7 @@
         if(isset($aTasks[$aCommit][$aPermutation])) {
             $aData = $aTasks[$aCommit][$aPermutation];
         } else {
-            $aError = 'Unknown permutation with hash ' . Besearcher\view::out($aPermutation);
+            $aError = 'Unknown result with hash ' . Besearcher\view::out($aPermutation);
         }
     } else {
         $aError = 'Unknown task with commit ' . Besearcher\view::out($aCommit);
@@ -27,8 +27,8 @@
         $aLogContent = file_get_contents($aLogPath);
     }
 
-    Besearcher\View::render('permutation', array(
-        'permutation' => $aData,
+    Besearcher\View::render('result', array(
+        'info' => $aData,
         'log_content' => $aLogContent,
         'error' => $aError,
     ));

@@ -34,8 +34,7 @@
                         <thead>
                             <tr>
                                 <th>Status</th>
-                                <th>Commit</th>
-                                <th>Permutation</th>
+                                <th>Commit-permutation</th>
                                 <th>Date</th>
                                 <th>Params</th>
                             </tr>
@@ -47,8 +46,7 @@
                                     foreach($aTask as $aItem) {
                                         echo '<tr class="'.($aNum++ % 2 == 0 ? 'even' : 'odd').'">';
                                             echo '<td><i class="fa fa-warning"></i> Running</td>';
-                                            echo '<td>'.substr($aItem['commit'], 0, 16).'</td>';
-                                            echo '<td><a href="permutation.php?commit='.$aItem['commit'].'&permutation='.$aItem['permutation'].'" title="Click to view more information">'.substr($aItem['permutation'], 0, 16).'</a></td>';
+                                            echo '<td><a href="result.php?commit='.$aItem['commit'].'&permutation='.$aItem['permutation'].'" title="Click to view more information">'.substr($aItem['commit'], 0, 16).'-'.substr($aItem['permutation'], 0, 16).'</a></td>';
                                             echo '<td>'.$aItem['date'].'</td>';
                                             echo '<td>'.$aItem['params'].'</td>';
                                         echo '</tr>';

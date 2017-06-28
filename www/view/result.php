@@ -1,6 +1,6 @@
 <?php
     $aData = Besearcher\View::data();
-    $aInfo = $aData['permutation'];
+    $aInfo = $aData['info'];
 ?>
 
 <?php require_once(dirname(__FILE__) . '/header.php'); ?>
@@ -16,7 +16,7 @@
 
     <div class="row">
         <div class="col-lg-12">
-            <h1 class="page-header">Permutation</h1>
+            <h1 class="page-header">Result</h1>
         </div>
         <!-- /.col-lg-12 -->
     </div>
@@ -27,8 +27,8 @@
             <table width="100%" class="table table-striped table-bordered table-hover">
                 <thead>
                     <tr>
-                        <th>Commit</th>
-                        <th>Hash</th>
+                        <th>Commit hash</th>
+                        <th>Permutation hash</th>
                         <th>Date</th>
                         <th>Progress</th>
                     </tr>
