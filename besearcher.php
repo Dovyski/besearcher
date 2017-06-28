@@ -119,9 +119,23 @@ function setLastKnownCommit(& $theContext, $theHash) {
     file_put_contents($aCommitFile, $theContext['last_commit']);
 }
 
-function findNewCommits($theWatchDir, $theGitExe, $theLastCommitHash) {
+function performGitPull($theWatchDir, $theGitExe, $theContext) {
+    $aEntries = array();
+
+    say("Updating repo with git pull", SAY_INFO, $theContext);
+    $aOutput = exec('cd ' . $theWatchDir . ' & ' . $theGitExe . ' pull', $aEntries);
+    say(implode("\n", $aEntries), SAY_DEBUG, $theContext);
+}
+
+function findNewCommits($theWatchDir, $theGitExe, $theLastCommitHash, $theContext) {
     $aNewCommits = array();
     $aEntries = array();
+
+    $aPerformPull = get_ini('perform_git_pull', $theContext, true);
+
+    if($aPerformPull) {
+        performGitPull($theWatchDir, $theGitExe, $theContext);
+    }
 
     exec('cd ' . $theWatchDir . ' & ' . $theGitExe . ' log --pretty=oneline', $aEntries);
 
@@ -302,7 +316,7 @@ function processNewCommits(& $theContext) {
     $aWatchDir = get_ini('watch_dir', $theContext);
     $aGitExe = get_ini('git', $theContext);
 
-    $aTasks = findNewCommits($aWatchDir, $aGitExe, $theContext['last_commit']);
+    $aTasks = findNewCommits($aWatchDir, $aGitExe, $theContext['last_commit'], $theContext);
     $aLastHash = '';
     $aTasksCount = count($aTasks);
 

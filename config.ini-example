@@ -16,6 +16,10 @@ git = git.exe
 ; alreaby been executed.
 skip_performed_tasks = false
 
+; If besearcher should invoke git pull to update the data
+; in the watched directory.
+perform_git_pull = true
+
 ; Number of seconds to wait between each pull
 ; performed in "watch_dir"
 git_pull_interval = 600
