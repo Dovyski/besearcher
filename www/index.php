@@ -4,6 +4,7 @@
     $aLoaded = Besearcher\Data::init();
 
     Besearcher\View::render('index', array(
-        'loaded' => $aLoaded
+        'loaded' => $aLoaded,
+        'ini' => Besearcher\Data::ini()
     ));
 ?>

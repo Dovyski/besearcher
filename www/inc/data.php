@@ -39,6 +39,10 @@ class Data {
 		return self::$mData;
 	}
 
+	public static function ini() {
+		return self::$mINI;
+	}
+
 	public static function loaded() {
 		return self::$mLoaded;
 	}

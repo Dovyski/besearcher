@@ -3,4 +3,4 @@
 ; Specify the path to the INI file being used to configure
 ; beseacher. The INI file contains information regarding
 ; the folder where all the processed data is.
-beseacher_ini_file = '../besearcher.ini-example'
+beseacher_ini_file = "..\besearcher.ini-example"
