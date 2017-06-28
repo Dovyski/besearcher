@@ -48,6 +48,7 @@ function get_ini($theKey, $theContext, $theDefault = null) {
 }
 
 function execCommand($theCmd, $theLogFile, $theParallel) {
+    // TODO: make parallel using http://php.net/manual/en/function.pcntl-fork.php
     $aCmdTemplate = $theParallel ? 'start "Job" /b cmd.exe /c "%s > "%s""' : '%s > "%s"';
     $aFinalCmd = sprintf($aCmdTemplate, $theCmd, $theLogFile);
 
@@ -160,7 +161,7 @@ function findNewCommits($theWatchDir, $theGitExe, $theLastCommitHash, $theContex
 
 function enqueTask($theTask, & $theContext) {
     array_push($theContext['tasks_queue'], $theTask);
-    say("Enqueing task " . $theTask['hash'], SAY_DEBUG, $theContext);
+    say("Enqueing task " . $theTask['hash'] . '-' . $theTask['permutation'], SAY_DEBUG, $theContext);
 }
 
 function createTask($theCommitHash, $thePermutation, $theContext) {
