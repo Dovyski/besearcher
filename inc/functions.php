@@ -69,7 +69,7 @@ function aggredateTaskInfos($theTaskJsonFiles) {
         $aInfos[$aPermutation] = array(
             'commit'        => $aInfo['hash'],
             'permutation'   => $aPermutation,
-            'date'          => date('d-m-Y H:i:s', $aInfo['time']),
+            'date'          => date('Y-m-d H:i:s', $aInfo['time']),
             'params'        => $aInfo['params'],
             'cmd'           => $aInfo['cmd'],
             'progress'      => calculateTaskProgressFromTags($aTags),
