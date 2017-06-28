@@ -67,6 +67,16 @@
 </div>
 <!-- /#page-wrapper -->
 
+<script>
+    $(document).ready(function() {
+        $('#dataTables-example').DataTable({
+            responsive: true,
+            pageLength: 100,
+            order: [[3, 'desc']]
+        });
+    });
+</script>
+
 <?php
     require_once(dirname(__FILE__) . '/footer.php');
 ?>
