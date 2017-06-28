@@ -14,6 +14,15 @@
     </div>
     <!-- /.row -->
 
+    <?php if(count($aSummary) == 0) { ?>
+    <div class="row">
+        <div class="col-lg-12">
+            There is not enough data to perform any analytics.
+        </div>
+        <!-- /.col-lg-12 -->
+    </div>
+    <?php } ?>
+
     <?php foreach($aSummary as $aMetric => $aEntry) { ?>
         <div class="row">
             <div class="col-lg-12" style="text-align: center;">

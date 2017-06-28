@@ -5,7 +5,6 @@
     $aTasks = Besearcher\Data::tasks();
 
     Besearcher\View::render('tasks', array(
-        'loaded' => $aLoaded,
         'tasks' => $aTasks
     ));
 ?>

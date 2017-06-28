@@ -1,5 +1,9 @@
 <?php
     require_once(dirname(__FILE__) . '/inc/globals.php');
 
-    Besearcher\View::render('index');
+    $aLoaded = Besearcher\Data::init();
+
+    Besearcher\View::render('index', array(
+        'loaded' => $aLoaded
+    ));
 ?>
