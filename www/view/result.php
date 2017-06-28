@@ -39,7 +39,7 @@
                             echo '<td>'.$aInfo['commit'].'</td>';
                             echo '<td>'.$aInfo['permutation'].'</td>';
                             echo '<td>'.$aInfo['date'].'</td>';
-                            echo '<td>'.$aInfo['progress'].'</td>';
+                            echo '<td>'.sprintf('%.1f', $aInfo['progress'] * 100).'%</td>';
                         echo '</tr>';
                     ?>
                 </tbody>
@@ -69,6 +69,41 @@
                 </tbody>
             </table>
             <!-- /.table-responsive -->
+        </div>
+        <!-- /.col-lg-12 -->
+    </div>
+    <!-- /.row -->
+
+    <div class="row">
+        <div class="col-lg-12">
+            <strong>Results</strong>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-lg-12">
+            <?php if(count($aData['results']) > 0) { ?>
+                <table width="100%" class="table table-striped table-bordered table-hover">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Data</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php
+                            foreach($aData['results'] as $aItem) {
+                                echo '<tr>';
+                                    echo '<td>'.$aItem['name'].'</td>';
+                                    echo '<td>'.print_r($aItem['data'], true).'</td>';
+                                echo '</tr>';
+                            }
+                        ?>
+                    </tbody>
+                </table>
+                <!-- /.table-responsive -->
+            <?php } else { ?>
+                <div class="alert alert-info" role="alert">No result information was found in the log file. Check out <em><a href="#">Besearcher log marks</a></em> to learn how to generate result information.</div>
+            <?php } ?>
         </div>
         <!-- /.col-lg-12 -->
     </div>

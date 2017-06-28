@@ -29,6 +29,7 @@
 
     Besearcher\View::render('result', array(
         'info' => $aData,
+        'results' => $aData['results'],
         'log_content' => $aLogContent,
         'error' => $aError,
     ));
