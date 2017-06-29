@@ -10,7 +10,7 @@ class Data {
 	private static function load($theINIPath) {
 		$aOk = false;
 
-		self::$mINI = parse_ini_file($theINIPath);
+		self::$mINI = parse_ini_file($theINIPath, true);
 		$aDataDir = self::$mINI['data_dir'];
 
 		if(file_exists($aDataDir)) {
