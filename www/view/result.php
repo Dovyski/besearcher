@@ -42,6 +42,7 @@
                             echo '<td>'.Besearcher\View::prettyStatusName($aInfo, true).'</td>';
                         echo '</tr>';
                     ?>
+                    <tr><td colspan="4"><?php echo Besearcher\View::out($aInfo['commit_message']); ?></td></tr>
                 </tbody>
             </table>
             <!-- /.table-responsive -->

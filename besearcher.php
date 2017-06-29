@@ -175,7 +175,7 @@ function enqueTask($theTask, & $theContext) {
     say("Enqueing task " . $theTask['hash'] . '-' . $theTask['permutation'], SAY_DEBUG, $theContext);
 }
 
-function createTask($theCommitHash, $thePermutation, $theContext) {
+function createTask($theCommitHash, $theCommitMessage, $thePermutation, $theContext) {
     $aUid = $theCommitHash . '-' . $thePermutation['hash'];
 
     $aDataDir = get_ini('data_dir', $theContext);
@@ -190,6 +190,7 @@ function createTask($theCommitHash, $thePermutation, $theContext) {
         'info_file' => $aInfoFile,
         'working_dir' => get_ini('task_cmd_working_dir', $theContext),
         'hash' => $theCommitHash,
+        'message' => $theCommitMessage,
         'permutation' => $thePermutation['hash'],
         'params' => $thePermutation['params'],
         'time' => time(),
@@ -262,13 +263,13 @@ function generateTaskCmdPermutations($theContext) {
     return $aPermutations;
 }
 
-function createTasksFromCommit($theHash, $theContext) {
+function createTasksFromCommit($theHash, $theMessage, $theContext) {
     $aTasks = array();
     $aPermutations = generateTaskCmdPermutations($theContext);
 
     if(count($aPermutations) > 0) {
         foreach($aPermutations as $aPermutation) {
-            $aTasks[] = createTask($theHash, $aPermutation, $theContext);
+            $aTasks[] = createTask($theHash, $theMessage, $aPermutation, $theContext);
         }
     }
 
@@ -309,7 +310,7 @@ function createTaskResultsFolder($theCommitHash, $theContext) {
 }
 
 function handleNewCommit($theHash, $theMessage, & $theContext) {
-    $aTasks = createTasksFromCommit($theHash, $theContext);
+    $aTasks = createTasksFromCommit($theHash, $theMessage, $theContext);
 
     // Create a folder to house the results of the tasks
     // originated from the present commit
