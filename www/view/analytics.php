@@ -21,7 +21,7 @@
         </div>
         <!-- /.col-lg-12 -->
     </div>
-    <?php } ?>
+    <?php } else { ?>
 
     <div class="row">
         <div class="col-lg-12">
@@ -50,6 +50,7 @@
         <!-- /.col-lg-12 -->
     </div>
     <!-- /.row -->
+    <?php } ?>
 </div>
 <!-- /#page-wrapper -->
 
