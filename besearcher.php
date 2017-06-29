@@ -192,7 +192,8 @@ function createTask($theCommitHash, $thePermutation, $theContext) {
         'hash' => $theCommitHash,
         'permutation' => $thePermutation['hash'],
         'params' => $thePermutation['params'],
-        'time' => time()
+        'time' => time(),
+        'time_end' => 0
     );
 
     return $aTask;

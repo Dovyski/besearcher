@@ -8,10 +8,13 @@
  Author: Fernando Bevilacqua <fernando.bevilacqua@his.se>
  */
 
- function writeDataToTaskInfoFile($thePathInfoFile, $theKey, $theValue) {
+ function writeDataToTaskInfoFile($thePathInfoFile, $theKeyValue) {
      $aContent = file_get_contents($thePathInfoFile);
      $aJson = json_decode($aContent, true);
-     $aJson[$theKey] = $theValue;
+
+     foreach($theKeyValue as $aKey => $aValue) {
+         $aJson[$aKey] = $aValue;
+     }
 
      file_put_contents($thePathInfoFile, json_encode($aJson, JSON_PRETTY_PRINT));
  }
@@ -29,6 +32,9 @@ $aOutput = array();
 $aReturnCode = -1;
 $aLastLine = exec($aCmd . ' > "'.$aPathLogFile.'"', $aOutput, $aReturnCode);
 
-writeDataToTaskInfoFile($aPathInfoFile, 'cmd_return_code', $aReturnCode);
+writeDataToTaskInfoFile($aPathInfoFile, array(
+    'cmd_return_code' => $aReturnCode,
+    'time_end' => time()
+));
 
 exit(0);
