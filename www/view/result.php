@@ -30,7 +30,7 @@
                         <th>Commit hash</th>
                         <th>Permutation hash</th>
                         <th>Date</th>
-                        <th>Progress</th>
+                        <th>Status</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -39,7 +39,7 @@
                             echo '<td>'.$aInfo['commit'].'</td>';
                             echo '<td>'.$aInfo['permutation'].'</td>';
                             echo '<td>'.$aInfo['date'].'</td>';
-                            echo '<td>'.Besearcher\View::prettyProgressValue($aInfo['progress']).'</td>';
+                            echo '<td>'.Besearcher\View::prettyStatusName($aInfo, true).'</td>';
                         echo '</tr>';
                     ?>
                 </tbody>
@@ -55,15 +55,17 @@
             <table width="100%" class="table table-striped table-bordered table-hover">
                 <thead>
                     <tr>
-                        <th>Params</th>
-                        <th>Command</th>
+                        <th style="width: 45%;">Command</th>
+                        <th style="width: 45%;">Params</th>
+                        <th style="width: 10%;">Return</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php
                         echo '<tr>';
-                            echo '<td>'.$aInfo['params'].'</td>';
                             echo '<td>'.$aInfo['cmd'].'</td>';
+                            echo '<td>'.$aInfo['params'].'</td>';
+                            echo '<td>'.$aInfo['raw']['cmd_return_code'].'</td>';
                         echo '</tr>';
                     ?>
                 </tbody>

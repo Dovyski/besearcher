@@ -18,25 +18,25 @@ class View {
 		return htmlspecialchars($theText);
 	}
 
-	public static function prettyProgressName($theProgressValue) {
-		$aRet = '<i class="fa fa-question-circle-o"></i> Unknown';
+	public static function prettyStatusName($theItem, $theShowText = false) {
+		$aProgress 	 = $theItem['progress'];
+		$aReturnCode = $theItem['raw']['cmd_return_code'];
+		$aTimeEnd    = $theItem['raw']['time_end'];
+		$aRet        = '<i class="fa fa-question-circle-o"></i> Unknown';
+		$aFinished   = $aTimeEnd != 0 || $aProgress >= 1.0;
 
-		if($theProgressValue >= 0. && $theProgressValue < 1.0) {
-			$aRet = '<i class="fa fa-circle-o-notch fa-spin"></i> Running';
-		} else if($theProgressValue >= 1.0) {
-			$aRet = '<i class="fa fa-check-circle"></i> Complete';
-		}
+		if(!$aFinished) {
+			$aProgressText = sprintf('%.1f%%', $aProgress < 0 ? 0 : $aProgress * 100);
+			$aText         = $theShowText ? 'Running (' . $aProgressText . ')' : '';
+			$aRet          = '<span class="status-running" title="Running"><i class="fa fa-circle-o-notch fa-spin ""></i> ' . $aText . '</span>';
 
-		return $aRet;
-	}
+		} else if($aFinished && $aReturnCode == 0) {
+			$aText         = $theShowText ? 'Complete' : '';
+			$aRet          = '<span class="status-complete" title="Complete"><i class="fa fa-check-circle status-complete"></i> ' . $aText . '</span>';
 
-	public static function prettyProgressValue($theProgressValue) {
-		$aRet = '<i class="fa fa-question-circle-o"></i> Unknown';
-
-		if($theProgressValue >= 0. && $theProgressValue < 1.0) {
-			$aRet = '<i class="fa fa-circle-o-notch fa-spin"></i> '.sprintf('%.1f%%', $theProgressValue * 100);
-		} else if($theProgressValue >= 1.0) {
-			$aRet = '<i class="fa fa-check-circle"></i> '.sprintf('%.0f%%', $theProgressValue * 100);
+		} else if($aFinished && $aReturnCode != 0) {
+			$aText         = $theShowText ? 'Error' : '';
+			$aRet          = '<span class="status-error" title="Error"><i class="fa fa-exclamation-circle status-error"></i> '.$aText.'</span>';
 		}
 
 		return $aRet;

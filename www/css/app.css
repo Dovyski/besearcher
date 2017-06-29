@@ -1,0 +1,17 @@
+.status-running,
+.status-complete,
+.status-error {
+	font-weight: 200;
+}
+
+.status-running {
+	color: #d29000;
+}
+
+.status-complete {
+	color: #11af00;
+}
+
+.status-error {
+	color: #d30000;
+}

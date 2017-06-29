@@ -19,7 +19,7 @@
             <table width="100%" class="table table-striped table-bordered table-hover" id="dataTables-example">
                 <thead>
                     <tr>
-                        <th>Status</th>
+                        <th><i class="fa fa-info-circle"></i></th>
                         <th>Commit-permutation</th>
                         <th>Date</th>
                         <th>Params</th>
@@ -31,7 +31,7 @@
                         foreach($aTasks as $aTask) {
                             foreach($aTask as $aItem) {
                                 echo '<tr class="'.($aNum++ % 2 == 0 ? 'even' : 'odd').'">';
-                                    echo '<td>'.Besearcher\View::prettyProgressName($aItem['progress']).'</td>';
+                                    echo '<td>'.Besearcher\View::prettyStatusName($aItem, true).'</td>';
                                     echo '<td><a href="result.php?commit='.$aItem['commit'].'&permutation='.$aItem['permutation'].'" title="Click to view more information">'.substr($aItem['commit'], 0, 16).'-'.substr($aItem['permutation'], 0, 16).'</a></td>';
                                     echo '<td>'.$aItem['date'].'</td>';
                                     echo '<td>'.$aItem['params'].'</td>';
