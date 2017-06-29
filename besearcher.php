@@ -13,6 +13,8 @@ define('SAY_WARN', 2);
 define('SAY_INFO', 1);
 define('SAY_DEBUG', 0);
 
+define('RUNNER_CMD', 'php "' . dirname(__FILE__) . '\runner.php"');
+
 $gSayStrings = array(
     SAY_ERROR => 'ERROR',
     SAY_WARN => 'WARN',
@@ -47,10 +49,19 @@ function get_ini($theKey, $theContext, $theDefault = null) {
     return $aRet;
 }
 
-function execCommand($theCmd, $theLogFile, $theParallel) {
-    // TODO: make parallel using http://php.net/manual/en/function.pcntl-fork.php
-    $aCmdTemplate = $theParallel ? 'start "Job" /b cmd.exe /c "%s > "%s""' : '%s > "%s"';
-    $aFinalCmd = sprintf($aCmdTemplate, $theCmd, $theLogFile);
+function execTaskCommand($theTask, $theParallel, $theContext) {
+    $aCmd = $theTask['cmd'];
+    $aLogFile = $theTask['log_file'];
+    $aInfoFile = $theTask['info_file'];
+
+    $aCmdTemplate = '%s > "%s"';
+    $aFinalCmd = sprintf($aCmdTemplate, $aCmd, $aLogFile);
+
+    say($aFinalCmd, SAY_DEBUG, $theContext);
+
+    if($theParallel) {
+        $aFinalCmd = sprintf('start "Job" /b cmd.exe /c "%s "%s" "%s" "%s""', RUNNER_CMD, $aCmd, $aLogFile, $aInfoFile);
+    }
 
     pclose(popen($aFinalCmd, 'r'));
 }
@@ -174,6 +185,7 @@ function createTask($theCommitHash, $thePermutation, $theContext) {
 
     $aTask = array(
         'cmd' => $thePermutation['cmd'],
+        'cmd_return_code' => -1,
         'log_file' => $aLogFile,
         'info_file' => $aInfoFile,
         'working_dir' => get_ini('task_cmd_working_dir', $theContext),
@@ -269,10 +281,6 @@ function writeTaskInfoFile($theTask) {
 function runTask($theTask, $theMaxParallel, $theContext) {
     say('Running task (hash=' . $theTask['hash'] . ', permutation=' . $theTask['permutation'] . ')', SAY_INFO, $theContext);
 
-    $aParallel = $theMaxParallel > 1;
-    $aTaskCmd = $theTask['cmd'];
-    $aTaskLogFile = $theTask['log_file'];
-
     writeTaskInfoFile($theTask);
 
     $aSkipPerformedTasks = get_ini('skip_performed_tasks', $theContext, false);
@@ -286,8 +294,8 @@ function runTask($theTask, $theMaxParallel, $theContext) {
         return;
     }
 
-    say($aTaskCmd, SAY_DEBUG, $theContext);
-    execCommand($aTaskCmd, $aTaskLogFile, $aParallel);
+    $aParallel = $theMaxParallel > 1;
+    execTaskCommand($theTask, $aParallel, $theContext);
 }
 
 function createTaskResultsFolder($theCommitHash, $theContext) {
