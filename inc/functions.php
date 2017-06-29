@@ -68,7 +68,7 @@ function aggredateTaskInfos($theTaskJsonFiles) {
 
         $aInfos[$aPermutation] = array(
             'commit'        => $aInfo['hash'],
-            'commit_message'=> $aInfo['message'],
+            'commit_message'=> @$aInfo['message'],
             'permutation'   => $aPermutation,
             'date'          => date('Y-m-d H:i:s', $aInfo['time']),
             'params'        => $aInfo['params'],
