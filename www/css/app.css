@@ -15,3 +15,7 @@
 .status-error {
 	color: #d30000;
 }
+
+.navbar-header {
+	height: 80px;
+}

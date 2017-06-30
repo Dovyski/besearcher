@@ -52,7 +52,7 @@
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                 </button>
-                <a class="navbar-brand" href="index.php">Besearcher</a>
+                <a class="navbar-brand" href="index.php"><img src="img/logo/logo-text.png" title="Besearcher logo" style="width: auto; height: 50px;"/></a>
             </div>
             <!-- /.navbar-header -->
 
