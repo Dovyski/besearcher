@@ -9,9 +9,13 @@ Besearcher (bot researcher) is a tool to help researchers automate and keep trac
 
 - [Features](#features)
 - [Installation](#installation)
-- [Getting started](#usage)
-	- [Basic features](#basic-features)
-	- [Command permutations](#command-permutations)
+- [Getting started](#getting-started)
+	- [Prerequisites](#prerequisites)
+	- [Installing](#installing)
+	- [Configuring](#configuring)
+- [Usage](#usage)
+	- [Working directories](#working-directories)
+	- [Command and permutations](#command-and-permutations)
 	- [Web dashboard](#web-dashboard)
 - [License](#license)
 - [Changelog](#changelog)
@@ -32,13 +36,53 @@ You need PHP installed and available in the commmand line.
 
 ## Getting started
 
+These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
+
+### Prerequisites
+
+What things you need to install the software and how to install them
+
+```
+Give examples
+```
+
+### Installing
+
+A step by step series of examples that tell you have to get a development env running
+
+Say what the step will be
+
+```
+Give the example
+```
+
+And repeat
+
+```
+until finished
+```
+
+End with an example of getting some data out of the system or using it for a little demo.
+
+### Configuring
+
+A step by step series of examples that tell you have to get a development env running
+
+Say what the step will be
+
+```
+Give the example
+```
+
+## Usage
+
 Please check the file [config.ini-example](config.ini-example) for usage information.
 
-### Basic usage
+### Working directories
 
 Please check the file [config.ini-example](config.ini-example) for usage information.
 
-### Command permutations
+### Command and permutations
 
 Please check the file [config.ini-example](config.ini-example) for usage information.
 
