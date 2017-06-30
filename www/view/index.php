@@ -13,10 +13,10 @@
     </div>
     <!-- /.row -->
 
-    <?php if(!$aData['loaded']) { ?>
+    <?php if(!empty($aData['error'])) { ?>
         <div class="row">
             <div class="col-lg-12">
-                <div class="alert alert-danger" role="alert"><strong>Unable to load data!</strong> Check the <em>config.ini</em> file and make sure <em>besearcher_ini_file</em> contains the right path to the INI file being used by Besearcher.</div>
+                <div class="alert alert-danger" role="alert"><strong>Oops!</strong> <?php echo Besearcher\View::out($aData['error']); ?></div>
             </div>
         </div>
     <?php } else { ?>
@@ -24,7 +24,7 @@
     <div class="row">
         <div class="col-lg-12">
             <p>Besearcher is configured and working as expected. Below are the configuration settings being used.</p>
-            <p>Configuration file: <code><?php echo $aData['ini_path']; ?></code></p>
+            <p>Configuration file: <code><?php echo Besearcher\View::out($aData['ini_path']); ?></code></p>
 
             <table width="100%" class="table table-striped table-bordered table-hover">
                 <thead>
@@ -39,8 +39,8 @@
                         foreach($aData['ini'] as $aName => $aValue) {
                             if($aName != 'task_cmd_params') {
                                 echo '<tr>';
-                                    echo '<td>'.$aName.'</td>';
-                                    echo '<td>'.(is_array($aValue) ? '<pre>'.print_r($aValue, true).'</pre>' : $aValue).'</td>';
+                                    echo '<td>'.Besearcher\View::out($aName).'</td>';
+                                    echo '<td>'.(is_array($aValue) ? '<pre>'.print_r($aValue, true).'</pre>' : Besearcher\View::out($aValue)).'</td>';
                                     echo '<td></td>';
                                 echo '</tr>';
                             }
@@ -50,8 +50,8 @@
 
                         foreach($aData['task_params'] as $aName => $aValue) {
                             echo '<tr>';
-                                echo '<td>'.$aName.'</td>';
-                                echo '<td>'.(is_array($aValue) ? '<pre>'.print_r($aValue, true).'</pre>' : $aValue).'</td>';
+                                echo '<td>'.Besearcher\View::out($aName).'</td>';
+                                echo '<td>'.(is_array($aValue) ? '<pre>'.print_r($aValue, true).'</pre>' : Besearcher\View::out($aValue)).'</td>';
                                 echo '<td></td>';
                             echo '</tr>';
                         }

@@ -8,7 +8,7 @@ class Data {
 	private static $mLoaded;
 
 	private static function load($theINIPath) {
-		$aOk = false;
+		$aError = '';
 
 		self::$mINI = parse_ini_file($theINIPath, true);
 		$aDataDir = self::$mINI['data_dir'];
@@ -16,23 +16,26 @@ class Data {
 		if(file_exists($aDataDir)) {
 			self::$mData = findTasksInfos($aDataDir);
 			self::$mLoaded = true;
-			$aOk = true;
+		} else {
+			$aError = 'Informed data directory does not exist: ' . $aDataDir;
 		}
 
-		return $aOk;
+		return $aError;
 	}
 
 	public static function init() {
-		$aOk = false;
+		$aError = '';
 
 		self::$mLoaded = false;
 		self::$mData = array();
 
 		if(file_exists(PATH_BESERCHER_INI_FILE)) {
-			$aOk = self::load(PATH_BESERCHER_INI_FILE);
+			$aError = self::load(PATH_BESERCHER_INI_FILE);
+		} else {
+			$aError	= 'Unable to load config.ini file: ' . PATH_BESERCHER_INI_FILE;
 		}
 
-		return $aOk;
+		return $aError;
 	}
 
 	public static function tasks() {
