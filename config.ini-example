@@ -7,8 +7,17 @@ log_level = 1
 ; Number of seconds to wait to check for task to run or changes in this INI file
 refresh_interval = 1
 
-; Path to the git executable
-git = git.exe
+; The directory the app will monitor for new commits.
+watch_dir = "C:\wamp\www\besearcher\"
+
+; Directory the app will use to store results produced by issued
+; commands, as well as internal info.
+data_dir = "C:\wamp\www\besearcher\data\"
+
+; The hash of the commit that the app should use as a starting point
+; in the analysis (exclusive). If nothing is specified, the app will process
+; all available commits.
+start_commit_hash =
 
 ; If set to true, a task will only be executed if it has no existing result
 ; files related to it (task was already executed in the past). If set to false,
@@ -23,6 +32,9 @@ perform_git_pull = true
 ; Number of seconds to wait between each pull
 ; performed in "watch_dir"
 git_pull_interval = 600
+
+; Path to the git executable
+git = git.exe
 
 ; Max number of concurrents tasks to be executed
 max_parallel_tasks = 5
@@ -47,18 +59,6 @@ task_cmd_list_name = "ping.exe"
 ; An absolute path to the directory to be used as the working
 ; directory for issued commands.
 task_cmd_working_dir = "C:\wamp\www\besearcher\"
-
-; The directory the app will monitor for new commits.
-watch_dir = "C:\wamp\www\besearcher\"
-
-; Directory the app will use to store results produced by issued
-; commands, as well as internal info.
-data_dir = "C:\wamp\www\besearcher\data\"
-
-; The hash of the commit that the app should use as a starting point
-; in the analysis (exclusive). If nothing is specified, the app will process
-; all available commits.
-start_commit_hash =
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; This section contains the values that will be used
