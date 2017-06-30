@@ -1,4 +1,4 @@
-; This is a sample configuration file for beseacher.php
+; This is a sample configuration file for Besearcher
 
 ; Specify the amount of information produced in the logs. Available
 ; levels are: 0 (debug), 1 (infos), 2 (warnings) and 3 (errors)
@@ -85,7 +85,7 @@ task_cmd_working_dir = "C:\wamp\www\besearcher\"
 ; named "data" within the [task_cmd_params] section, as well as {@debug} is
 ; replaced by the value of the param "debug" (which is -d). The value
 ; of {@files} will be replaced by 1 and by 2, because {@files} was defined
-; as an array. If more than one param is defined as an array, beseacher
+; as an array. If more than one param is defined as an array, Besearcher
 ; will generate all possible permutations with the informed param values.
 ;
 ; There are special expressions that will be expanded by Besearcher, which
@@ -96,12 +96,12 @@ task_cmd_working_dir = "C:\wamp\www\besearcher\"
 ;   This expresions can be used with arrays with a single element and they
 ;   generate a set of numbers from START to END, incremented acording to INC.
 ;   E.g.
-;		values[] = 0..3:1
-;	will be expanded to:
-;		values[] = 0
-;		values[] = 1
-;		values[] = 2
-;		values[] = 3
+;      values[] = 0..3:1
+;   will be expanded to:
+;      values[] = 0
+;      values[] = 1
+;      values[] = 2
+;      values[] = 3
 ;
 [task_cmd_params]
 domain[] = "google.com"
