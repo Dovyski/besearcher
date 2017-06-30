@@ -1,8 +1,8 @@
 <?php
 
 /*
- This script will run a set of commands based on the changes of a
- Git repository. It tracks changes in the repo and, for each new
+ Main file for Besearcher. This script is the deamon that will periodically check
+ the informed Git repository. It tracks changes in the repo and, for each new
  commit, runs a set of pre-defined commands.
 
  Author: Fernando Bevilacqua <fernando.bevilacqua@his.se>

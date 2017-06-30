@@ -1,9 +1,8 @@
 <?php
 
 /*
- This script will run a command issued by besearcher. This is
- a very nasty hack to provide forking capabilities to besearcher
- on Windows, since pcntl_fork() is not available.
+ Runs a command issued by Besearcher. This is a very nasty hack to provide
+ forking capabilities to Besearcher on Windows, since pcntl_fork() is not available.
 
  Author: Fernando Bevilacqua <fernando.bevilacqua@his.se>
  */

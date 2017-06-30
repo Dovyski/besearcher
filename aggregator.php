@@ -1,8 +1,7 @@
 <?php
 
 /*
- This script walk among the result files produced by command tasks
- producing a report.
+ Loads task result files and produces a summary of their data.
 
  Author: Fernando Bevilacqua <fernando.bevilacqua@his.se>
  */
@@ -19,7 +18,7 @@ if($argc <= 1) {
      echo "Usage: \n";
      echo " php ".basename($_SERVER['PHP_SELF']) . " [options]\n\n";
      echo "Options:\n";
-     echo " --ini=<path>     Path to the INI files used for configuration.\n";
+     echo " --ini=<path>     Path to the INI file being used by Besearcher.\n";
      echo "\n";
      exit(1);
 }
