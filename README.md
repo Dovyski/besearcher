@@ -1,9 +1,9 @@
-![Besearcher](www/img/logo/logo-text.png)
+![Besearcher](www/img/logo/logo-text-padding.png)
 
 Besearcher
 ======================
 
-Besearcher (bot researcher) is a tool to help researchers automate and keep track of software-based experiments. It automatically monitors a git repository and performs a pre-defined command for each new commit. It is also possible to keep track of commands (running, finished or aborted) and the output they produced.  
+Besearcher (*bot researcher*) is a tool to help researchers automate and keep track of software-based experiments. It automatically monitors a git repository and performs a pre-defined command for each new commit. It is also possible to keep track of commands (running, finished or aborted) and the output they produced.  
 
 ## Table of content
 
@@ -19,7 +19,7 @@ Besearcher (bot researcher) is a tool to help researchers automate and keep trac
 
 ## Features
 
-Besearcher was created out of a need from a scientific project, so its design values reproducibility and trackability of results. It is easy to use, has minimal dependencies (PHP and Git) and focus on preventing repetitive and boring tasks. It also has an (optional) web dashboard that allows users to easily and quickly monitor tasks:
+Besearcher was created out of a need from a scientific project, so its design values reproducibility and trackability of results. It is easy to use, has minimal dependencies (PHP and Git) and focus on automating repetitive and boring tasks. It also has an (optional) web dashboard that allows users to easily and quickly monitor tasks:
 
 [![Besearcher web dashboard - home](www/img/screenshots/besearcher-home.png)](./www/img/screenshots/besearcher-home.png)
 
