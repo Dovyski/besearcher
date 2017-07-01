@@ -1,6 +1,6 @@
-; This is a sample configuration file for beseacher's web dashboard
+; This is a sample configuration file for Besearcher's web dashboard
 
 ; Specify the path to the INI file being used to configure
-; beseacher. The INI file contains information regarding
+; Besearcher. The INI file contains information regarding
 ; the folder where all the processed data is.
-beseacher_ini_file = "..\besearcher.ini-example"
+besearcher_ini_file = "C:\wamp\www\besearcher\config.ini"
