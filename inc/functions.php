@@ -11,6 +11,7 @@ define('BESEARCHER_TAG_TYPE_RESULT',        'result');
 define('BESEARCHER_TAG_TYPE_PROGRESS',      'progress');
 
 define('BESEARCHER_CACHE_FILE',              '.besearcher-cache');
+define('BESEARCHER_COMMIT_SKIP_TOKEN',       '/\[(skip-ci|skip|skip-ic|skip-besearcher)\]/');
 
 function findBesearcherLogTags($theLogFilePath) {
     $aRet = array();

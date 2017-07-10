@@ -8,6 +8,8 @@
  Author: Fernando Bevilacqua <fernando.bevilacqua@his.se>
  */
 
+require_once(dirname(__FILE__) . '/inc/functions.php');
+
 define('SAY_ERROR', 3);
 define('SAY_WARN', 2);
 define('SAY_INFO', 1);
@@ -293,7 +295,7 @@ function runTask($theTask, $theMaxParallel, $theContext) {
     }
 
     say('Running task (hash=' . $theTask['hash'] . ', permutation=' . $theTask['permutation'] . ')', SAY_INFO, $theContext);
-    writeTaskInfoFile($theTask);    
+    writeTaskInfoFile($theTask);
 
     $aParallel = $theMaxParallel > 1;
     execTaskCommand($theTask, $aParallel, $theContext);
@@ -322,26 +324,40 @@ function handleNewCommit($theHash, $theMessage, & $theContext) {
     }
 }
 
-function processNewCommits(& $theContext) {
-    $aWatchDir = get_ini('watch_dir', $theContext);
-    $aGitExe = get_ini('git', $theContext);
+function textHasSkipToken($theMessage) {
+    $aMatches = array();
+    $aHits = preg_match_all(BESEARCHER_COMMIT_SKIP_TOKEN, $theMessage, $aMatches);
 
-    $aTasks = findNewCommits($aWatchDir, $aGitExe, $theContext['last_commit'], $theContext);
-    $aLastHash = '';
+    return $aHits !== false && $aHits > 0;
+}
+
+function processNewCommits(& $theContext) {
+    $aWatchDir   = get_ini('watch_dir', $theContext);
+    $aGitExe     = get_ini('git', $theContext);
+
+    $aTasks      = findNewCommits($aWatchDir, $aGitExe, $theContext['last_commit'], $theContext);
+    $aLastHash   = '';
     $aTasksCount = count($aTasks);
 
     if($aTasksCount > 0) {
         foreach($aTasks as $aCommit) {
-            $aDivider = strpos($aCommit, ' ');
-            $aHash = substr($aCommit, 0, $aDivider);
-            $aMessage = substr($aCommit, $aDivider);
+            $aDivider  = strpos($aCommit, ' ');
+            $aHash     = substr($aCommit, 0, $aDivider);
+            $aMessage  = substr($aCommit, $aDivider);
             $aLastHash = $aHash;
+
+            if(textHasSkipToken($aMessage)) {
+                say("Skipping commit due to skip token (hash=" . $aHash . ", msg=" . trim($aMessage) . ")", SAY_INFO, $theContext);
+                continue;
+            }
 
             say("New commit (hash=" . $aHash . ", msg=" . trim($aMessage) . ")", SAY_INFO, $theContext);
             handleNewCommit($aHash, $aMessage, $theContext);
         }
 
-        setLastKnownCommit($theContext, $aLastHash);
+        if($aLastHash != '') {
+            setLastKnownCommit($theContext, $aLastHash);
+        }
     }
 
     return $aTasksCount > 0;
