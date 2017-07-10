@@ -1,6 +1,8 @@
 <?php
     require_once(dirname(__FILE__) . '/inc/globals.php');
 
+    Besearcher\Auth::allowNonAuthenticated();
+
     $aError = '';
 
     if(isset($_REQUEST['user'])) {

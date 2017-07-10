@@ -1,6 +1,8 @@
 <?php
     require_once(dirname(__FILE__) . '/inc/globals.php');
 
+    Besearcher\Auth::allowAuthenticated();
+
     $aCommit = isset($_REQUEST['commit']) ? $_REQUEST['commit'] : '';
     $aPermutation = isset($_REQUEST['permutation']) ? $_REQUEST['permutation'] : '';
 

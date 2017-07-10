@@ -2,6 +2,7 @@
 <?php
     require_once(dirname(__FILE__) . '/inc/globals.php');
 
+    Besearcher\Auth::allowAuthenticated();
     Besearcher\Data::init();
 
     $aTasks = Besearcher\Data::tasks();
