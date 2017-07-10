@@ -501,8 +501,7 @@ function say($theMessage, $theType, $theContext) {
     $aMessage = date('[Y-m-d H:i:s]') . ' [' . $aLabel . '] ' . $theMessage . "\n";
 
     if($theType >= $aLogLevel) {
-        echo $aMessage;
-        fwrite($theContext['log_file_stream'], $aMessage);
+        fwrite($theContext['log_file_stream'] == null ? STDOUT : $theContext['log_file_stream'], $aMessage);
     }
 }
 
@@ -521,7 +520,8 @@ if($argc <= 1) {
      echo "Usage: \n";
      echo " php ".basename($_SERVER['PHP_SELF']) . " [options]\n\n";
      echo "Options:\n";
-     echo " --log=<path>     Path to the log file.\n";
+     echo " --log=<path>     Path to the log file. If nothing is provided,\n";
+     echo "                  log messages will be output to STDOUT.\n";
      echo "\n";
      echo " --ini=<path>     Path to the INI files used for configuration.\n";
      echo "\n";
@@ -545,7 +545,7 @@ register_shutdown_function('shutdown', $aContext);
 
 // Open the log file. Program messages will be printed to stdout
 // and to that file.
-$aContext['log_file_stream'] = fopen($aContext['path_log_file'], 'a');
+$aContext['log_file_stream'] = empty($aContext['path_log_file']) ? STDOUT : fopen($aContext['path_log_file'], 'a');
 
 say('Besearcher starting up. What a great day for science!', SAY_INFO, $aContext);
 performConfigHotReload($aContext);
@@ -556,7 +556,9 @@ while($aActive) {
     performConfigHotReload($aContext);
 }
 
-fclose($aContext['log_file_stream']);
+if($aContext['log_file_stream'] != null) {
+    fclose($aContext['log_file_stream']);
+}
 
 say('All done. Over and out!', SAY_INFO, $aContext);
 exit(0);
