@@ -281,10 +281,6 @@ function writeTaskInfoFile($theTask) {
 }
 
 function runTask($theTask, $theMaxParallel, $theContext) {
-    say('Running task (hash=' . $theTask['hash'] . ', permutation=' . $theTask['permutation'] . ')', SAY_INFO, $theContext);
-
-    writeTaskInfoFile($theTask);
-
     $aSkipPerformedTasks = get_ini('skip_performed_tasks', $theContext, false);
     $aTaskAlreadyPerformed = file_exists($theTask['info_file']);
 
@@ -295,6 +291,9 @@ function runTask($theTask, $theMaxParallel, $theContext) {
         say('Skipping already performed task (hash=' . $theTask['hash'] . ', permutation=' . $theTask['permutation'] . ')', SAY_WARN, $theContext);
         return;
     }
+
+    say('Running task (hash=' . $theTask['hash'] . ', permutation=' . $theTask['permutation'] . ')', SAY_INFO, $theContext);
+    writeTaskInfoFile($theTask);    
 
     $aParallel = $theMaxParallel > 1;
     execTaskCommand($theTask, $aParallel, $theContext);
