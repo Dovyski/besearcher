@@ -14,7 +14,7 @@ define('BESEARCHER_CACHE_FILE',              '.besearcher-cache');
 
 function findBesearcherLogTags($theLogFilePath) {
     $aRet = array();
-    $aFile = fopen($theLogFilePath, 'r');
+    $aFile = @fopen($theLogFilePath, 'r');
 
     if (!$aFile) {
         return $aRet;
