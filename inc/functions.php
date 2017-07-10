@@ -10,6 +10,8 @@ define('BESEARCHER_TAG',                    '[BSR]');
 define('BESEARCHER_TAG_TYPE_RESULT',        'result');
 define('BESEARCHER_TAG_TYPE_PROGRESS',      'progress');
 
+define('BESEARCHER_CACHE_FILE',              '.besearcher-cache');
+
 function findBesearcherLogTags($theLogFilePath) {
     $aRet = array();
     $aFile = fopen($theLogFilePath, 'r');
@@ -55,6 +57,30 @@ function calculateTaskProgressFromTags(array $theBesearcherLogTags) {
     return $aProgress;
 }
 
+function isTaskFinished($theTaskInfo) {
+    return $theTaskInfo['time_end'] != 0;
+}
+
+function handleBesearcherLogTags($theTaskInfo, $theUseCache = true) {
+    $aTags = array();
+
+    if(isTaskFinished($theTaskInfo) && $theUseCache) {
+        // Task has finished, it might be a cached version of the log file.
+        $aCacheFilePath = $theTaskInfo['log_file'] . BESEARCHER_CACHE_FILE;
+
+        if(file_exists($aCacheFilePath)) {
+            $aTags = unserialize(file_get_contents($aCacheFilePath));
+        } else {
+            $aTags = findBesearcherLogTags($theTaskInfo['log_file']);
+            file_put_contents($aCacheFilePath, serialize($aTags));
+        }
+    } else {
+        $aTags = findBesearcherLogTags($theTaskInfo['log_file']);
+    }
+
+    return $aTags;
+}
+
 function aggredateTaskInfos($theTaskJsonFiles) {
     $aInfos = array();
 
@@ -64,7 +90,7 @@ function aggredateTaskInfos($theTaskJsonFiles) {
 
         // Find special marks in the log file that inform
         // Besearcher about things
-        $aTags = findBesearcherLogTags($aInfo['log_file']);
+        $aTags = handleBesearcherLogTags($aInfo);
 
         $aInfos[$aPermutation] = array(
             'commit'        => $aInfo['hash'],
