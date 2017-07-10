@@ -14,6 +14,8 @@
 
 	<!-- Custom Theme JavaScript -->
 	<script src="./js/sb-admin-2.js"></script>
+
+	<!-- <?php echo 'Process time: ' . (microtime(true) - BESERCHER_WEB_SCRIPT_START_TIME); ?> -->
 </body>
 
 </html>
