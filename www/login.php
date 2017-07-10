@@ -6,9 +6,11 @@
     $aError = '';
 
     if(isset($_REQUEST['user'])) {
+        $aUser = $_REQUEST['user'];
+
         // Performing login operation
-        if(Besearcher\Auth::isValidUser(@$_REQUEST['user'], @$_REQUEST['password'])) {
-            Besearcher\Auth::login();
+        if(Besearcher\Auth::isValidUser($aUser, @$_REQUEST['password'])) {
+            Besearcher\Auth::login($aUser);
 
             // Take the user to the index page
             header('Location: index.php');

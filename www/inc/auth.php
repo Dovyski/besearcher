@@ -9,8 +9,27 @@ class Auth {
 	}
 
 	public static function isValidUser($theUser, $thePassword) {
-		// TODO: implement this
-		return true;
+		// TODO: get this value from INI?
+		$aPasswordFile = dirname(__FILE__) . '/../.htpasswd';
+		$aValid = false;
+
+		if(file_exists($aPasswordFile)) {
+			$aValues = file($aPasswordFile);
+			foreach($aValues as $aRow) {
+				$aParts = explode(':', trim($aRow), 2);
+				$aUser = @$aParts[0];
+				$aHash = @$aParts[1];
+
+				if($aUser == $theUser && password_verify($thePassword, $aHash)) {
+					$aValid = true;
+				}
+			}
+		} else {
+			// If no password file is provided, allow anyone to login
+			$aValid = true;
+		}
+
+		return $aValid;
 	}
 
 	public static function login($theUserData) {
@@ -30,6 +49,10 @@ class Auth {
 			header('Location: index.php');
 			exit();
 		}
+	}
+
+	public static function user() {
+		return isset($_SESSION['user']) ? $_SESSION['user'] : '';
 	}
 
 	public static function logout() {
