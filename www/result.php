@@ -26,7 +26,7 @@
     $aLogContent = '';
 
     if(!empty($aLogPath)) {
-        $aLogContent = file_get_contents($aLogPath);
+        $aLogContent = @file_get_contents($aLogPath);
     }
 
     $aMeta = array();

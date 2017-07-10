@@ -107,7 +107,7 @@
                 </table>
                 <!-- /.table-responsive -->
             <?php } else { ?>
-                <div class="alert alert-info" role="alert">No meta information was found in the log file. Check out <em><a href="#">Besearcher log marks</a></em> to learn how to generate meta information.</div>
+                <p>No meta information was found in the command output. Check out <em><a href="#">Besearcher log marks</a></em> to learn how to generate meta information.</p>
             <?php } ?>
         </div>
         <!-- /.col-lg-12 -->
@@ -121,7 +121,7 @@
     </div>
     <div class="row">
         <div class="col-lg-12">
-            <?php echo '<pre>'.$aData['log_content'].'</pre>'; ?>
+            <?php echo ($aData['log_content'] === false ? '<p>No output was produced.</p>' : '<pre>'.$aData['log_content'].'</pre>'); ?>
         </div>
     </div>
 
