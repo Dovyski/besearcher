@@ -30,9 +30,12 @@
     }
 
     $aMeta = array();
-    foreach($aData['meta'] as $aItem) {
-        if($aItem['type'] != BESEARCHER_TAG_TYPE_PROGRESS) {
-            $aMeta[] = $aItem;
+
+    if(isset($aData['meta'])) {
+        foreach($aData['meta'] as $aItem) {
+            if($aItem['type'] != BESEARCHER_TAG_TYPE_PROGRESS) {
+                $aMeta[] = $aItem;
+            }
         }
     }
 
