@@ -116,7 +116,7 @@
 
     <div class="row">
         <div class="col-lg-12">
-            <strong>Generated log</strong>
+            <strong>Command output</strong>
         </div>
     </div>
     <div class="row">
