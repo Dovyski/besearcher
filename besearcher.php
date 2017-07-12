@@ -136,7 +136,7 @@ function setLastKnownCommit(& $theContext, $theHash) {
 function performGitPull($theWatchDir, $theGitExe, $theContext) {
     $aEntries = array();
 
-    say("Updating repo with git pull", SAY_INFO, $theContext);
+    say("Updating repo with git pull", SAY_DEBUG, $theContext);
     $aOutput = exec('cd ' . $theWatchDir . ' & ' . $theGitExe . ' pull', $aEntries);
     say(implode("\n", $aEntries), SAY_DEBUG, $theContext);
 }
