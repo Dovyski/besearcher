@@ -141,24 +141,44 @@ function performGitPull($theWatchDir, $theGitExe, $theContext) {
     say(implode("\n", $aEntries), SAY_DEBUG, $theContext);
 }
 
+function findCommitsFromGitLog($theWatchDir, $theGitExe) {
+    $aCommits = array();
+    $aPrettyFormat = '--pretty=format:"%HBESEARCHER-CONTENT-BREAK%BBESEARCHER-CONTENT-END"';
+
+    $aLines = array();
+    $aGitLog = exec('cd ' . $theWatchDir . ' & ' . $theGitExe . ' --no-pager log ' . $aPrettyFormat, $aLines);
+    $aContent = '';
+
+    foreach($aLines as $aLine) {
+        if(stripos($aLine, 'BESEARCHER-CONTENT-END') !== false) {
+            // We have enough data for a single commit
+            $aParts = explode('BESEARCHER-CONTENT-BREAK', $aContent);
+            if(count($aParts) == 2) {
+                $aCommits[] = array('hash' => $aParts[0], 'message' => $aParts[1]);
+            }
+            $aContent = '';
+        } else {
+            $aContent .= $aLine . ' ';
+        }
+    }
+
+    return $aCommits;
+}
+
 function findNewCommits($theWatchDir, $theGitExe, $theLastCommitHash, $theContext) {
     $aNewCommits = array();
-    $aEntries = array();
-
     $aPerformPull = get_ini('perform_git_pull', $theContext, true);
 
     if($aPerformPull) {
         performGitPull($theWatchDir, $theGitExe, $theContext);
     }
 
-    exec('cd ' . $theWatchDir . ' & ' . $theGitExe . ' log --pretty=oneline', $aEntries);
-
+    $aCommits = findCommitsFromGitLog($theWatchDir, $theGitExe);
     $aShouldInclude = false;
 
-    for($i = count($aEntries) - 1; $i >= 0; $i--) {
-        $aCommit = $aEntries[$i];
-        $aParts = explode(' ', $aCommit);
-        $aHash = $aParts[0];
+    for($i = count($aCommits) - 1; $i >= 0; $i--) {
+        $aCommit = $aCommits[$i];
+        $aHash = $aCommit['hash'];
 
         if($aHash == $theLastCommitHash || $theLastCommitHash == '') {
             $aShouldInclude = true;
@@ -341,9 +361,8 @@ function processNewCommits(& $theContext) {
 
     if($aTasksCount > 0) {
         foreach($aTasks as $aCommit) {
-            $aDivider  = strpos($aCommit, ' ');
-            $aHash     = substr($aCommit, 0, $aDivider);
-            $aMessage  = substr($aCommit, $aDivider);
+            $aHash     = $aCommit['hash'];
+            $aMessage  = $aCommit['message'];
             $aLastHash = $aHash;
 
             if(textHasSkipToken($aMessage)) {
