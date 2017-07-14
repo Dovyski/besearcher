@@ -408,11 +408,13 @@ function processGitPulls(& $theContext) {
 }
 
 function run(& $theContext) {
-    processGitPulls($theContext);
+    if($theContext['status'] == BESEARCHER_STATUS_RUNNING) {
+        processGitPulls($theContext);
 
-    $aProcessQueue = true;
-    while($aProcessQueue) {
-        $aProcessQueue = processQueuedTasks($theContext);
+        $aProcessQueue = true;
+        while($aProcessQueue) {
+            $aProcessQueue = processQueuedTasks($theContext);
+        }
     }
 
     monitorRunningTasks($theContext);
@@ -480,11 +482,102 @@ function loadINI($theINIFilePath, & $theContext) {
     $theContext['ini_values'] = expandExpressions($theContext['ini_values']);
 }
 
-function checkPrepareTaskCommandProcedures(& $theContext) {
+function prepareTaskCommandFileExists(& $theContext) {
+    $aResult = false;
     $aPreTaskCmd = get_ini('task_prepare_cmd', $theContext, '');
 
     if($aPreTaskCmd != '') {
+        $aDataDir = get_ini('data_dir', $theContext);
+        $aPrepareFilePath = $aDataDir . DIRECTORY_SEPARATOR . BESEARCHER_PREPARE_FILE;
+        $aResult = file_exists($aPrepareFilePath);
+    }
 
+    return $aResult;
+}
+
+/**
+ * Informs about the result of running the prepare task command.
+ *
+ * @param  $theContext         app context.
+ * @return mixed               return <code>false</code> if the command was not executed, or an integer containing the value the command returned.
+ */
+function getPrepareTaskCommandResult(& $theContext) {
+    $aResult = false;
+    $aPreTaskCmd = get_ini('task_prepare_cmd', $theContext, '');
+
+    if($aPreTaskCmd != '') {
+        $aDataDir = get_ini('data_dir', $theContext);
+        $aPrepareFilePath = $aDataDir . DIRECTORY_SEPARATOR . BESEARCHER_PREPARE_FILE;
+        $aResult = @file_get_contents($aPrepareFilePath);
+
+        $aResult = trim($aResult);
+        $aResult = $aResult == '' ? false : ($aResult + 0);
+    }
+
+    return $aResult;
+}
+
+function setAppStatus(& $theContext, $theValue, $theLogMessage = '', $theLogType = SAY_INFO) {
+    if($theContext['status'] != $theValue) {
+        say('App status changed to ' . $theValue . '. ' . ($theLogMessage != '' ? 'Note: ' . $theLogMessage : ''), $theLogType, $theContext);
+    }
+    $theContext['status'] = $theValue;
+}
+
+function runPrepareTaskCommand(& $theContext) {
+    $aDataDir = get_ini('data_dir', $theContext);
+    $aPrepareFilePath = $aDataDir . DIRECTORY_SEPARATOR . BESEARCHER_PREPARE_FILE;
+    $aPrepareCmdLogPath = $aDataDir . DIRECTORY_SEPARATOR . BESEARCHER_PREPARE_TASK_LOG_FILE;
+    $aPreTaskCmd = get_ini('task_prepare_cmd', $theContext, '');
+
+    say('Command found in "task_prepare_cmd", executing it. Command output will be in: ' . $aPrepareCmdLogPath, SAY_INFO, $theContext);
+
+    if($aPreTaskCmd != '') {
+        // Create empty file to inform the command is running
+        file_put_contents($aPrepareFilePath, '');
+
+        setAppStatus($theContext, BESEARCHER_STATUS_WAITING_PRETASK);
+
+        $aCmd = $aPreTaskCmd . ' > "'.$aPrepareCmdLogPath.'"';
+        $aReturn = -1;
+        say('Running "task_prepare_cmd": ' . $aCmd, SAY_DEBUG, $theContext);
+        system($aCmd, $aReturn);
+
+        file_put_contents($aPrepareFilePath, $aReturn);
+        say('task_prepare_cmd finished (returned '.$aReturn.')', SAY_DEBUG, $theContext);
+    } else {
+        say('Empty task_prepare_cmd, unable to run it', SAY_ERROR, $theContext);
+    }
+}
+
+function checkPrepareTaskCommandProcedures(& $theContext) {
+    $aHasPrepareCmd = get_ini('task_prepare_cmd', $theContext, '') != '';
+
+    if(!$aHasPrepareCmd) {
+        // Unpause the app in case it was paused and the INI file changed
+        // and is now configured to not have any pre task cmd.
+        setAppStatus($theContext, BESEARCHER_STATUS_RUNNING);
+        return;
+    }
+
+    if(prepareTaskCommandFileExists($theContext)) {
+        // pre task command is running or have finished
+        $aPrepareResult = getPrepareTaskCommandResult($theContext);
+
+        if($aPrepareResult === false) {
+            // We have a prepare task, but it is not finished yet. Halt
+            // all task commands.
+            setAppStatus($theContext, BESEARCHER_STATUS_WAITING_PRETASK);
+
+        } else if($aPrepareResult != 0) {
+            setAppStatus($theContext, BESEARCHER_STATUS_PAUSED, 'command in "task_prepare_cmd" returned error (return='.$aPrepareResult.').', SAY_ERROR);
+
+        } else {
+            setAppStatus($theContext, BESEARCHER_STATUS_RUNNING, 'command in "task_prepare_cmd" finished successfully.');
+        }
+    } else {
+        // pre task command has not started yet.
+        runPrepareTaskCommand($theContext);
     }
 }
 
@@ -561,15 +654,16 @@ if($argc <= 1) {
 }
 
 $aContext = array(
-    'ini_path' => isset($aArgs['ini']) ? $aArgs['ini'] : '',
-    'ini_hash' => '',
-    'ini_values' => '',
-    'last_commit' => '',
-    'path_log_file' => isset($aArgs['log']) ? $aArgs['log'] : '',
-    'log_file_stream' => null,
-    'tasks_queue' => array(),
-    'time_last_pull' => 0,
-    'running_tasks' => 0
+    'ini_path'         => isset($aArgs['ini']) ? $aArgs['ini'] : '',
+    'ini_hash'         => '',
+    'ini_values'       => '',
+    'last_commit'      => '',
+    'path_log_file'    => isset($aArgs['log']) ? $aArgs['log'] : '',
+    'log_file_stream'  => null,
+    'tasks_queue'      => array(),
+    'time_last_pull'   => 0,
+    'running_tasks'    => 0,
+    'status'           => BESEARCHER_STATUS_INITING
 );
 
 // Register shutdown handler to deal with last minute stuff

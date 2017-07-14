@@ -10,8 +10,14 @@ define('BESEARCHER_TAG',                    '[BSR]');
 define('BESEARCHER_TAG_TYPE_RESULT',        'result');
 define('BESEARCHER_TAG_TYPE_PROGRESS',      'progress');
 
+define('BESEARCHER_STATUS_INITING',          'INITING');
+define('BESEARCHER_STATUS_RUNNING',          'RUNNING');
+define('BESEARCHER_STATUS_PAUSED',           'PAUSED');
+define('BESEARCHER_STATUS_WAITING_PRETASK',  'WAITING_PRETASK');
+
 define('BESEARCHER_CACHE_FILE_EXT',          '.besearcher-cache');
-define('BESEARCHER_PREPARE_FILE',            'besearcher.pre-task-ready');
+define('BESEARCHER_PREPARE_FILE',            'besearcher.task_prepare_cmd-result');
+define('BESEARCHER_PREPARE_TASK_LOG_FILE',   'task_prepare_cmd.log');
 define('BESEARCHER_LAST_COMMIT_FILE',        'beseacher.last-commit');
 
 define('BESEARCHER_COMMIT_SKIP_TOKEN',       '/\[(skip-ci|skip|skip-ic|skip-besearcher)\]/');
