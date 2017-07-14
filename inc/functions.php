@@ -10,7 +10,10 @@ define('BESEARCHER_TAG',                    '[BSR]');
 define('BESEARCHER_TAG_TYPE_RESULT',        'result');
 define('BESEARCHER_TAG_TYPE_PROGRESS',      'progress');
 
-define('BESEARCHER_CACHE_FILE',              '.besearcher-cache');
+define('BESEARCHER_CACHE_FILE_EXT',          '.besearcher-cache');
+define('BESEARCHER_PREPARE_FILE',            'besearcher.pre-task-ready');
+define('BESEARCHER_LAST_COMMIT_FILE',        'beseacher.last-commit');
+
 define('BESEARCHER_COMMIT_SKIP_TOKEN',       '/\[(skip-ci|skip|skip-ic|skip-besearcher)\]/');
 
 function findBesearcherLogTags($theLogFilePath) {
@@ -67,7 +70,7 @@ function handleBesearcherLogTags($theTaskInfo, $theUseCache = true) {
 
     if(isTaskFinished($theTaskInfo) && $theUseCache) {
         // Task has finished, it might be a cached version of the log file.
-        $aCacheFilePath = $theTaskInfo['log_file'] . BESEARCHER_CACHE_FILE;
+        $aCacheFilePath = $theTaskInfo['log_file'] . BESEARCHER_CACHE_FILE_EXT;
 
         if(file_exists($aCacheFilePath)) {
             $aTags = unserialize(file_get_contents($aCacheFilePath));

@@ -116,7 +116,7 @@ function processQueuedTasks(& $theContext) {
 
 function loadLastKnownCommitFromFile($theContext) {
     $aDataDir = get_ini('data_dir', $theContext);
-    $aCommitFile = $aDataDir . DIRECTORY_SEPARATOR . 'beseacher.last-commit';
+    $aCommitFile = $aDataDir . DIRECTORY_SEPARATOR . BESEARCHER_LAST_COMMIT_FILE;
     $aFileContent = @file_get_contents($aCommitFile);
     $aValue = $aFileContent !== FALSE ? trim($aFileContent) : '';
 
@@ -480,6 +480,30 @@ function loadINI($theINIFilePath, & $theContext) {
     $theContext['ini_values'] = expandExpressions($theContext['ini_values']);
 }
 
+function checkPrepareTaskCommandProcedures(& $theContext) {
+    $aPreTaskCmd = get_ini('task_prepare_cmd', $theContext, '');
+
+    if($aPreTaskCmd != '') {
+
+    }
+}
+
+function checkLastCommitDataFromDisk(& $theContext) {
+    $aLastCommitDisk = loadLastKnownCommitFromFile($theContext);
+
+    // If we don't have any information regarding the last commit, we use
+    // the one provided in the ini file.
+    if(empty($aLastCommitDisk)) {
+        $aLastCommitDisk = get_ini('start_commit_hash', $theContext, '');
+        say("No commit info found on disk, using info from INI: " . $aLastCommitDisk, SAY_INFO, $theContext);
+    }
+
+    if($aLastCommitDisk != $theContext['last_commit']) {
+        say("Info regarding last commit has changed: old=" . $theContext['last_commit'] . ", new=" . $aLastCommitDisk, SAY_DEBUG, $theContext);
+        setLastKnownCommit($theContext, $aLastCommitDisk);
+    }
+}
+
 function performConfigHotReload(& $theContext) {
     $aPath = $theContext['ini_path'];
 
@@ -497,19 +521,8 @@ function performConfigHotReload(& $theContext) {
         loadINI($aPath, $theContext);
     }
 
-    $aLastCommitDisk = loadLastKnownCommitFromFile($theContext);
-
-    // If we don't have any information regarding the last commit, we use
-    // the one provided in the ini file.
-    if(empty($aLastCommitDisk)) {
-        $aLastCommitDisk = get_ini('start_commit_hash', $theContext, '');
-        say("No commit info found on disk, using info from INI: " . $aLastCommitDisk, SAY_INFO, $theContext);
-    }
-
-    if($aLastCommitDisk != $theContext['last_commit']) {
-        say("Info regarding last commit has changed: old=" . $theContext['last_commit'] . ", new=" . $aLastCommitDisk, SAY_DEBUG, $theContext);
-        setLastKnownCommit($theContext, $aLastCommitDisk);
-    }
+    checkLastCommitDataFromDisk($theContext);
+    checkPrepareTaskCommandProcedures($theContext);
 }
 
 function say($theMessage, $theType, $theContext) {
