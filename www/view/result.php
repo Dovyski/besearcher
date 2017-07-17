@@ -56,19 +56,33 @@
             <table width="100%" class="table table-striped table-bordered table-hover">
                 <thead>
                     <tr>
-                        <th style="width: 45%;">Command</th>
-                        <th style="width: 45%;">Params</th>
-                        <th style="width: 10%;">Return</th>
+                        <th style="width: 95%;">Command</th>
+                        <th style="width: 5%;">Return</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php
                         echo '<tr>';
                             echo '<td>'.$aInfo['cmd'].'</td>';
-                            echo '<td>'.$aInfo['params'].'</td>';
                             echo '<td>'.$aInfo['raw']['cmd_return_code'].'</td>';
                         echo '</tr>';
                     ?>
+                </tbody>
+            </table>
+            <!-- /.table-responsive -->
+        </div>
+        <!-- /.col-lg-12 -->
+    </div>
+    <!-- /.row -->
+
+    <div class="row">
+        <div class="col-lg-12">
+            <table width="100%" class="table table-striped table-bordered table-hover">
+                <thead>
+                    <tr><th>Params</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td><?php echo $aInfo['params']; ?></td></tr>
                 </tbody>
             </table>
             <!-- /.table-responsive -->
