@@ -411,6 +411,10 @@ function run(& $theContext) {
     if($theContext['status'] == BESEARCHER_STATUS_RUNNING) {
         processGitPulls($theContext);
 
+        // The config INI file may have changed with the pull, so
+        // let's check current config params
+        performConfigHotReload($theContext);
+
         $aProcessQueue = true;
         while($aProcessQueue) {
             $aProcessQueue = processQueuedTasks($theContext);
