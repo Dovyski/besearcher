@@ -6,7 +6,7 @@
  Author: Fernando Bevilacqua <fernando.bevilacqua@his.se>
  */
 
-require_once(dirname(__FILE__) . '/inc/functions.php');
+require_once(dirname(__FILE__) . '/../inc/functions.php');
 
 $aOptions = array(
     "ini:"
