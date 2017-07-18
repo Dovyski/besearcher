@@ -33,7 +33,7 @@ $aLastLine = exec($aCmd . ' > "'.$aPathLogFile.'"', $aOutput, $aReturnCode);
 
 writeDataToTaskInfoFile($aPathInfoFile, array(
     'cmd_return_code' => $aReturnCode,
-    'time_end' => time()
+    'exec_time_end' => time()
 ));
 
 exit(0);

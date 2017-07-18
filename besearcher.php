@@ -15,7 +15,7 @@ define('SAY_WARN', 2);
 define('SAY_INFO', 1);
 define('SAY_DEBUG', 0);
 
-define('RUNNER_CMD', 'php "' . dirname(__FILE__) . '\runner.php"');
+define('RUNNER_CMD', 'php "' . dirname(__FILE__) . DIRECTORY_SEPARATOR . 'cmd' . DIRECTORY_SEPARATOR . 'runner.php"');
 
 $gSayStrings = array(
     SAY_ERROR => 'ERROR',

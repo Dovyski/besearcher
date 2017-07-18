@@ -68,8 +68,7 @@ function calculateTaskProgressFromTags(array $theBesearcherLogTags) {
 }
 
 function isTaskFinished($theTaskInfo) {
-    // TODO: remove legacy code for 'time_end'
-    $aTime = isset($theTaskInfo['time_end']) ? $theTaskInfo['time_end'] : $theTaskInfo['exec_time_end'];
+    $aTime = $theTaskInfo['exec_time_end'];
     return $aTime != 0;
 }
 
@@ -108,7 +107,7 @@ function aggredateTaskInfos($theTaskJsonFiles) {
             'commit'          => $aInfo['hash'],
             'commit_message'  => @$aInfo['message'],
             'permutation'     => $aPermutation,
-            'creation_time'   => isset($aInfo['creation_time']) ? $aInfo['creation_time'] : $aInfo['time'],
+            'creation_time'   => @$aInfo['creation_time'],
             'exec_time_start' => @$aInfo['exec_time_start'],
             'exec_time_end'   => @$aInfo['exec_time_end'],
             'params'          => $aInfo['params'],

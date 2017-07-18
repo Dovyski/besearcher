@@ -21,7 +21,7 @@ class View {
 	public static function prettyStatusName($theItem, $theShowText = false) {
 		$aProgress 	 = $theItem['progress'];
 		$aReturnCode = $theItem['raw']['cmd_return_code'];
-		$aTimeEnd    = $theItem['raw']['time_end'];
+		$aTimeEnd    = $theItem['raw']['exec_time_end'];
 		$aRet        = '<i class="fa fa-question-circle-o"></i> Unknown';
 		$aFinished   = $aTimeEnd != 0 || $aProgress >= 1.0;
 
