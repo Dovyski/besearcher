@@ -68,7 +68,9 @@ function calculateTaskProgressFromTags(array $theBesearcherLogTags) {
 }
 
 function isTaskFinished($theTaskInfo) {
-    return $theTaskInfo['time_end'] != 0;
+    // TODO: remove legacy code for 'time_end'
+    $aTime = isset($theTaskInfo['time_end']) ? $theTaskInfo['time_end'] : $theTaskInfo['exec_time_end'];
+    return $aTime != 0;
 }
 
 function handleBesearcherLogTags($theTaskInfo, $theUseCache = true) {
@@ -103,15 +105,17 @@ function aggredateTaskInfos($theTaskJsonFiles) {
         $aTags = handleBesearcherLogTags($aInfo);
 
         $aInfos[$aPermutation] = array(
-            'commit'        => $aInfo['hash'],
-            'commit_message'=> @$aInfo['message'],
-            'permutation'   => $aPermutation,
-            'date'          => date('Y-m-d H:i:s', $aInfo['time']),
-            'params'        => $aInfo['params'],
-            'cmd'           => $aInfo['cmd'],
-            'progress'      => calculateTaskProgressFromTags($aTags),
-            'meta'          => $aTags,
-            'raw'           => $aInfo
+            'commit'          => $aInfo['hash'],
+            'commit_message'  => @$aInfo['message'],
+            'permutation'     => $aPermutation,
+            'creation_time'   => isset($aInfo['creation_time']) ? $aInfo['creation_time'] : $aInfo['time'],
+            'exec_time_start' => @$aInfo['exec_time_start'],
+            'exec_time_end'   => @$aInfo['exec_time_end'],
+            'params'          => $aInfo['params'],
+            'cmd'             => $aInfo['cmd'],
+            'progress'        => calculateTaskProgressFromTags($aTags),
+            'meta'            => $aTags,
+            'raw'             => $aInfo
         );
     }
 

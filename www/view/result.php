@@ -38,7 +38,7 @@
                         echo '<tr>';
                             echo '<td>'.$aInfo['commit'].'</td>';
                             echo '<td>'.$aInfo['permutation'].'</td>';
-                            echo '<td>'.$aInfo['date'].'</td>';
+                            echo '<td>'.date('Y:m:d H:i:s', $aInfo['creation_time']).'</td>';
                             echo '<td>'.Besearcher\View::prettyStatusName($aInfo, true).'</td>';
                         echo '</tr>';
                     ?>

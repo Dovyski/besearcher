@@ -215,8 +215,9 @@ function createTask($theCommitHash, $theCommitMessage, $thePermutation, $theCont
         'message' => $theCommitMessage,
         'permutation' => $thePermutation['hash'],
         'params' => $thePermutation['params'],
-        'time' => time(),
-        'time_end' => 0
+        'creation_time' => time(),
+        'exec_time_start' => 0,
+        'exec_time_end' => 0
     );
 
     return $aTask;
@@ -313,6 +314,9 @@ function runTask($theTask, $theMaxParallel, $theContext) {
         say('Skipping already performed task (hash=' . $theTask['hash'] . ', permutation=' . $theTask['permutation'] . ')', SAY_WARN, $theContext);
         return;
     }
+
+    // Update exec time
+    $theTask['exec_time_start'] = time();
 
     say('Running task (hash=' . $theTask['hash'] . ', permutation=' . $theTask['permutation'] . ')', SAY_INFO, $theContext);
     writeTaskInfoFile($theTask);

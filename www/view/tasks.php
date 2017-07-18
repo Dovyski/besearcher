@@ -33,7 +33,7 @@
                                 echo '<tr class="'.($aNum++ % 2 == 0 ? 'even' : 'odd').'">';
                                     echo '<td>'.Besearcher\View::prettyStatusName($aItem, true).'</td>';
                                     echo '<td><a href="result.php?commit='.$aItem['commit'].'&permutation='.$aItem['permutation'].'" title="Click to view more information">'.substr($aItem['commit'], 0, 16).'-'.substr($aItem['permutation'], 0, 16).'</a></td>';
-                                    echo '<td>'.$aItem['date'].'</td>';
+                                    echo '<td>'.date('Y:m:d H:i:s', $aItem['creation_time']).'</td>';
                                     echo '<td>'.$aItem['params'].'</td>';
                                 echo '</tr>';
                             }
