@@ -27,22 +27,47 @@
             <table width="100%" class="table table-striped table-bordered table-hover">
                 <thead>
                     <tr>
-                        <th>Commit hash</th>
                         <th>Permutation hash</th>
-                        <th>Date</th>
+                        <th>Creation</th>
+                        <th>Start</th>
+                        <th>End</th>
                         <th>Status</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php
                         echo '<tr>';
-                            echo '<td>'.$aInfo['commit'].'</td>';
                             echo '<td>'.$aInfo['permutation'].'</td>';
-                            echo '<td>'.date('Y:m:d H:i:s', $aInfo['creation_time']).'</td>';
+                            echo '<td>'.date('Y/m/d H:i:s', $aInfo['creation_time']).'</td>';
+                            echo '<td>'.date('Y/m/d H:i:s', $aInfo['exec_time_start']).'</td>';
+                            echo '<td>'.($aInfo['exec_time_end'] != 0 ? date('Y/m/d H:i:s', $aInfo['exec_time_end']) : '-').'</td>';
                             echo '<td>'.Besearcher\View::prettyStatusName($aInfo, true).'</td>';
                         echo '</tr>';
                     ?>
-                    <tr><td colspan="4"><?php echo Besearcher\View::out($aInfo['commit_message']); ?></td></tr>
+                </tbody>
+            </table>
+            <!-- /.table-responsive -->
+        </div>
+        <!-- /.col-lg-12 -->
+    </div>
+    <!-- /.row -->
+
+    <div class="row">
+        <div class="col-lg-12">
+            <table width="100%" class="table table-striped table-bordered table-hover">
+                <thead>
+                    <tr>
+                        <th>Commit hash</th>
+                        <th>Commit message</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php
+                        echo '<tr>';
+                            echo '<td>'.$aInfo['commit'].'</td>';
+                            echo '<td>'.Besearcher\View::out($aInfo['commit_message']).'</td>';
+                        echo '</tr>';
+                    ?>
                 </tbody>
             </table>
             <!-- /.table-responsive -->
