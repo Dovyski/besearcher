@@ -46,7 +46,7 @@ $aData = findTasksInfos($aDataDir);
 
 $aShouldCreateCache = isset($aArgs['create-web-cache']);
 
-if($aCreateCache) {
+if($aShouldCreateCache) {
     $aCacheFile = $aDataDir . DIRECTORY_SEPARATOR . BESEARCHER_WEB_CACHE_FILE;
     $aSerializedData = serialize($aData);
     file_put_contents($aCacheFile, $aSerializedData);
