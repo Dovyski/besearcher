@@ -19,6 +19,7 @@ define('BESEARCHER_CACHE_FILE_EXT',          '.besearcher-cache');
 define('BESEARCHER_PREPARE_FILE',            'besearcher.task_prepare_cmd-result');
 define('BESEARCHER_PREPARE_TASK_LOG_FILE',   'task_prepare_cmd.log');
 define('BESEARCHER_LAST_COMMIT_FILE',        'beseacher.last-commit');
+define('BESEARCHER_WEB_CACHE_FILE',          'beseacher.web-cache');
 
 define('BESEARCHER_COMMIT_SKIP_TOKEN',       '/\[(skip-ci|skip|skip-ic|skip-besearcher)\]/');
 

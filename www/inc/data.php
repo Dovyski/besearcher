@@ -14,7 +14,22 @@ class Data {
 		$aDataDir = self::$mINI['data_dir'];
 
 		if(file_exists($aDataDir)) {
-			self::$mData = findTasksInfos($aDataDir);
+			$aCacheFile = $aDataDir . DIRECTORY_SEPARATOR . BESEARCHER_WEB_CACHE_FILE;
+			$aData = false;
+
+			if(file_exists($aCacheFile)) {
+				// There is a cache file for the aggradated content.
+				// Let's use that instead
+				$aData = @unserialize(file_get_contents($aCacheFile));
+			}
+
+			// If cache data is inexistent or invalid, load
+			// raw data instead
+			if($aData === false) {
+				$aData = findTasksInfos($aDataDir);
+			}
+
+			self::$mData = $aData;
 			self::$mLoaded = true;
 		} else {
 			$aError = 'Informed data directory does not exist: ' . $aDataDir;

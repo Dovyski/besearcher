@@ -9,7 +9,8 @@
 require_once(dirname(__FILE__) . '/../inc/functions.php');
 
 $aOptions = array(
-    "ini:"
+    "ini:",
+    "create-web-cache"
 );
 
 $aArgs = getopt("", $aOptions);
@@ -18,7 +19,9 @@ if($argc <= 1) {
      echo "Usage: \n";
      echo " php ".basename($_SERVER['PHP_SELF']) . " [options]\n\n";
      echo "Options:\n";
-     echo " --ini=<path>     Path to the INI file being used by Besearcher.\n";
+     echo " --ini=<path>         Path to the INI file being used by Besearcher.\n";
+     echo " --create-web-cache   If present, all task data will be loaded and used\n";
+     echo "                      to create a cache for the web dashboard.\n";
      echo "\n";
      exit(1);
 }
@@ -38,8 +41,21 @@ if(!file_exists($aDataDir)) {
     exit(1);
 }
 
+// Load the data
 $aData = findTasksInfos($aDataDir);
-echo json_encode($aData, JSON_PRETTY_PRINT);
+
+$aShouldCreateCache = isset($aArgs['create-web-cache']);
+
+if($aCreateCache) {
+    $aCacheFile = $aDataDir . DIRECTORY_SEPARATOR . BESEARCHER_WEB_CACHE_FILE;
+    $aSerializedData = serialize($aData);
+    file_put_contents($aCacheFile, $aSerializedData);
+
+    echo "Cache file successfully created at: " . $aCacheFile . "\n";
+} else {
+    // Just output the aggredated data
+    echo json_encode($aData, JSON_PRETTY_PRINT);
+}
 
 exit(0);
 
