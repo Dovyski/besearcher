@@ -24,12 +24,6 @@ $gSayStrings = array(
     SAY_DEBUG => 'DEBUG'
 );
 
-// Below are the definitions of the expressions that are
-// expandable in the INI file.
-
-// E.g. 0..10:1, which generates 0,1,2,...,10
-define('INI_EXP_START_END_INC', '/(\d*[.]?\d*)[[:blank:]]*\.\.[[:blank:]]*(\d*[.]?\d*)[[:blank:]]*:[[:blank:]]*(\d*[.]?\d*)/i');
-
 /**
   * Get a value from the INI file. The key is first looked up
   * at the action section. If nothing is found, the key is
@@ -434,6 +428,47 @@ function run(& $theContext) {
     return true;
 }
 
+// License: https://stackoverflow.com/a/38871855/29827
+function array_unique_combinations($in, $minLength = 1, $max = 2000) {
+    $count = count($in);
+    $members = pow(2, $count);
+    $return = array();
+    for($i = 0; $i < $members; $i ++) {
+        $b = sprintf("%0" . $count . "b", $i);
+        $out = array();
+        for($j = 0; $j < $count; $j ++) {
+            $b{$j} == '1' and $out[] = $in[$j];
+        }
+
+        count($out) >= $minLength && count($out) <= $max and $return[] = $out;
+    }
+    return $return;
+}
+
+function expandPermExpression($theMatches) {
+    $aMinAmount = $theMatches[1][0] + 0;
+    $aElements = $theMatches[2][0];
+
+    // Ensure at least one element will be included in the result
+    $aMinAmount = $aMinAmount <= 0 ? 1 : $aMinAmount;
+    $aList = explode(',', $aElements);
+
+    if($aList === false || $aMinAmount < 1) {
+        // TODO: generate a log entry?
+        // Wrong "perm" expression in INI file.
+        exit(2);
+    }
+
+    $aCombinations = array_unique_combinations($aList, $aMinAmount);
+    $aReturn = array();
+
+    foreach($aCombinations as $aItems) {
+        $aReturn[] = implode(',', $aItems);
+    }
+
+    return $aReturn;
+}
+
 function expandStartEndIncExpression($theMatches) {
     $aRet = array();
 
@@ -453,7 +488,7 @@ function expandStartEndIncExpression($theMatches) {
     return $aRet;
 }
 
-function expandExpressions($theINIValues) {
+function processSpecialExpressions($theINIValues) {
     $aCount = count($theINIValues);
 
     if(!is_array($theINIValues) || $aCount == 0) {
@@ -468,13 +503,16 @@ function expandExpressions($theINIValues) {
         // Check for expressions like "0..10:1"
         if(preg_match_all(INI_EXP_START_END_INC, $aValue, $aMatches)) {
             $theINIValues = expandStartEndIncExpression($aMatches);
+
+        } else if(preg_match_all(INI_PERM, $aValue, $aMatches)) {
+            $theINIValues = expandPermExpression($aMatches);
         }
     } else {
         // There is more than one element in the array,
         // so we must check each one.
         foreach($theINIValues as $aKey => $aValue) {
             if(is_array($aValue)) {
-                $theINIValues[$aKey] = expandExpressions($aValue);
+                $theINIValues[$aKey] = processSpecialExpressions($aValue);
             }
         }
     }
@@ -487,7 +525,7 @@ function loadINI($theINIFilePath, & $theContext) {
 
     // Interpret the special syntax in the INI file
     // to expand expressions, e.g. 0..10:1 becomes 0,1,2,3,..,10
-    $theContext['ini_values'] = expandExpressions($theContext['ini_values']);
+    $theContext['ini_values'] = processSpecialExpressions($theContext['ini_values']);
 }
 
 function prepareTaskCommandFileExists(& $theContext) {

@@ -23,6 +23,15 @@ define('BESEARCHER_WEB_CACHE_FILE',          'beseacher.web-cache');
 
 define('BESEARCHER_COMMIT_SKIP_TOKEN',       '/\[(skip-ci|skip|skip-ic|skip-besearcher)\]/');
 
+// Below are the definitions of the expressions that are
+// expandable in the INI file.
+
+// E.g. 0..10:1, which generates 0,1,2,...,10
+define('INI_EXP_START_END_INC', '/(\d*[.]?\d*)[[:blank:]]*\.\.[[:blank:]]*(\d*[.]?\d*)[[:blank:]]*:[[:blank:]]*(\d*[.]?\d*)/i');
+
+// E.g. 0..10:1, which generates 0,1,2,...,10
+define('INI_PERM', '/perm[[:blank:]]*:[[:blank:]]*(\d+)[[:blank:]]*:[[:blank:]]*(.*)/i');
+
 function findBesearcherLogTags($theLogFilePath) {
     $aRet = array();
     $aFile = @fopen($theLogFilePath, 'r');
