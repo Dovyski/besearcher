@@ -105,6 +105,11 @@ function isTaskFinished($theTaskInfo) {
     return $aTime != 0;
 }
 
+function loadTask($theInfoFilePath) {
+    $aInfo = json_decode(file_get_contents($theInfoFilePath), true);
+    return $aInfo;
+}
+
 function handleBesearcherLogTags($theTaskInfo, $theUseCache = true) {
     $aTags = array();
 
@@ -129,7 +134,7 @@ function aggredateTaskInfos($theTaskJsonFiles) {
     $aInfos = array();
 
     foreach($theTaskJsonFiles as $aFile) {
-        $aInfo = json_decode(file_get_contents($aFile), true);
+        $aInfo = loadTask($aFile);
         $aPermutation = $aInfo['permutation'];
 
         // Find special marks in the log file that inform

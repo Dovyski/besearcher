@@ -278,7 +278,12 @@ function writeTaskInfoFile($theTask) {
 
 function runTask($theTask, $theMaxParallel, $theContext) {
     $aSkipPerformedTasks = get_ini('skip_performed_tasks', $theContext, false);
-    $aTaskAlreadyPerformed = file_exists($theTask['info_file']);
+    $aTaskAlreadyPerformed = false;
+
+    if(file_exists($theTask['info_file'])) {
+        $aTaskInfo = loadTask($theTask['info_file']);
+        $aTaskAlreadyPerformed = isTaskFinished($aTaskInfo);
+    }
 
     if($aSkipPerformedTasks && $aTaskAlreadyPerformed) {
         // It seems the task at hand already has already
