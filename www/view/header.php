@@ -78,6 +78,7 @@
                         <ul class="nav" id="side-menu">
                             <li><a href="index.php"><i class="fa fa-dashboard fa-fw"></i> Home</a></li>
                             <li><a href="tasks.php"><i class="fa fa-tasks fa-fw"></i> Tasks</a></li>
+                            <li><a href="control.php"><i class="fa fa-wrench fa-fw"></i> Control</a></li>
                             <li><a href="analytics.php"><i class="fa fa-line-chart fa-fw"></i> Analytics</a></li>
                         </ul>
                     </div>
