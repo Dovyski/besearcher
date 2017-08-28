@@ -211,6 +211,11 @@ function loadOverrideContextFromDisk($theDataDir) {
     return $aContext;
 }
 
+function hasOverrideContextInDisk($theDataDir) {
+    $aOverridePath = $theDataDir . DIRECTORY_SEPARATOR . BESEARCHER_CONTEXT_OVERRIDE_FILE;
+    return file_exists($aOverridePath);
+}
+
 function writeContextToDisk(& $theContext) {
     $theDataDir = get_ini('data_dir', $theContext, '');
     $aContextPath = $theDataDir . DIRECTORY_SEPARATOR . BESEARCHER_CONTEXT_FILE;
@@ -218,6 +223,56 @@ function writeContextToDisk(& $theContext) {
     $aRet = @file_put_contents($aContextPath, $aSerializedContext);
 
     return $aRet;
+}
+
+function writeContextOverrideToDisk($theDataDir, $theDiff) {
+    $aOverridePath = $theDataDir . DIRECTORY_SEPARATOR . BESEARCHER_CONTEXT_OVERRIDE_FILE;
+    $aSerializedOverride = serialize($theDiff);
+    $aRet = @file_put_contents($aOverridePath, $aSerializedOverride);
+
+    return $aRet;
+}
+
+
+/**
+ * Change the order of some tasks in the queue of tasks. The informed
+ * taskes will be moved to the begining of the queue, so they are more likely
+ * to be executed by Besearcher.
+ *
+ * @param  array $theTasks array with the tasks to be prioritized. Each entry in the array is an associtive array with the fields 'hash' and 'permutation'.
+ * @param  array $theQueue queue of tasks
+  */
+function prioritizeTasks($theTasks, $theQueue) {
+    $aExistingTasks = array();
+    $aRelocatedTasks = array();
+
+    if(count($theTasks) == 0) {
+        throw new Exception('Unable to prioritize the selected elements.');
+    }
+
+    foreach($theTasks as $aItem) {
+        foreach($theQueue as $aQueueItem) {
+            if($aQueueItem['hash'] == $aItem['hash'] && $aQueueItem['permutation'] == $aItem['permutation']) {
+                $aRelocatedTasks[] = $aQueueItem;
+            }
+        }
+    }
+
+    foreach($theQueue as $aQueueItem) {
+        $aWasRelocatedBefore = false;
+        foreach($aRelocatedTasks as $aItem) {
+            if($aQueueItem['hash'] == $aItem['hash'] && $aQueueItem['permutation'] == $aItem['permutation']) {
+                $aWasRelocatedBefore = true;
+                break;
+            }
+        }
+
+        if(!$aWasRelocatedBefore) {
+            $aRelocatedTasks[] = $aQueueItem;
+        }
+    }
+
+    return $aRelocatedTasks;
 }
 
 ?>

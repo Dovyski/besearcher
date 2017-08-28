@@ -403,10 +403,6 @@ function run(& $theContext) {
 
     monitorRunningTasks($theContext);
 
-    // Wait for the next check
-    $aWaitTime = get_ini('refresh_interval', $theContext, 1);
-    sleep($aWaitTime);
-
     return true;
 }
 
@@ -777,6 +773,10 @@ printSummary($aContext);
 while($aActive) {
     $aActive = run($aContext);
     performHotReloadProcedures($aContext);
+
+    // Wait for the next check
+    $aWaitTime = get_ini('refresh_interval', $aContext, 1);
+    sleep($aWaitTime);
 }
 
 if($aContext['log_file_stream'] != null) {
