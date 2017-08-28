@@ -23,6 +23,10 @@
 
         $aAction = isset($_REQUEST['action']) ? $_REQUEST['action'] : '';
 
+        if($aAction != '' && hasOverrideContextInDisk($aINI['data_dir'])) {
+            throw new Exception('There are changes still pending to be loaded by Besearcher, it is not safe to perform more changes now. Try again in a few seconds.');
+        }
+
         if($aAction == 'move' || $aAction == 'delete') {
             $aSelected = array();
             $aNewQueue = array();
