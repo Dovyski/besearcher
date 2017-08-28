@@ -24,27 +24,6 @@ $gSayStrings = array(
     SAY_DEBUG => 'DEBUG'
 );
 
-/**
-  * Get a value from the INI file. The key is first looked up
-  * at the action section. If nothing is found, the key is
-  * looked up at the whole INI file scope.
-  *
-  * @param  string $theKey      Key that represents an entry in the INI file.
-  * @param  array $theContext   Array containing informatio regarding the app context.
-  * @param  mixed $theDefault   Value to be returned if nothing is found.
-  * @return mixed               Value of the informed key.
-  */
-function get_ini($theKey, $theContext, $theDefault = null) {
-    $aINI = $theContext['ini_values'];
-    $aRet = $theDefault;
-
-    if(isset($aINI[$theKey])) {
-        $aRet = $aINI[$theKey];
-    }
-
-    return $aRet;
-}
-
 function execTaskCommand($theTask, $theParallel, $theContext) {
     $aCmd = $theTask['cmd'];
     $aLogFile = $theTask['log_file'];
@@ -659,7 +638,62 @@ function performConfigHotReload(& $theContext) {
         $theContext['ini_hash'] = $aContentHash;
         loadINI($aPath, $theContext);
     }
+}
 
+function performContextMaintenance(& $theContext) {
+    $aDataDir = get_ini('data_dir', $theContext, '');
+    $aStatus = $theContext['status'];
+
+    $aReplaceContext = array();
+
+    if($aStatus == BESEARCHER_STATUS_INITING) {
+        // We are initing besearcher. We are allowed to use a context
+        // from the disk
+        $aDiskContext = loadContextFromDisk($aDataDir);
+
+        if($aDiskContext === false) {
+            say("No previous context found on disk, proceeding to create a new one.", SAY_INFO, $theContext);
+        } else {
+            say("Previous context found on disk. It will be used.", SAY_INFO, $theContext);
+            $aReplaceContext = $aDiskContext;
+        }
+    } else {
+        // We are not initing, so we can only get a new context from the disk
+        // if it comes from the override file.
+        $aOverrideContext = loadOverrideContextFromDisk($aDataDir);
+
+        if($aOverrideContext !== false) {
+            say("Context override found on disk, it will replace the currently active context.", SAY_INFO, $theContext);
+            $aReplaceContext = $aOverrideContext;
+        }
+    }
+
+    // Update the current context with the data from the new context, if any
+    if(count($aReplaceContext) > 0) {
+        // Save the log stream
+        $aLogStream = $theContext['log_file_stream'];
+
+        say("Patching currently active context.", SAY_INFO, $theContext);
+        foreach($aReplaceContext as $aKey => $aValue) {
+            $theContext[$aKey] = $aValue;
+        }
+
+        // Restore the log stream
+        $theContext['log_file_stream'] = $aLogStream;
+    }
+
+    $aOk = writeContextToDisk($theContext);
+
+    if($aOk === false) {
+        say("Unable to save context to disk.", SAY_ERROR, $theContext);
+    } else {
+        say("Context has been saved to disk.", SAY_DEBUG, $theContext);
+    }
+}
+
+function performHotReloadProcedures(& $theContext) {
+    performConfigHotReload($theContext);
+    performContextMaintenance($theContext);
     checkLastCommitDataFromDisk($theContext);
     checkPrepareTaskCommandProcedures($theContext);
 }
@@ -720,12 +754,12 @@ register_shutdown_function('shutdown', $aContext);
 $aContext['log_file_stream'] = empty($aContext['path_log_file']) ? STDOUT : fopen($aContext['path_log_file'], 'a');
 
 say('Besearcher starting up. What a great day for science!', SAY_INFO, $aContext);
-performConfigHotReload($aContext);
+performHotReloadProcedures($aContext);
 $aActive = true;
 
 while($aActive) {
     $aActive = run($aContext);
-    performConfigHotReload($aContext);
+    performHotReloadProcedures($aContext);
 }
 
 if($aContext['log_file_stream'] != null) {

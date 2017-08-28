@@ -20,6 +20,8 @@ define('BESEARCHER_PREPARE_FILE',            'besearcher.task_prepare_cmd-result
 define('BESEARCHER_PREPARE_TASK_LOG_FILE',   'task_prepare_cmd.log');
 define('BESEARCHER_LAST_COMMIT_FILE',        'beseacher.last-commit');
 define('BESEARCHER_WEB_CACHE_FILE',          'beseacher.web-cache');
+define('BESEARCHER_CONTEXT_FILE',            'beseacher.context');
+define('BESEARCHER_CONTEXT_OVERRIDE_FILE',   'beseacher.context-override');
 
 define('BESEARCHER_COMMIT_SKIP_TOKEN',       '/\[(skip-ci|skip|skip-ic|skip-besearcher)\]/');
 
@@ -31,6 +33,27 @@ define('INI_EXP_START_END_INC', '/(\d*[.]?\d*)[[:blank:]]*\.\.[[:blank:]]*(\d*[.
 
 // E.g. 0..10:1, which generates 0,1,2,...,10
 define('INI_PERM', '/perm[[:blank:]]*:[[:blank:]]*(\d+)[[:blank:]]*:[[:blank:]]*(.*)/i');
+
+/**
+  * Get a value from the INI file. The key is first looked up
+  * at the action section. If nothing is found, the key is
+  * looked up at the whole INI file scope.
+  *
+  * @param  string $theKey      Key that represents an entry in the INI file.
+  * @param  array $theContext   Array containing informatio regarding the app context.
+  * @param  mixed $theDefault   Value to be returned if nothing is found.
+  * @return mixed               Value of the informed key.
+  */
+function get_ini($theKey, $theContext, $theDefault = null) {
+    $aINI = $theContext['ini_values'];
+    $aRet = $theDefault;
+
+    if(isset($aINI[$theKey])) {
+        $aRet = $aINI[$theKey];
+    }
+
+    return $aRet;
+}
 
 function findBesearcherLogTags($theLogFilePath) {
     $aRet = array();
@@ -145,6 +168,56 @@ function findTasksInfos($theDataDir) {
     }
 
     return $aData;
+}
+
+/**
+ * [loadContextFromDisk description]
+ * @param  [type]  $theDataDir         [description]
+ * @param  boolean $theIncludeOverride [description]
+ * @return [type]                      [description]
+ */
+function loadContextFromDisk($theDataDir) {
+    $aContextPath = $theDataDir . DIRECTORY_SEPARATOR . BESEARCHER_CONTEXT_FILE;
+
+    $aContext = false;
+    $aContextRaw = @file_get_contents($aContextPath);
+
+    if($aContextRaw !== false) {
+        $aContext = unserialize($aContextRaw);
+    }
+
+    return $aContext;
+}
+
+/**
+ * [loadContextFromDisk description]
+ * @param  [type]  $theDataDir         [description]
+ * @param  boolean $theIncludeOverride [description]
+ * @return [type]                      [description]
+ */
+function loadOverrideContextFromDisk($theDataDir) {
+    $aOverridePath = $theDataDir . DIRECTORY_SEPARATOR . BESEARCHER_CONTEXT_OVERRIDE_FILE;
+    $aOverrideRaw = @file_get_contents($aOverridePath);
+    $aContext = false;
+
+    if($aOverrideRaw !== false) {
+        // We have a new context to use. Let's return this one then.
+        $aContext = unserialize($aOverrideRaw);
+
+        // Get rid of override file
+        unlink($aOverridePath);
+    }
+
+    return $aContext;
+}
+
+function writeContextToDisk(& $theContext) {
+    $theDataDir = get_ini('data_dir', $theContext, '');
+    $aContextPath = $theDataDir . DIRECTORY_SEPARATOR . BESEARCHER_CONTEXT_FILE;
+    $aSerializedContext = serialize($theContext);
+    $aRet = @file_put_contents($aContextPath, $aSerializedContext);
+
+    return $aRet;
 }
 
 ?>
