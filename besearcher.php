@@ -676,11 +676,11 @@ function performContextMaintenance(& $theContext) {
         say("Patching currently active context.", SAY_INFO, $theContext);
         foreach($aReplaceContext as $aKey => $aValue) {
             $aIsAboutStream = $aKey == 'log_file_stream';
-            $aIsDifferent = !is_array($aValue) && $theContext[$aKey] != $aValue;
+            $aIsDifferent = serialize($theContext[$aKey]) != serialize($aValue);
             $aShouldLog = !$aIsAboutStream && $aIsDifferent;
 
             if($aShouldLog) {
-                say('context.' . $aKey . ' = "' . $aValue . '" (old="' . $theContext[$aKey] . '")', SAY_DEBUG, $theContext);
+                say('context.' . $aKey . ' = ' . (is_array($aValue) ? 'Array' : $aValue) . ' (old=' . (is_array($theContext[$aKey]) ? 'Array' : $theContext[$aKey]) . ')', SAY_DEBUG, $theContext);
             }
             $theContext[$aKey] = $aValue;
         }

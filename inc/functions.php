@@ -242,7 +242,7 @@ function writeContextOverrideToDisk($theDataDir, $theDiff) {
  * @param  array $theTasks array with the tasks to be prioritized. Each entry in the array is an associtive array with the fields 'hash' and 'permutation'.
  * @param  array $theQueue queue of tasks
   */
-function prioritizeTasks($theTasks, $theQueue) {
+function prioritizeTasksInQueue($theTasks, $theQueue) {
     $aExistingTasks = array();
     $aRelocatedTasks = array();
 
@@ -273,6 +273,31 @@ function prioritizeTasks($theTasks, $theQueue) {
     }
 
     return $aRelocatedTasks;
+}
+
+function removeTasksFromQueue($theTasks, $theQueue) {
+    $aFilteredQueue = array();
+
+    if(count($theTasks) == 0) {
+        throw new Exception('Nothing has been selected for removal.');
+    }
+
+    foreach($theQueue as $aQueueItem) {
+        $aFound = false;
+
+        foreach($theTasks as $aItem) {
+            if($aQueueItem['hash'] == $aItem['hash'] && $aQueueItem['permutation'] == $aItem['permutation']) {
+                $aFound = true;
+                break;
+            }
+        }
+
+        if(!$aFound) {
+            $aFilteredQueue[] = $aQueueItem;
+        }
+    }
+
+    return $aFilteredQueue;
 }
 
 ?>

@@ -19,9 +19,13 @@
 
         $aTasksQueue = isset($aContext['tasks_queue']) ? $aContext['tasks_queue'] : array();
         $aSettings = $aContext;
+        $aOverride = array();
 
-        if(isset($_REQUEST['action'])) {
+        $aAction = isset($_REQUEST['action']) ? $_REQUEST['action'] : '';
+
+        if($aAction == 'move' || $aAction == 'delete') {
             $aSelected = array();
+            $aNewQueue = array();
 
             foreach($_REQUEST as $aKey => $aValue) {
                 if(stripos($aKey, 'task_') !== false) {
@@ -35,13 +39,16 @@
             }
 
             if($_REQUEST['action'] == 'move') {
-                $aNewQueue = prioritizeTasks($aSelected, $aContext['tasks_queue']);
-                $aOverride = array('tasks_queue' => $aNewQueue);
+                $aNewQueue = prioritizeTasksInQueue($aSelected, $aContext['tasks_queue']);
 
             } else if ($_REQUEST['action'] == 'delete') {
-
+                $aNewQueue = removeTasksFromQueue($aSelected, $aContext['tasks_queue']);
             }
 
+            $aOverride = array('tasks_queue' => $aNewQueue);
+        }
+
+        if(count($aOverride) > 0) {
             $aOk = writeContextOverrideToDisk($aINI['data_dir'], $aOverride);
 
             if($aOk) {
