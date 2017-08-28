@@ -367,10 +367,13 @@ function monitorRunningTasks(& $theContext) {
             say('Tasks running now: ' . $aTasksNow, SAY_INFO, $theContext);
         }
 
-        if($aTasksNow == 0 && $theContext['running_tasks'] > 0) {
-            say('All runnings tasks finished!', SAY_INFO, $theContext);
-        }
+        $aTasksBefore = $theContext['running_tasks'];
         $theContext['running_tasks'] = $aTasksNow;
+
+        if($aTasksNow == 0 && $aTasksBefore > 0) {
+            say('All runnings tasks finished!', SAY_INFO, $theContext);
+            printSummary($theContext);
+        }
     }
 }
 
@@ -595,9 +598,10 @@ function checkPrepareTaskCommandProcedures(& $theContext) {
             setAppStatus($theContext, BESEARCHER_STATUS_WAITING_PRETASK);
 
         } else if($aPrepareResult != 0) {
-            setAppStatus($theContext, BESEARCHER_STATUS_PAUSED, 'command in "task_prepare_cmd" returned error (return='.$aPrepareResult.').', SAY_ERROR);
+            say('Command in "task_prepare_cmd" returned error (return='.$aPrepareResult.')', SAY_ERROR, $theContext);
+            exit(3);
 
-        } else {
+        } else if($theContext['status'] == BESEARCHER_STATUS_WAITING_PRETASK) {
             setAppStatus($theContext, BESEARCHER_STATUS_RUNNING, 'command in "task_prepare_cmd" finished successfully.');
         }
     } else {
@@ -663,7 +667,7 @@ function performContextMaintenance(& $theContext) {
         $aOverrideContext = loadOverrideContextFromDisk($aDataDir);
 
         if($aOverrideContext !== false) {
-            say("Context override found on disk, it will replace the currently active context.", SAY_INFO, $theContext);
+            say("Context override found on disk, it will replace the currently active context.", SAY_DEBUG, $theContext);
             $aReplaceContext = $aOverrideContext;
         }
     }
@@ -675,6 +679,13 @@ function performContextMaintenance(& $theContext) {
 
         say("Patching currently active context.", SAY_INFO, $theContext);
         foreach($aReplaceContext as $aKey => $aValue) {
+            $aIsAboutStream = $aKey == 'log_file_stream';
+            $aIsDifferent = !is_array($aValue) && $theContext[$aKey] != $aValue;
+            $aShouldLog = !$aIsAboutStream && $aIsDifferent;
+
+            if($aShouldLog) {
+                say('context.' . $aKey . ' = "' . $aValue . '" (old="' . $theContext[$aKey] . '")', SAY_DEBUG, $theContext);
+            }
             $theContext[$aKey] = $aValue;
         }
 
@@ -686,8 +697,6 @@ function performContextMaintenance(& $theContext) {
 
     if($aOk === false) {
         say("Unable to save context to disk.", SAY_ERROR, $theContext);
-    } else {
-        say("Context has been saved to disk.", SAY_DEBUG, $theContext);
     }
 }
 
@@ -696,6 +705,12 @@ function performHotReloadProcedures(& $theContext) {
     performContextMaintenance($theContext);
     checkLastCommitDataFromDisk($theContext);
     checkPrepareTaskCommandProcedures($theContext);
+}
+
+function printSummary(& $theContext) {
+    $aCountRunningTasks = $theContext['running_tasks'];
+    $aCountEnquedTasks = count($theContext['tasks_queue']);
+    say('Running tasks: '. $aCountRunningTasks . ', queued tasks: ' . $aCountEnquedTasks . ', status: ' . $theContext['status'], SAY_INFO, $theContext);
 }
 
 function say($theMessage, $theType, $theContext) {
@@ -756,6 +771,8 @@ $aContext['log_file_stream'] = empty($aContext['path_log_file']) ? STDOUT : fope
 say('Besearcher starting up. What a great day for science!', SAY_INFO, $aContext);
 performHotReloadProcedures($aContext);
 $aActive = true;
+
+printSummary($aContext);
 
 while($aActive) {
     $aActive = run($aContext);
