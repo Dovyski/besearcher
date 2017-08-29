@@ -13,11 +13,11 @@ define('BESEARCHER_TAG_TYPE_PROGRESS',      'progress');
 define('BESEARCHER_STATUS_INITING',          'INITING');
 define('BESEARCHER_STATUS_RUNNING',          'RUNNING');
 define('BESEARCHER_STATUS_PAUSED',           'PAUSED');
-define('BESEARCHER_STATUS_WAITING_PRETASK',  'WAITING_PRETASK');
+define('BESEARCHER_STATUS_WAITING_SETUP',    'WAITING_SETUP');
 
 define('BESEARCHER_CACHE_FILE_EXT',          '.besearcher-cache');
-define('BESEARCHER_PREPARE_FILE',            'besearcher.task_prepare_cmd-result');
-define('BESEARCHER_PREPARE_TASK_LOG_FILE',   'task_prepare_cmd.log');
+define('BESEARCHER_SETEUP_FILE',             'besearcher.setup_cmd-result');
+define('BESEARCHER_SETUP_LOG_FILE',          'setup_cmd.log');
 define('BESEARCHER_LAST_COMMIT_FILE',        'beseacher.last-commit');
 define('BESEARCHER_WEB_CACHE_FILE',          'beseacher.web-cache');
 define('BESEARCHER_CONTEXT_FILE',            'beseacher.context');

@@ -58,14 +58,14 @@ task_cmd_list_name = "ping.exe"
 
 ; Command to be executed once as a preparation for "task_cmd"
 ; to be executed. While "task_cmd" is executed for every new
-; commit that arrives, "task_prepare_cmd" is executed only once.
+; commit that arrives, "setup_cmd" is executed only once.
 ; This command is useful to create datasets that are needed by the
 ; task command, for instance. Besearcher will check the return
 ; status of this command to determine if everything is good to
 ; continue. If the command returns a non-zero value, Besearcher
 ; assumes a problem occured and it interrups the execution of
 ; the task commands until the problem is solved.
-task_prepare_cmd = "dir"
+setup_cmd = "dir"
 
 ; An absolute path to the directory to be used as the working
 ; directory for issued commands.
