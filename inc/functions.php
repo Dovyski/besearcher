@@ -14,6 +14,7 @@ define('BESEARCHER_STATUS_INITING',          'INITING');
 define('BESEARCHER_STATUS_RUNNING',          'RUNNING');
 define('BESEARCHER_STATUS_PAUSED',           'PAUSED');
 define('BESEARCHER_STATUS_WAITING_SETUP',    'WAITING_SETUP');
+define('BESEARCHER_STATUS_STOPPING',         'STOPPING');
 
 define('BESEARCHER_CACHE_FILE_EXT',          '.besearcher-cache');
 define('BESEARCHER_SETEUP_FILE',             'besearcher.setup_cmd-result');

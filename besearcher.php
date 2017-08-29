@@ -783,12 +783,24 @@ while($aActive) {
     // Wait for the next check
     $aWaitTime = get_ini('refresh_interval', $aContext, 1);
     sleep($aWaitTime);
+
+    if($aContext['status'] == BESEARCHER_STATUS_STOPPING && countRunningTasks($aContext) == 0) {
+        say('All running tasks finnished, proceeding with requested shutdown.', SAY_INFO, $aContext);
+
+        // Reset the status of the context in the disk
+        $aContext['status'] = BESEARCHER_STATUS_RUNNING;
+        writeContextToDisk($aContext);
+
+        // Terminate the party
+        $aActive = false;
+    }
 }
+
+say('Besearcher is done. Over and out!', SAY_INFO, $aContext);
 
 if($aContext['log_file_stream'] != null) {
     fclose($aContext['log_file_stream']);
 }
 
-say('All done. Over and out!', SAY_INFO, $aContext);
 exit(0);
 ?>
