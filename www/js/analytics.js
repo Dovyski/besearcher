@@ -1,6 +1,7 @@
 var MAX_CHART_HEIGHT = 300;
 
 function renderMetric(theData, theMetric, theContainerId) {
+	$('#' + theContainerId).empty();
 	renderMetricChart(theData, theMetric, theContainerId);
 	renderMetricDataValues(theData, theMetric, theContainerId);
 }
@@ -24,7 +25,29 @@ function renderMetricChart(theData, theMetric, theContainerId) {
 }
 
 function renderMetricDataValues(theData, theMetric, theContainerId) {
-	$('#' + theContainerId).append('<p></p>');
+	var aValues = theData.values.slice(0, 20), aText = '';
+
+	aText = '' +
+	'<table width="100%" class="table table-striped table-bordered table-hover">' +
+		'<thead>' +
+			'<tr>' +
+				'<th>Commit-permutation</th>' +
+				'<th>Value</th>' +
+			'</tr>' +
+		'</thead>' +
+		'<tbody>';
+
+	for(var i = 0; i < aValues.length; i++) {
+		aText +=
+			'<tr>' +
+				'<td><a href="result.php?commit=' + aValues[i].commit + '&permutation=' + aValues[i].permutation + '">' + aValues[i].commit + '-' + aValues[i].permutation + '</a></td>' +
+				'<td>' + aValues[i].value + '</td>' +
+			'</tr>';
+	}
+
+	aText += '</tbody></table>';
+
+	$('#' + theContainerId).append(aText);
 }
 
 function onMetricDataFail(theJqXHR, theTextStatus, theErrorThrown) {
