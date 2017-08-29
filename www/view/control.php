@@ -65,6 +65,7 @@
                     <thead>
                         <tr>
                             <th></th>
+                            <th>#</th>
                             <th>Commit-permutation</th>
                             <th>Creation</th>
                             <th>Params</th>
@@ -76,12 +77,14 @@
                             foreach($aData['tasks_queue'] as $aItem) {
                                 echo '<tr>';
                                     echo '<td>';
-                                        echo '<input type="checkbox" name="task_'.$aNum++.'" value="'.$aItem['hash'].'-'.$aItem['permutation'].'" />';
+                                        echo '<input type="checkbox" name="task_'.$aNum.'" value="'.$aItem['hash'].'-'.$aItem['permutation'].'" />';
                                     echo '</td>';
+                                    echo '<td>'.$aNum.'</td>';
                                     echo '<td><a href="result.php?commit='.$aItem['hash'].'&permutation='.$aItem['permutation'].'" title="Click to view more information">'.substr($aItem['hash'], 0, 16).'-'.substr($aItem['permutation'], 0, 16).'</a></td>';
                                     echo '<td>'.date('Y/m/d H:i:s', $aItem['creation_time']).'</td>';
                                     echo '<td>'.$aItem['params'].'</td>';
                                 echo '</tr>';
+                                $aNum++;
                             }
                         ?>
                     </tbody>
