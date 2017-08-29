@@ -2,65 +2,42 @@
 <?php
     require_once(dirname(__FILE__) . '/inc/globals.php');
 
+    function compareStats($theA, $theB) {
+        if ($theA['value'] == $theB['value']) {
+            return 0;
+        }
+        return ($theA['value'] < $theB['value']) ? 1 : -1;
+    }
+
     Besearcher\Auth::allowAuthenticated();
     Besearcher\Data::init();
 
     $aTasks = Besearcher\Data::tasks();
-    $aStats = array();
+    $aStats = Besearcher\Data::compileMetricStats($aTasks);
+    $aAnalytics = Besearcher\Data::compileAnalyticsFromMetricStats($aStats);
 
-    foreach($aTasks as $aTask) {
-        foreach($aTask as $aResult) {
-            $aMeta = $aResult['meta'];
+    // Get a list of all available metrics
+    $aMetrics = array_keys($aStats);
 
-            foreach($aMeta as $aItem) {
-                if($aItem['type'] != BESEARCHER_TAG_TYPE_PROGRESS) {
-                    $aMetric = $aItem['name'];
-                    $aData = $aItem['data'];
-
-                    if(is_array($aData)) {
-                        continue;
-                    }
-
-                    if(!isset($aStats[$aMetric])) {
-                        $aStats[$aMetric] = array();
-                    }
-
-                    $aStats[$aMetric][] = array(
-                        'commit' => $aResult['commit'],
-                        'permutation' => $aResult['permutation'],
-                        'value' => $aData
-                    );
-                }
-            }
-        }
+    // Sort everything from best to worst
+    foreach($aMetrics as $aMetric) {
+        usort($aStats[$aMetric], 'compareStats');
     }
 
-    $aAnalytics = array();
+    $aJson = isset($_REQUEST['json']);
+    $aView = $aJson ? 'json' : 'analytics';
 
-    foreach($aStats as $aMetric => $aItems) {
-        if(count($aItems) == 0) {
-            continue;
-        }
-
-        if(!isset($aAnalytics[$aMetric])) {
-            $aAnalytics[$aMetric] = array(
-                'min' => array('commit' => $aItems[0]['commit'], 'permutation' => $aItems[0]['permutation'], 'value' => $aItems[0]['value']),
-                'max' => array('commit' => $aItems[0]['commit'], 'permutation' => $aItems[0]['permutation'], 'value' => $aItems[0]['value']),
-            );
-        }
-
-        foreach($aItems as $aEntry) {
-            if($aEntry['value'] < $aAnalytics[$aMetric]['min']['value']) {
-                $aAnalytics[$aMetric]['min'] = $aEntry;
-            }
-
-            if($aEntry['value'] > $aAnalytics[$aMetric]['max']['value']) {
-                $aAnalytics[$aMetric]['max'] = $aEntry;
-            }
-        }
+    // If an specific metric was requested, use only that metric
+    $aSelectedMetric = isset($_REQUEST['metric']) ? $_REQUEST['metric'] : '';
+    if($aSelectedMetric != '' && in_array($aSelectedMetric, $aMetrics)) {
+        $aMetrics = $aSelectedMetric;
+        $aAnalytics = $aAnalytics[$aSelectedMetric];
+        $aStats = $aStats[$aSelectedMetric];
     }
 
-    Besearcher\View::render('analytics', array(
-        'summary' => $aAnalytics
+    Besearcher\View::render($aView, array(
+        'metrics' => $aMetrics,
+        'summary' => $aAnalytics,
+        'values' => $aStats
     ));
 ?>
