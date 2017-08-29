@@ -46,7 +46,7 @@
                                 echo '<td><a href="result.php?commit='.$aEntry['max']['commit'].'&permutation='.$aEntry['max']['permutation'].'" title="Click to view more information">'.$aEntry['max']['value'].'</a></td>';
                                 echo '<td><a href="#" class="show-stats" data-container="'.$aContainer.'" data-metric="'.$aMetric.'" title="Click to view statistics" ><i class="fa fa-bar-chart"></i></a></td>';
                             echo '</tr>';
-                            echo '<tr id="row'.$aContainer.'" style="display:none;"><td colspan="4"><div id="'.$aContainer.'"></div></td></tr>';
+                            echo '<tr id="row'.$aContainer.'" style="display:none;" data-open="false"><td colspan="4"><div id="'.$aContainer.'"></div></td></tr>';
                             $aNum++;
                         }
                     ?>

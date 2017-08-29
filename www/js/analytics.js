@@ -1,4 +1,5 @@
 var MAX_CHART_HEIGHT = 300;
+var MAX_LAST_ENTRIES = 20;
 
 function renderMetric(theData, theMetric, theContainerId) {
 	$('#' + theContainerId).empty();
@@ -15,7 +16,7 @@ function renderMetricChart(theData, theMetric, theContainerId) {
 	}
 
 	var aOptions = {
-		title: theData.metrics,
+		title: 'Distribution of ' + theData.metrics,
 		legend: { position: 'none' },
 		height: MAX_CHART_HEIGHT
 	};
@@ -25,7 +26,7 @@ function renderMetricChart(theData, theMetric, theContainerId) {
 }
 
 function renderMetricDataValues(theData, theMetric, theContainerId) {
-	var aValues = theData.values.slice(0, 20), aText = '';
+	var aValues = theData.values.slice(0, MAX_LAST_ENTRIES), aText = '';
 
 	aText = '' +
 	'<table width="100%" class="table table-striped table-bordered table-hover">' +
@@ -60,7 +61,14 @@ $(function() {
 		var aContainerRowId = 'row' + aContainerId;
 		var aMetric = $(this).data('metric');
 
-		$('#' + aContainerRowId).css({height: MAX_CHART_HEIGHT}).slideDown();
+		var aOpen = $('#' + aContainerRowId).data('open');
+
+		if(aOpen) {
+			$('#' + aContainerRowId).slideUp().data('open', false);
+			return;
+		}
+
+		$('#' + aContainerRowId).css({height: MAX_CHART_HEIGHT}).slideDown().data('open', true);
 		$('#' + aContainerId).html('<i class="fa fa-circle-o-notch fa-spin"></i> Loading...');
 
 		$.ajax({
