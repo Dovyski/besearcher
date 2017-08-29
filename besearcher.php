@@ -613,17 +613,18 @@ function checkPrepareTaskCommandProcedures(& $theContext) {
 
 function checkLastCommitDataFromDisk(& $theContext) {
     $aLastCommitDisk = loadLastKnownCommitFromFile($theContext);
+    $aNewCommit = $aLastCommitDisk;
 
     // If we don't have any information regarding the last commit, we use
     // the one provided in the ini file.
-    if(empty($aLastCommitDisk)) {
-        $aLastCommitDisk = get_ini('start_commit_hash', $theContext, '');
-        say("No commit info found on disk, using info from INI: " . $aLastCommitDisk, SAY_INFO, $theContext);
+    if(empty($aNewCommit)) {
+        $aNewCommit = get_ini('start_commit_hash', $theContext, '');
+        say("No commit info found on disk, using info from INI: " . $aNewCommit, SAY_INFO, $theContext);
     }
 
-    if($aLastCommitDisk != $theContext['last_commit']) {
-        say("Info regarding last commit has changed: old=" . $theContext['last_commit'] . ", new=" . $aLastCommitDisk, SAY_DEBUG, $theContext);
-        setLastKnownCommit($theContext, $aLastCommitDisk);
+    if($aNewCommit != $theContext['last_commit'] || empty($aLastCommitDisk)) {
+        say("Info regarding last commit has changed: old=" . $theContext['last_commit'] . ", new=" . $aNewCommit, SAY_DEBUG, $theContext);
+        setLastKnownCommit($theContext, $aNewCommit);
     }
 }
 
