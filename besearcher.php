@@ -602,7 +602,7 @@ function checkPrepareTaskCommandProcedures(& $theContext) {
             say('Command in "task_prepare_cmd" returned error (return='.$aPrepareResult.')', SAY_ERROR, $theContext);
             exit(3);
 
-        } else if($theContext['status'] == BESEARCHER_STATUS_WAITING_PRETASK) {
+        } else if($aPrepareResult == 0 && ($theContext['status'] == BESEARCHER_STATUS_WAITING_PRETASK || $theContext['status'] == BESEARCHER_STATUS_INITING)) {
             setAppStatus($theContext, BESEARCHER_STATUS_RUNNING, 'command in "task_prepare_cmd" finished successfully.');
         }
     } else {
