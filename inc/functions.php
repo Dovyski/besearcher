@@ -188,7 +188,7 @@ function loadContextFromDisk($theDataDir) {
     $aContextRaw = @file_get_contents($aContextPath);
 
     if($aContextRaw !== false) {
-        $aContext = unserialize($aContextRaw);
+        $aContext = @unserialize($aContextRaw);
     }
 
     return $aContext;
@@ -207,10 +207,12 @@ function loadOverrideContextFromDisk($theDataDir) {
 
     if($aOverrideRaw !== false) {
         // We have a new context to use. Let's return this one then.
-        $aContext = unserialize($aOverrideRaw);
+        $aContext = @unserialize($aOverrideRaw);
 
         // Get rid of override file
-        unlink($aOverridePath);
+        if($aContext !== false) {
+            unlink($aOverridePath);
+        }
     }
 
     return $aContext;
