@@ -9,6 +9,7 @@
  */
 
 require_once(dirname(__FILE__) . '/inc/functions.php');
+require_once(dirname(__FILE__) . '/inc/db.php');
 
 define('SAY_ERROR', 3);
 define('SAY_WARN', 2);
@@ -715,6 +716,26 @@ function printSummary(& $theContext) {
     say('Running tasks: '. $aCountRunningTasks . ', queued tasks: ' . $aCountEnquedTasks . ', status: ' . $theContext['status'], SAY_INFO, $theContext);
 }
 
+function initDatabase(& $theContext) {
+    $aDataDir = get_ini('data_dir', $theContext, '');
+    $aDatabasePath = $aDataDir . DIRECTORY_SEPARATOR . BESEARCHER_DB_FILE;
+
+    try {
+        say('DB file: ' . $aDatabasePath, SAY_DEBUG, $theContext);
+        Besearcher\Db::init($aDatabasePath);
+
+        if(!Besearcher\Db::hasTables()) {
+            say('First time the DB is used, initial structure will be created.', SAY_INFO, $theContext);
+            Besearcher\Db::createTables();
+        }
+
+        say('DB is ready for use.', SAY_INFO, $theContext);
+
+    } catch(Exception $e) {
+        say($e->getMessage(), SAY_ERROR, $theContext);
+    }
+}
+
 function say($theMessage, $theType, $theContext) {
     global $gSayStrings;
 
@@ -771,6 +792,13 @@ register_shutdown_function('shutdown', $aContext);
 $aContext['log_file_stream'] = empty($aContext['path_log_file']) ? STDOUT : fopen($aContext['path_log_file'], 'a');
 
 say('Besearcher starting up. What a great day for science!', SAY_INFO, $aContext);
+
+// Load INI file because we need the bare minimum to start everything up.
+performConfigHotReload($aContext);
+initDatabase($aContext);
+
+// Database is ready, it is time to proceed with the initialization
+// with everything else.
 performHotReloadProcedures($aContext);
 $aActive = true;
 
