@@ -18,6 +18,7 @@ require_once(dirname(__FILE__) . '/../../inc/functions.php');
 require_once(dirname(__FILE__) . '/view.php');
 require_once(dirname(__FILE__) . '/data.php');
 require_once(dirname(__FILE__) . '/auth.php');
+require_once(dirname(__FILE__) . '/utils.php');
 
 // Mark the time this script started
 define('BESERCHER_WEB_SCRIPT_START_TIME', microtime(true));

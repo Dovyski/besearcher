@@ -63,10 +63,19 @@
         $aMessage['body'] = $e->getMessage();
     }
 
+    // Paginate the results
+    $aPage = isset($_REQUEST['page']) ? $_REQUEST['page'] + 0 : 1;
+    $aSize = isset($_REQUEST['size']) ? $_REQUEST['size'] + 0 : 10;
+    $aPagination = Besearcher\Utils::paginate($aTasksQueue, $aPage, $aSize);
+
     Besearcher\View::render('control', array(
-        'message' => $aMessage,
-        'tasks_queue' => $aTasksQueue,
-        'has_override' => hasOverrideContextInDisk($aINI['data_dir']),
-        'settings' => $aSettings
+        'message'       => $aMessage,
+        'tasks_queue'   => $aPagination['data'],
+        'pages'         => $aPagination['pages'],
+        'page'          => $aPagination['page'],
+        'size'          => $aPagination['size'],
+        'start'         => $aPagination['start'],
+        'has_override'  => hasOverrideContextInDisk($aINI['data_dir']),
+        'settings'      => $aSettings
     ));
 ?>

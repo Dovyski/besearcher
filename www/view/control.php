@@ -79,7 +79,7 @@
                                     echo '<td>';
                                         echo '<input type="checkbox" name="task_'.$aNum.'" value="'.$aItem['hash'].'-'.$aItem['permutation'].'" />';
                                     echo '</td>';
-                                    echo '<td>'.$aNum.'</td>';
+                                    echo '<td>'.($aData['start'] + $aNum + 1).'</td>';
                                     echo '<td><a href="result.php?commit='.$aItem['hash'].'&permutation='.$aItem['permutation'].'" title="Click to view more information">'.substr($aItem['hash'], 0, 16).'-'.substr($aItem['permutation'], 0, 16).'</a></td>';
                                     echo '<td>'.date('Y/m/d H:i:s', $aItem['creation_time']).'</td>';
                                     echo '<td>'.$aItem['params'].'</td>';
@@ -94,6 +94,29 @@
     </div>
 
     <?php if(count($aData['tasks_queue']) != 0) { ?>
+        <nav aria-label="Page navigation">
+            <ul class="pagination">
+                <?php
+                    if($aData['page'] > 1) {
+                        echo '<li><a href="control.php?page='.($aData['page'] - 1).'&size='.$aData['size'].'" aria-label="Previous"><span aria-hidden="true">&laquo;</span></a></li>';
+                    } else {
+                        echo '<li class="disabled"><span aria-hidden="true">&laquo;</span>';
+                    }
+
+                    for($i = 1; $i <= $aData['pages']; $i++) {
+                        $aExtra = $aData['page'] == $i ? 'class="active"' : '';
+                        echo '<li ' . $aExtra . '><a href="control.php?page='.$i.'&size='.$aData['size'].'">' . $i . '</a></li>';
+                    }
+
+                    if($aData['page'] < $aData['pages']) {
+                        echo '<li><a href="control.php?page='.($aData['page'] + 1).'&size='.$aData['size'].'" aria-label="Next"><span aria-hidden="true">&raquo;</span></a></li>';
+                    } else {
+                        echo '<li class="disabled"><span aria-hidden="true">&raquo;</span>';
+                    }
+                ?>
+            </ul>
+        </nav>
+
         <div class="row" style="padding-bottom: 20px;">
             <div class="col-lg-8">
                 <button type="submit" class="btn btn-primary" name="action" value="move"><i class="fa fa-sort"></i> Move selected to the begining of queue</button>
@@ -103,6 +126,7 @@
     <?php } ?>
 
     </form>
+
 </div>
 <!-- /#page-wrapper -->
 
