@@ -733,6 +733,7 @@ function initDatabase(& $theContext) {
 
     } catch(Exception $e) {
         say($e->getMessage(), SAY_ERROR, $theContext);
+        exit(5);
     }
 }
 

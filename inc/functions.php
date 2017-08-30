@@ -203,6 +203,8 @@ function writeContextToDisk(& $theContext) {
     $aSerializedContext = serialize($theContext);
     $aRet = @file_put_contents($aContextPath, $aSerializedContext);
 
+    Besearcher\Db::saveContext($theContext);
+
     return $aRet;
 }
 
