@@ -11,8 +11,8 @@ CREATE TABLE `context` (
 CREATE TABLE `tasks` (
 	`id`	INTEGER PRIMARY KEY AUTOINCREMENT,
 	`creation_time`	INTEGER NOT NULL,
-	`commit`	TEXT NOT NULL,
-	`permutation`	TEXT NOT NULL,
+	`commit_hash`	TEXT NOT NULL,
+	`permutation_hash`	TEXT NOT NULL,
 	`data`	TEXT NOT NULL
 );
 

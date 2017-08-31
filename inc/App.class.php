@@ -63,7 +63,7 @@ class App {
 		// Get all life support components up and running
 		$aDbPath = $this->config('data_dir') . DIRECTORY_SEPARATOR . BESEARCHER_DB_FILE;
 		$this->mDb = new Db($aDbPath);
-		$this->mContext = new Context($this->mDb, $this->mLog);
+		$this->mContext = new Context($this->mDb, $this->mLog, array('status' => BESEARCHER_STATUS_INITING));
 
 		// Load context data from disk and merge it with in-memory data
 		$this->mContext->sync();
@@ -165,7 +165,7 @@ class App {
 
 	    if(!$aWait && $this->countEnquedTasks() > 0) {
 	        // There is room for another job. Let's spawn it.
-	        $aTask = dequeueTask();
+	        $aTask = $this->dequeueTask();
 	        $this->runTask($aTask, $aMaxParallelJobs);
 
 	        $aSpawnedNewTask = true;
@@ -242,13 +242,51 @@ class App {
 	}
 
 	private function enqueTask($theTask) {
-	    array_push($theContext['tasks_queue'], $theTask);
 	    $this->mLog->debug("Enqueing task " . $theTask['hash'] . '-' . $theTask['permutation']);
+
+		$aSql = "INSERT INTO tasks (creation_time, commit_hash, permutation_hash, data) VALUES (:creation_time, :commit_hash, :permutation_hash, :data)";
+		$aStmt = $this->mDb->getPDO()->prepare($aSql);
+
+		$aTaskSerialized = serialize($theTask);
+		$aNow = time();
+
+		$aStmt->bindParam(':creation_time', $aNow);
+		$aStmt->bindParam(':commit_hash', $theTask['hash']);
+		$aStmt->bindParam(':permutation_hash', $theTask['permutation']);
+		$aStmt->bindParam(':data', $aTaskSerialized);
+
+		$aOk = $aStmt->execute();
+		return $aOk;
 	}
 
 	private function dequeueTask() {
-	    echo "dequeueTask()\n";
-	    $this->mLog->debug("Dequeue task " . $aTask['hash'] . '-' . $aTask['permutation']);
+	    $this->mLog->debug("Dequeueing task");
+
+		// Get a task from DB
+		$aStmt = $this->mDb->getPDO()->prepare("SELECT * FROM tasks WHERE 1 ORDER BY creation_time ASC LIMIT 1");
+		$aStmt->execute();
+		$aDbTask = $aStmt->fetch(\PDO::FETCH_ASSOC);
+
+		if($aDbTask === false) {
+			throw new \Exception('Unable to dequeu task, tasks queue is probably empty.');
+		}
+
+		$aTask = @unserialize($aDbTask['data']);
+
+		if($aTask === false) {
+			throw new \Exception('Unable to unserialize dequeued task.');
+		}
+
+		// Remove that tasks from the queue
+	    $aStmt = $this->mDb->getPDO()->prepare("DELETE FROM tasks WHERE id = :id");
+	    $aStmt->bindParam(':id', $aDbTask['id']);
+	    $aOk = $aStmt->execute();
+
+		if(!$aOk) {
+			throw new \Exception('Unable to delete task with id '.$aDbTask['id'].' from tasks queue.');
+		}
+
+		return $aTask;
 	}
 
 	private function createTask($theCommitHash, $theCommitMessage, $thePermutation) {
