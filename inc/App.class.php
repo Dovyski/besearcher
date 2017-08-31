@@ -499,7 +499,7 @@ class App {
 	    }
 	}
 
-	private function processGitPulls() {
+	private function processGitCommits() {
 	    $aPullInterval = $this->config('git_pull_interval', 10);
 	    $aShouldPull = time() - $this->mContext->get('time_last_pull') >= $aPullInterval;
 
@@ -511,7 +511,7 @@ class App {
 
 	private function step() {
 	    if($this->mContext->get('status') == BESEARCHER_STATUS_RUNNING) {
-	        $this->processGitPulls();
+	        $this->processGitCommits();
 
 	        // The config INI file may have changed with the pull, so
 	        // let's check current config params
