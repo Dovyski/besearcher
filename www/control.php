@@ -41,7 +41,7 @@
         }
 
         // Get pagination info
-        $aTasksCount = $aDb->tasksCount();
+        $aTasksCount = $aDb->tasksQueueSize();
         $aPage = isset($_REQUEST['page']) ? $_REQUEST['page'] + 0 : 1;
         $aSize = isset($_REQUEST['size']) ? $_REQUEST['size'] + 0 : 100;
         $aPagination = Besearcher\Utils::paginate($aPage, $aSize, $aTasksCount);

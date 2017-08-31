@@ -25,7 +25,7 @@ class Db {
 		return $aRow['num'] > 0;
 	}
 
-	public function tasksCount() {
+	public function tasksQueueSize() {
 		$aStmt = $this->mPDO->prepare("SELECT COUNT(*) AS num FROM tasks WHERE 1");
 		$aStmt->execute();
 		$aRow = $aStmt->fetch(\PDO::FETCH_ASSOC);

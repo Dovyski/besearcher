@@ -7,6 +7,8 @@
  */
 
 require_once(dirname(__FILE__) . '/../inc/functions.php');
+require_once(dirname(__FILE__) . '/../inc/Db.class.php');
+require_once(dirname(__FILE__) . '/../inc/Context.class.php');
 
 function deleteFilesList($theList, $theExitCode = 1, $theVerbose = false) {
     foreach($theList as $aPath) {
@@ -93,19 +95,22 @@ if(!file_exists($aDataDir)) {
     exit(1);
 }
 
+$aDbPath = $aINI['data_dir'] . DIRECTORY_SEPARATOR . BESEARCHER_DB_FILE;
+$aDb = new Besearcher\Db($aDbPath);
+$aContext = new Besearcher\Context($aDb);
+
 $aIsVerbose = isset($aArgs['v']) || isset($aArgs['verbose']);
 $aIsForce = isset($aArgs['f']) || isset($aArgs['force']);
 
 if(isset($aArgs['status'])) {
-    $aContext = loadContextFromDisk($aDataDir);
+    $aQueueSize = $aDb->tasksQueueSize();
     echo "Besearcher summary:\n";
-    echo "Status: ".$aContext['status']."\n";
-    echo "Last commit: ".$aContext['last_commit']."\n";
-    echo "Tasks waiting in queue: ". count($aContext['tasks_queue'])."\n";
-    echo "Tasks running: ". $aContext['running_tasks']."\n";
-    echo "Pending changes: ". (hasOverrideContextInDisk($aDataDir) ? "YES" : "no")."\n";
+    echo " Status: ".$aContext->get('status')."\n";
+    echo " Last commit: ".$aContext->get('last_commit')."\n";
+    echo " Tasks waiting in queue: ". $aQueueSize."\n";
+    echo " Tasks running: ". $aContext->get('running_tasks')."\n";
 }
-
+exit();
 if(isset($aArgs['pause']) || isset($aArgs['resume']) || isset($aArgs['stop'])) {
     $aOverride = array();
     $aRefreshInterval = @$aINI['refresh_interval'];
