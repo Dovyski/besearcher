@@ -10,7 +10,6 @@
     }
 
     Besearcher\Auth::allowAuthenticated();
-    Besearcher\Data::init();
 
     $aTasks = Besearcher\Data::tasks();
     $aStats = Besearcher\Data::compileMetricStats($aTasks);

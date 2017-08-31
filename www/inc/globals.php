@@ -26,4 +26,15 @@ define('BESERCHER_WEB_SCRIPT_START_TIME', microtime(true));
 
 // Start the authentication mechanism
 Besearcher\Auth::init();
+
+// Load INI info
+$aError = Besearcher\Data::init();
+
+if(!empty($aError)) {
+	Besearcher\View::render('error', array(
+        'error' => $aError,
+        'ini' => PATH_BESERCHER_INI_FILE
+    ));
+	exit();
+}
 ?>

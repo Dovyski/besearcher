@@ -3,10 +3,7 @@
 
     Besearcher\Auth::allowAuthenticated();
 
-    $aLoaded = Besearcher\Data::init();
-    $aTasks = Besearcher\Data::tasks();
-
     Besearcher\View::render('tasks', array(
-        'tasks' => $aTasks
+        'tasks' => Besearcher\Data::tasks()
     ));
 ?>

@@ -6,8 +6,6 @@
     $aCommit = isset($_REQUEST['commit']) ? $_REQUEST['commit'] : '';
     $aPermutation = isset($_REQUEST['permutation']) ? $_REQUEST['permutation'] : '';
 
-    Besearcher\Data::init();
-
     $aTasks = Besearcher\Data::tasks();
     $aError = '';
     $aData = array();
