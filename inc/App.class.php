@@ -103,7 +103,7 @@ class App {
 		}
 	}
 
-	private function execTaskCommand($theTask, $theParallel, $theContext) {
+	private function execTaskCommand($theTask, $theParallel) {
 	    $aCmd = $theTask['cmd'];
 	    $aLogFile = $theTask['log_file'];
 	    $aInfoFile = $theTask['info_file'];
@@ -111,7 +111,7 @@ class App {
 	    $aCmdTemplate = '%s > "%s"';
 	    $aFinalCmd = sprintf($aCmdTemplate, $aCmd, $aLogFile);
 
-	    say($aFinalCmd, SAY_DEBUG, $theContext);
+	    $this->mLog->debug($aFinalCmd);
 
 	    if($theParallel) {
 	        $aFinalCmd = sprintf('start "Job" /b cmd.exe /c "%s "%s" "%s" "%s""', RUNNER_CMD, $aCmd, $aLogFile, $aInfoFile);
@@ -120,8 +120,8 @@ class App {
 	    pclose(popen($aFinalCmd, 'r'));
 	}
 
-	private function countRunningTasks($theContext) {
-	    $aTaskCmdApp = get_ini('task_cmd_list_name', $theContext, '');
+	private function countRunningTasks() {
+	    $aTaskCmdApp = $this->config('task_cmd_list_name', '');
 	    $aCount = 0;
 	    $aLines = array();
 	    $aProcesses = exec("tasklist", $aLines);
@@ -135,9 +135,9 @@ class App {
 	    return $aCount;
 	}
 
-	private function shouldWaitForUnfinishedTasks($theMaxParallel, $theContext) {
+	private function shouldWaitForUnfinishedTasks($theMaxParallel) {
 	    $aShouldWait = false;
-	    $aCount = countRunningTasks($theContext);
+	    $aCount = $this->countRunningTasks();
 
 	    // If there are tasks running, we must wait if we are at full capacity
 	    if($aCount != 0 && $aCount >= $theMaxParallel) {
@@ -148,27 +148,25 @@ class App {
 	}
 
 	private function countEnquedTasks() {
-	    $aDb = Besearcher\Db::instance();
-
-	    $aStmt = $aDb->prepare("SELECT COUNT(*) AS num FROM tasks WHERE 1");
+	    $aStmt = $this->mDb->getPDO()->prepare("SELECT COUNT(*) AS num FROM tasks WHERE 1");
 	    $aStmt->execute();
 	    $aRow = $aStmt->fetch(\PDO::FETCH_ASSOC);
 
 	    return $aRow['num'];
 	}
 
-	private function processQueuedTasks(& $theContext) {
+	private function processQueuedTasks() {
 	    $aSpawnedNewTask = false;
 
-	    $aCmdName = get_ini('task_cmd_list_name', $theContext, '');
-	    $aMaxParallelJobs = get_ini('max_parallel_tasks', $theContext, 1);
+	    $aCmdName = $this->config('task_cmd_list_name', '');
+	    $aMaxParallelJobs = $this->config('max_parallel_tasks', 1);
 
-	    $aWait = shouldWaitForUnfinishedTasks($aMaxParallelJobs, $theContext);
+	    $aWait = $this->shouldWaitForUnfinishedTasks($aMaxParallelJobs);
 
-	    if(!$aWait && countEnquedTasks() > 0) {
+	    if(!$aWait && $this->countEnquedTasks() > 0) {
 	        // There is room for another job. Let's spawn it.
-	        $aTask = array_shift($theContext['tasks_queue']);
-	        runTask($aTask, $aMaxParallelJobs, $theContext);
+	        $aTask = dequeueTask();
+	        $this->runTask($aTask, $aMaxParallelJobs);
 
 	        $aSpawnedNewTask = true;
 	    }
@@ -177,16 +175,19 @@ class App {
 	}
 
 	private function setLastKnownCommit($theHash) {
+		if($theHash == $this->mContext->get('last_commit')) {
+			return;
+		}
 	    $this->mContext->set('last_commit', $theHash);
 	    $this->mLog->info("Last known commit (on memory and on disk) changed to " . $theHash);
 	}
 
-	private function performGitPull($theWatchDir, $theGitExe, $theContext) {
+	private function performGitPull($theWatchDir, $theGitExe) {
 	    $aEntries = array();
 
-	    say("Updating repo with git pull", SAY_DEBUG, $theContext);
+	    $this->mLog->debug("Updating repo with git pull");
 	    $aOutput = exec('cd ' . $theWatchDir . ' & ' . $theGitExe . ' pull', $aEntries);
-	    say(implode("\n", $aEntries), SAY_DEBUG, $theContext);
+	    $this->mLog->debug(implode("\n", $aEntries));
 	}
 
 	private function findCommitsFromGitLog($theWatchDir, $theGitExe) {
@@ -213,15 +214,15 @@ class App {
 	    return $aCommits;
 	}
 
-	private function findNewCommits($theWatchDir, $theGitExe, $theLastCommitHash, $theContext) {
+	private function findNewCommits($theWatchDir, $theGitExe, $theLastCommitHash) {
 	    $aNewCommits = array();
-	    $aPerformPull = get_ini('perform_git_pull', $theContext, true);
+	    $aPerformPull = $this->config('perform_git_pull', false);
 
 	    if($aPerformPull) {
-	        performGitPull($theWatchDir, $theGitExe, $theContext);
+	        $this->performGitPull($theWatchDir, $theGitExe);
 	    }
 
-	    $aCommits = findCommitsFromGitLog($theWatchDir, $theGitExe);
+	    $aCommits = $this->findCommitsFromGitLog($theWatchDir, $theGitExe);
 	    $aShouldInclude = false;
 
 	    for($i = count($aCommits) - 1; $i >= 0; $i--) {
@@ -240,15 +241,20 @@ class App {
 	    return $aNewCommits;
 	}
 
-	private function enqueTask($theTask, & $theContext) {
+	private function enqueTask($theTask) {
 	    array_push($theContext['tasks_queue'], $theTask);
-	    say("Enqueing task " . $theTask['hash'] . '-' . $theTask['permutation'], SAY_DEBUG, $theContext);
+	    $this->mLog->debug("Enqueing task " . $theTask['hash'] . '-' . $theTask['permutation']);
 	}
 
-	private function createTask($theCommitHash, $theCommitMessage, $thePermutation, $theContext) {
+	private function dequeueTask() {
+	    echo "dequeueTask()\n";
+	    $this->mLog->debug("Dequeue task " . $aTask['hash'] . '-' . $aTask['permutation']);
+	}
+
+	private function createTask($theCommitHash, $theCommitMessage, $thePermutation) {
 	    $aUid = $theCommitHash . '-' . $thePermutation['hash'];
 
-	    $aDataDir = get_ini('data_dir', $theContext);
+	    $aDataDir = $this->config('data_dir');
 	    $aTaskDir = $aDataDir . DIRECTORY_SEPARATOR . $theCommitHash . DIRECTORY_SEPARATOR;
 	    $aLogFile = $aTaskDir . $aUid . '.log';
 	    $aInfoFile = $aTaskDir . $aUid . '.json';
@@ -258,7 +264,7 @@ class App {
 	        'cmd_return_code' => -1,
 	        'log_file' => $aLogFile,
 	        'info_file' => $aInfoFile,
-	        'working_dir' => get_ini('task_cmd_working_dir', $theContext),
+	        'working_dir' => $this->config('task_cmd_working_dir'),
 	        'hash' => $theCommitHash,
 	        'message' => $theCommitMessage,
 	        'permutation' => $thePermutation['hash'],
@@ -285,41 +291,39 @@ class App {
 	            foreach($aReplace as $aReplacePiece) {
 	                $aString = str_ireplace($aSearch, $aReplacePiece, $theString);
 	                $aParamsString = $theParamsString . $aKey . '=' . $aReplacePiece . ', ';
-	                replaceTolken($aString, $theSearches, $theReplaces, $theIdx + 1, $theOutputs, $aParamsString);
+	                $this->replaceTolken($aString, $theSearches, $theReplaces, $theIdx + 1, $theOutputs, $aParamsString);
 	            }
 	        } else {
 	            $aString = str_ireplace($aSearch, $aReplace, $theString);
 	            $aParamsString = $theParamsString . $aKey . '=' . $aReplace . ', ' ;
-	            replaceTolken($aString, $theSearches, $theReplaces, $theIdx + 1, $theOutputs, $aParamsString);
+	            $this->replaceTolken($aString, $theSearches, $theReplaces, $theIdx + 1, $theOutputs, $aParamsString);
 	        }
 	    }
 	}
 
-	private function checkNonReplacedValues($thePermutations, $theContext) {
+	private function checkNonReplacedValues($thePermutations) {
 	    if(count($thePermutations) > 0) {
 	        foreach($thePermutations as $aItem) {
 	            if(preg_match_all('/.*\{@.*\}/i', $aItem['cmd'])) {
-	                say('Unreplaced value in command: ' . $aItem['cmd'], SAY_ERROR, $theContext);
-	                exit(4);
+	                throw new Exception('Unreplaced value in command: ' . $aItem['cmd']);
 	            }
 	        }
 	    }
 	}
 
-	private function generateTaskCmdPermutations($theContext) {
+	private function generateTaskCmdPermutations() {
 	    $aPermutations = array();
-	    $aTaskCmd = get_ini('task_cmd', $theContext);
+	    $aTaskCmd = $this->config('task_cmd');
 
 	    if(!isset($aTaskCmd)) {
-	        say('Empty or invalid "task_cmd" directive provided in INI file.', SAY_ERROR, $theContext);
-	        exit(4);
+	        throw new Exception('Empty or invalid "task_cmd" directive provided in INI file.');
 	    }
 
-	    $aTaskCmdParams = isset($theContext['ini_values']['task_cmd_params']) ? $theContext['ini_values']['task_cmd_params'] : array();
+	    $aTaskCmdParams = isset($this->mINIValues['task_cmd_params']) ? $this->mINIValues['task_cmd_params'] : array();
 
 	    if(count($aTaskCmdParams) > 0) {
 	        $aCmds = array();
-	        replaceTolken($aTaskCmd, array_keys($aTaskCmdParams), array_values($aTaskCmdParams), 0, $aCmds);
+	        $this->replaceTolken($aTaskCmd, array_keys($aTaskCmdParams), array_values($aTaskCmdParams), 0, $aCmds);
 
 	        if(count($aCmds) > 0) {
 	            foreach($aCmds as $aCmd) {
@@ -330,17 +334,17 @@ class App {
 	        $aPermutations[] = array('cmd' => $aTaskCmd, 'hash' => md5($aTaskCmd), 'params' => 'NONE');
 	    }
 
-	    checkNonReplacedValues($aPermutations, $theContext);
+	    $this->checkNonReplacedValues($aPermutations);
 	    return $aPermutations;
 	}
 
-	private function createTasksFromCommit($theHash, $theMessage, $theContext) {
+	private function createTasksFromCommit($theHash, $theMessage) {
 	    $aTasks = array();
-	    $aPermutations = generateTaskCmdPermutations($theContext);
+	    $aPermutations = $this->generateTaskCmdPermutations();
 
 	    if(count($aPermutations) > 0) {
 	        foreach($aPermutations as $aPermutation) {
-	            $aTasks[] = createTask($theHash, $theMessage, $aPermutation, $theContext);
+	            $aTasks[] = $this->createTask($theHash, $theMessage, $aPermutation);
 	        }
 	    }
 
@@ -351,35 +355,35 @@ class App {
 	    file_put_contents($theTask['info_file'], json_encode($theTask, JSON_PRETTY_PRINT));
 	}
 
-	private function runTask($theTask, $theMaxParallel, $theContext) {
-	    $aSkipPerformedTasks = get_ini('skip_performed_tasks', $theContext, false);
+	private function runTask($theTask, $theMaxParallel) {
+	    $aSkipPerformedTasks = $this->config('skip_performed_tasks', false);
 	    $aTaskAlreadyPerformed = false;
 
 	    if(file_exists($theTask['info_file'])) {
-	        $aTaskInfo = loadTask($theTask['info_file']);
-	        $aTaskAlreadyPerformed = isTaskFinished($aTaskInfo);
+	        $aTaskInfo = $this->loadTask($theTask['info_file']);
+	        $aTaskAlreadyPerformed = $this->isTaskFinished($aTaskInfo);
 	    }
 
 	    if($aSkipPerformedTasks && $aTaskAlreadyPerformed) {
 	        // It seems the task at hand already has already
 	        // been executed in the past. Since we were instructed
 	        // to skip already performed tasks, we stop here.
-	        say('Skipping already performed task (hash=' . $theTask['hash'] . ', permutation=' . $theTask['permutation'] . ')', SAY_WARN, $theContext);
+	        $this->mLog->warn('Skipping already performed task (hash=' . $theTask['hash'] . ', permutation=' . $theTask['permutation'] . ')');
 	        return;
 	    }
 
 	    // Update exec time
 	    $theTask['exec_time_start'] = time();
 
-	    say('Running task (hash=' . $theTask['hash'] . ', permutation=' . $theTask['permutation'] . ')', SAY_INFO, $theContext);
-	    writeTaskInfoFile($theTask);
+	    $this->mLog->info('Running task (hash=' . $theTask['hash'] . ', permutation=' . $theTask['permutation'] . ')');
+	    $this->writeTaskInfoFile($theTask);
 
 	    $aParallel = $theMaxParallel > 1;
-	    execTaskCommand($theTask, $aParallel, $theContext);
+	    $this->execTaskCommand($theTask, $aParallel);
 	}
 
-	private function createTaskResultsFolder($theCommitHash, $theContext) {
-	    $aDataDir = get_ini('data_dir', $theContext);
+	private function createTaskResultsFolder($theCommitHash) {
+	    $aDataDir = $this->config('data_dir');
 	    $aCommitDir = $aDataDir . DIRECTORY_SEPARATOR . $theCommitHash;
 
 	    if(!file_exists($aCommitDir)) {
@@ -395,7 +399,7 @@ class App {
 	    $this->createTaskResultsFolder($theHash);
 
 	    if(count($aTasks) > 0) {
-	        foreach($aTasks as  $aTask) {
+	        foreach($aTasks as $aTask) {
 	            $this->enqueTask($aTask);
 	        }
 	    }
@@ -439,11 +443,11 @@ class App {
 	    return $aTasksCount > 0;
 	}
 
-	private function monitorRunningTasks(& $theContext) {
-	    $aTasksNow = $this->countRunningTasks($theContext);
+	private function monitorRunningTasks() {
 		$aTasksBefore = $this->mContext->get('running_tasks');
+	    $aTasksNow = $this->countRunningTasks();
 
-	    if($this->mContext->get('running_tasks') != $aTasksNow) {
+	    if($aTasksBefore != $aTasksNow) {
 	        if($aTasksNow > 0) {
 	            $this->mLog->info('Tasks running now: ' . $aTasksNow);
 	        }
@@ -457,13 +461,13 @@ class App {
 	    }
 	}
 
-	private function processGitPulls(& $theContext) {
+	private function processGitPulls() {
 	    $aPullInterval = $this->config('git_pull_interval', 10);
 	    $aShouldPull = time() - $this->mContext->get('time_last_pull') >= $aPullInterval;
 
 	    if($aShouldPull) {
-	        $aAnyNewTask = $this->processNewCommits($theContext);
-	        $this->mContext->set('time_last_pull'], time());
+	        $aAnyNewTask = $this->processNewCommits();
+	        $this->mContext->set('time_last_pull', time());
 	    }
 	}
 
@@ -594,7 +598,6 @@ class App {
 	/**
 	 * Informs about the result of running the prepare task command.
 	 *
-	 * @param  $theContext         app context.
 	 * @return mixed               return <code>false</code> if the command was not executed, or an integer containing the value the command returned.
 	 */
 	private function getPrepareTaskCommandResult() {
@@ -658,9 +661,9 @@ class App {
 	        return;
 	    }
 
-	    if($this->prepareTaskCommandFileExists($theContext)) {
+	    if($this->prepareTaskCommandFileExists()) {
 	        // pre task command is running or have finished
-	        $aPrepareResult = $this->getPrepareTaskCommandResult($theContext);
+	        $aPrepareResult = $this->getPrepareTaskCommandResult();
 
 	        if($aPrepareResult === false) {
 	            // We have a prepare task, but it is not finished yet. Halt
@@ -670,30 +673,26 @@ class App {
 	        } else if($aPrepareResult != 0) {
 	            throw new Exception('Command in "setup_cmd" returned error (return='.$aPrepareResult.')');
 
-	        } else if($aPrepareResult == 0 && ($theContext['status'] == BESEARCHER_STATUS_WAITING_SETUP || $theContext['status'] == BESEARCHER_STATUS_INITING)) {
+	        } else if($aPrepareResult == 0 && ($this->mContext->get('status') == BESEARCHER_STATUS_WAITING_SETUP || $this->mContext->get('status') == BESEARCHER_STATUS_INITING)) {
 	            $this->setStatus(BESEARCHER_STATUS_RUNNING, 'command in "setup_cmd" finished successfully.');
 	        }
 	    } else {
 	        // pre task command has not started yet.
-	        $this->runPrepareTaskCommand($theContext);
+	        $this->runPrepareTaskCommand();
 	    }
 	}
 
 	private function checkLastCommitDataFromDisk() {
-	    $aLastCommitDisk = $this->mContext->get('last_commit');
-	    $aNewCommit = $aLastCommitDisk;
+	    $aLastCommit = $this->mContext->get('last_commit');
 
 	    // If we don't have any information regarding the last commit, we use
 	    // the one provided in the ini file.
-	    if(empty($aNewCommit)) {
-	        $aNewCommit = $this->config('start_commit_hash', '');
-	        $this->mLog->info("No commit info found on disk, using info from INI: " . $aNewCommit);
+	    if(empty($aLastCommit)) {
+	        $aLastCommit = $this->config('start_commit_hash', '');
+	        $this->mLog->info("No commit info found on disk, using info from INI: " . $aLastCommit);
 	    }
 
-	    if($aNewCommit != $theContext['last_commit'] || empty($aLastCommitDisk)) {
-	        $this->mLog->debug("Info regarding last commit has changed: old=" . $theContext['last_commit'] . ", new=" . $aNewCommit);
-	        $this->mContext->set('last_commit', $aNewCommit);
-	    }
+		$this->setLastKnownCommit($aLastCommit);
 	}
 
 	private function performHotReloadProcedures() {
@@ -704,9 +703,9 @@ class App {
 	}
 
 	private function printSummary() {
-	    $aCountRunningTasks = $mContext->get('running_tasks');
+	    $aCountRunningTasks = $this->mContext->get('running_tasks');
 	    $aCountEnquedTasks = $this->countEnquedTasks();
-		$aStatus = $mContext->get('status');
+		$aStatus = $this->mContext->get('status');
 
 	    $this->mLog->info('Running tasks: '. $aCountRunningTasks . ', queued tasks: ' . $aCountEnquedTasks . ', status: ' . $aStatus);
 	}
