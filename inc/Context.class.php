@@ -89,7 +89,7 @@ class Context {
 					$this->mValues[$aKey] = $aValue;
 				}
 			} else {
-				// Disk is invalid, so let's update it with what we have in memery
+				// Disk is invalid, so let's update it with what we have in memory
 				$this->save();
 			}
 		}
@@ -99,6 +99,8 @@ class Context {
 
 	public function get($theKey) {
 		$this->ensureKeyExists($theKey);
+		$this->mValues = $this->getValuesFromDisk();
+
 		return $this->mValues[$theKey];
 	}
 

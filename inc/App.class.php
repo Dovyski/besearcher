@@ -179,7 +179,7 @@ class App {
 			return;
 		}
 	    $this->mContext->set('last_commit', $theHash);
-	    $this->mLog->info("Last known commit (on memory and on disk) changed to " . $theHash);
+	    $this->mLog->info("Last known commit changed to " . $theHash);
 	}
 
 	private function performGitPull($theWatchDir, $theGitExe) {
@@ -682,23 +682,21 @@ class App {
 	    }
 	}
 
-	private function checkLastCommitDataFromDisk() {
+	private function ensureLastCommitIsNotEmpty() {
 	    $aLastCommit = $this->mContext->get('last_commit');
 
 	    // If we don't have any information regarding the last commit, we use
 	    // the one provided in the ini file.
 	    if(empty($aLastCommit)) {
 	        $aLastCommit = $this->config('start_commit_hash', '');
-	        $this->mLog->info("No commit info found on disk, using info from INI: " . $aLastCommit);
+	        $this->mLog->info("Replacing last known commit with info from INI: " . $aLastCommit);
+			$this->setLastKnownCommit($aLastCommit);
 	    }
-
-		$this->setLastKnownCommit($aLastCommit);
 	}
 
 	private function performHotReloadProcedures() {
 	    $this->performConfigHotReload();
-	    //$this->mContext->sync();
-	    $this->checkLastCommitDataFromDisk();
+	    $this->ensureLastCommitIsNotEmpty();
 	    $this->checkPrepareTaskCommandProcedures();
 	}
 
