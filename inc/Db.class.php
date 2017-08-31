@@ -14,6 +14,9 @@ class Db {
 		}
 	}
 
+	public function shutdown() {
+	}
+
 	public function hasTables() {
 		$aStmt = $this->mPDO->prepare("SELECT COUNT(*) AS num FROM sqlite_master WHERE type='table' AND name='context'");
 		$aStmt->execute();

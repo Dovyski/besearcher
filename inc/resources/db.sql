@@ -1,7 +1,6 @@
 CREATE TABLE `context` (
 	`ini_hash`	TEXT NOT NULL,
 	`last_commit`	TEXT NOT NULL,
-	`path_log_file`	TEXT NOT NULL,
 	`time_last_pull`	INTEGER NOT NULL DEFAULT 0,
 	`running_tasks`	INTEGER NOT NULL DEFAULT 0,
 	`status`	TEXT NOT NULL
@@ -19,4 +18,4 @@ CREATE TABLE `tasks` (
 
 --split
 
-INSERT INTO "context" (ini_hash, last_commit, path_log_file, status) VALUES ('', '', '', '');
+INSERT INTO "context" (ini_hash, last_commit, status) VALUES ('', '', '');

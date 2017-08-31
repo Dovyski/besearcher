@@ -10,7 +10,9 @@
 
 require_once(dirname(__FILE__) . '/inc/functions.php');
 require_once(dirname(__FILE__) . '/inc/Db.class.php');
+require_once(dirname(__FILE__) . '/inc/Log.class.php');
 require_once(dirname(__FILE__) . '/inc/Context.class.php');
+require_once(dirname(__FILE__) . '/inc/App.class.php');
 
 define('SAY_ERROR', 3);
 define('SAY_WARN', 2);
@@ -757,6 +759,20 @@ if($argc <= 1) {
      echo " --ini=<path>     Path to the INI files used for configuration.\n";
      echo "\n";
      exit(1);
+}
+
+$aIniPath = isset($aArgs['ini']) ? $aArgs['ini'] : '';
+$aLogPath = isset($aArgs['log']) ? $aArgs['log'] : '';
+
+try {
+    $aApp = new Besearcher\App();
+    $aApp->init($aIniPath, $aLogPath);
+    $aApp->run();
+    exit(1);
+
+} catch(Exception $e) {
+    $aApp->getLogger()->error($e->getMessage());
+    exit(2);
 }
 
 $d = new Besearcher\Db('test.sqlite');

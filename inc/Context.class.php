@@ -9,7 +9,6 @@ class Context {
 		'ini_hash'         => '',
 		'ini_values'       => '',
 		'last_commit'      => '',
-		'path_log_file'    => '',
 		'time_last_pull'   => 0,
 		'running_tasks'    => 0,
 		'status'           => ''
@@ -29,7 +28,7 @@ class Context {
 
 	public function __construct(Db $theDb = null, array $theInitialValues = array()) {
 		$this->mDb = $theDb;
-		$this->mAutoSave = false;
+		$this->mAutoSave = true;
 
 		foreach($this->mValues as $aKey => $aValue) {
 			if(isset($theInitialValues[$aKey])) {
@@ -47,7 +46,6 @@ class Context {
 	        SET
 	            ini_hash = :ini_hash,
 	            last_commit = :last_commit,
-	            path_log_file = :path_log_file,
 	            time_last_pull = :time_last_pull,
 	            running_tasks = :running_tasks,
 	            status = :status
@@ -58,7 +56,6 @@ class Context {
 
 	    $aStmt->bindParam(':ini_hash',       $this->mValues['ini_hash']);
 	    $aStmt->bindParam(':last_commit',    $this->mValues['last_commit']);
-	    $aStmt->bindParam(':path_log_file',  $this->mValues['path_log_file']);
 	    $aStmt->bindParam(':time_last_pull', $this->mValues['time_last_pull']);
 	    $aStmt->bindParam(':running_tasks',  $this->mValues['running_tasks']);
 	    $aStmt->bindParam(':status',         $this->mValues['status']);

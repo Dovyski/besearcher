@@ -14,6 +14,7 @@ define('BESEARCHER_STATUS_RUNNING',          'RUNNING');
 define('BESEARCHER_STATUS_PAUSED',           'PAUSED');
 define('BESEARCHER_STATUS_WAITING_SETUP',    'WAITING_SETUP');
 define('BESEARCHER_STATUS_STOPPING',         'STOPPING');
+define('BESEARCHER_STATUS_STOPED',           'STOPED');
 
 define('BESEARCHER_DB_FILE',                 'besearcher.sqlite');
 
