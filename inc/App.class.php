@@ -41,7 +41,7 @@ class App {
 
 	private function loadINI($theINIPath) {
 		if(!file_exists($theINIPath)) {
-			throw new Exception("Informed INI file is invalid: '" . $theINIPath . "'");
+			throw new \Exception("Informed INI file is invalid: '" . $theINIPath . "'");
 		}
 
 		$this->mINIPath = $theINIPath;
@@ -90,7 +90,7 @@ class App {
 		    $aWaitTime = $this->config('refresh_interval', 1);
 		    sleep($aWaitTime);
 
-		    if($this->mContext->get('status') == BESEARCHER_STATUS_STOPPING && $this->countRunningTasks($aContext) == 0) {
+		    if($this->mContext->get('status') == BESEARCHER_STATUS_STOPPING && $this->countRunningTasks() == 0) {
 		        $this->mLog->info('All running tasks finnished, proceeding with requested shutdown.');
 
 		        // Reset the status of the context in the disk
@@ -343,7 +343,7 @@ class App {
 	    if(count($thePermutations) > 0) {
 	        foreach($thePermutations as $aItem) {
 	            if(preg_match_all('/.*\{@.*\}/i', $aItem['cmd'])) {
-	                throw new Exception('Unreplaced value in command: ' . $aItem['cmd']);
+	                throw new \Exception('Unreplaced value in command: ' . $aItem['cmd']);
 	            }
 	        }
 	    }
@@ -354,7 +354,7 @@ class App {
 	    $aTaskCmd = $this->config('task_cmd');
 
 	    if(!isset($aTaskCmd)) {
-	        throw new Exception('Empty or invalid "task_cmd" directive provided in INI file.');
+	        throw new \Exception('Empty or invalid "task_cmd" directive provided in INI file.');
 	    }
 
 	    $aTaskCmdParams = isset($this->mINIValues['task_cmd_params']) ? $this->mINIValues['task_cmd_params'] : array();
@@ -525,7 +525,7 @@ class App {
 	        // The config INI file may have changed with the pull, so
 	        // let's check current config params
 	        $this->performConfigHotReload();
-			
+
 			$aProcessQueue = true;
 			while($aProcessQueue) {
 				$aProcessQueue = $this->processQueuedTasks();
@@ -717,7 +717,7 @@ class App {
 	            $this->setStatus(BESEARCHER_STATUS_WAITING_SETUP);
 
 	        } else if($aPrepareResult != 0) {
-	            throw new Exception('Command in "setup_cmd" returned error (return='.$aPrepareResult.')');
+	            throw new \Exception('Command in "setup_cmd" returned error (return='.$aPrepareResult.')');
 
 	        } else if($aPrepareResult == 0 && ($this->mContext->get('status') == BESEARCHER_STATUS_WAITING_SETUP || $this->mContext->get('status') == BESEARCHER_STATUS_INITING)) {
 	            $this->setStatus(BESEARCHER_STATUS_RUNNING, 'command in "setup_cmd" finished successfully.');

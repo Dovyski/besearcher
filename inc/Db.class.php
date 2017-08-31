@@ -18,6 +18,12 @@ class Db {
 		$mPDO = null;
 	}
 
+	public function destroy() {
+		$this->mPDO->exec("DROP TABLE tasks");
+		$this->mPDO->exec("DROP TABLE context");
+		$this->createTables();
+	}
+
 	public function hasTables() {
 		$aStmt = $this->mPDO->prepare("SELECT COUNT(*) AS num FROM sqlite_master WHERE type='table' AND name='context'");
 		$aStmt->execute();

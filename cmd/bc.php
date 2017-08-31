@@ -17,10 +17,10 @@ function deleteFilesList($theList, $theExitCode = 1, $theVerbose = false) {
                 echo " removing: ". $aPath . "\n";
             }
 
-            $aOk = unlink($aPath);
+            $aOk = @unlink($aPath);
 
             if(!$aOk) {
-                echo "Unable to remove file: " . $aPath . ". Is it locked by another program?\n";
+                echo "Unable to remove file: \"" . $aPath . "\". Is it locked by another program?\n";
                 exit($theExitCode);
             }
         }
@@ -96,8 +96,15 @@ if(!file_exists($aDataDir)) {
 }
 
 $aDbPath = $aINI['data_dir'] . DIRECTORY_SEPARATOR . BESEARCHER_DB_FILE;
-$aDb = new Besearcher\Db($aDbPath);
+$aDb = new Besearcher\Db($aDbPath, false);
+
+if(!$aDb->hasTables()) {
+    echo "Besearcher database is not ready. Please, run besearcher at least once before using this \"bc\" command line tool.\n";
+    exit(2);
+}
+
 $aContext = new Besearcher\Context($aDb);
+$aContext->load();
 
 $aIsVerbose = isset($aArgs['v']) || isset($aArgs['verbose']);
 $aIsForce = isset($aArgs['f']) || isset($aArgs['force']);
@@ -110,10 +117,8 @@ if(isset($aArgs['status'])) {
     echo " Tasks waiting in queue: ". $aQueueSize."\n";
     echo " Tasks running: ". $aContext->get('running_tasks')."\n";
 }
-exit();
+
 if(isset($aArgs['pause']) || isset($aArgs['resume']) || isset($aArgs['stop'])) {
-    $aOverride = array();
-    $aRefreshInterval = @$aINI['refresh_interval'];
     $aStatus = '';
     $aText = '';
 
@@ -126,18 +131,10 @@ if(isset($aArgs['pause']) || isset($aArgs['resume']) || isset($aArgs['stop'])) {
         }
         $aStatus = BESEARCHER_STATUS_STOPPING;
         $aText = 'stop';
-        $aRefreshInterval = 'a few';
     }
 
-    $aOverride['status'] = $aStatus;
-    $aOk = writeContextOverrideToDisk($aDataDir, $aOverride);
-
-    if(!$aOk) {
-        echo "Unable to ".$aText." besearcher!\n";
-        exit(1);
-    } else {
-        echo "Ok, besearcher will ".$aText." in ".$aRefreshInterval." seconds!\n";
-    }
+    $aContext->set('status', $aStatus);
+    echo "Ok, besearcher will ".$aText.".\n";
 }
 
 if(isset($aArgs['reload'])) {
@@ -146,8 +143,6 @@ if(isset($aArgs['reload'])) {
     }
 
     $aDeleteList = array();
-    $aDeleteList[] = $aDataDir . DIRECTORY_SEPARATOR . BESEARCHER_LAST_COMMIT_FILE;
-
     $aData = findTasksInfos($aDataDir);
 
     foreach($aData as $aCommitHash => $aTasks) {
@@ -158,6 +153,8 @@ if(isset($aArgs['reload'])) {
     }
 
     deleteFilesList($aDeleteList, 2, $aIsVerbose);
+    $aContext->set('last_commit', '');
+
     echo "Ok, besearcher was reloaded successfully!\n";
 }
 
@@ -166,13 +163,7 @@ if(isset($aArgs['reset'])) {
         confirmOperation();
     }
 
-    $aBasePath = $aDataDir . DIRECTORY_SEPARATOR;
-    $aFiles = array(
-        $aBasePath . BESEARCHER_LAST_COMMIT_FILE,
-        $aBasePath . BESEARCHER_CONTEXT_FILE
-    );
-
-    deleteFilesList($aFiles, 3, $aIsVerbose);
+    $aDb->destroy();
     echo "Ok, besearcher was reset successfully!\n";
 }
 
