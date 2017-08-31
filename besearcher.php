@@ -12,6 +12,7 @@ require_once(dirname(__FILE__) . '/inc/constants.php');
 require_once(dirname(__FILE__) . '/inc/Db.class.php');
 require_once(dirname(__FILE__) . '/inc/Log.class.php');
 require_once(dirname(__FILE__) . '/inc/Context.class.php');
+require_once(dirname(__FILE__) . '/inc/Tasks.class.php');
 require_once(dirname(__FILE__) . '/inc/App.class.php');
 
 define('RUNNER_CMD', 'php "' . dirname(__FILE__) . DIRECTORY_SEPARATOR . 'cmd' . DIRECTORY_SEPARATOR . 'runner.php"');
@@ -46,7 +47,13 @@ try {
     exit(0);
 
 } catch(Exception $e) {
-    $aApp->getLogger()->error($e->getMessage());
+    $aLogger = $aApp->getLogger();
+
+    if($aLogger != null) {
+        $aLogger->error($e->getMessage());
+    }
+
+    echo $e->getMessage() . "\n";
     exit(2);
 }
 

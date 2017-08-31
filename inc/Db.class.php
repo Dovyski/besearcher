@@ -32,14 +32,6 @@ class Db {
 		return $aRow['num'] > 0;
 	}
 
-	public function tasksQueueSize() {
-		$aStmt = $this->mPDO->prepare("SELECT COUNT(*) AS num FROM tasks WHERE 1");
-		$aStmt->execute();
-		$aRow = $aStmt->fetch(\PDO::FETCH_ASSOC);
-
-		return $aRow['num'];
-	}
-
 	public function createTables() {
 		$aSqlFile = dirname(__FILE__) . '/resources/db.sql';
 		$aStructure = file_get_contents($aSqlFile);

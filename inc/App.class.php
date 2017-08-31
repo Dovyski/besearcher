@@ -5,6 +5,7 @@ namespace Besearcher;
 class App {
 	private $mDb;
 	private $mLog;
+	private $mTasks;
 	private $mContext;
 	private $mINIPath;
 	private $mINIValues;
@@ -64,6 +65,7 @@ class App {
 		$aDbPath = $this->config('data_dir') . DIRECTORY_SEPARATOR . BESEARCHER_DB_FILE;
 		$this->mDb = new Db($aDbPath);
 		$this->mContext = new Context($this->mDb, $this->mLog, array('status' => BESEARCHER_STATUS_INITING));
+		$this->mTasks = new Tasks($this->mDb);
 
 		// Load context data from disk and merge it with in-memory data
 		$this->mContext->sync();
@@ -165,7 +167,8 @@ class App {
 
 	    if(!$aWait && $this->countEnquedTasks() > 0) {
 	        // There is room for another job. Let's spawn it.
-	        $aTask = $this->dequeueTask();
+	        $this->mLog->debug("Dequeueing task");
+	        $aTask = $this->mTasks->dequeueTask();
 	        $this->runTask($aTask, $aMaxParallelJobs);
 
 	        $aSpawnedNewTask = true;
@@ -239,54 +242,6 @@ class App {
 	    }
 
 	    return $aNewCommits;
-	}
-
-	private function enqueTask($theTask) {
-	    $this->mLog->debug("Enqueing task " . $theTask['hash'] . '-' . $theTask['permutation']);
-
-		$aSql = "INSERT INTO tasks (creation_time, commit_hash, permutation_hash, data) VALUES (:creation_time, :commit_hash, :permutation_hash, :data)";
-		$aStmt = $this->mDb->getPDO()->prepare($aSql);
-
-		$aTaskSerialized = serialize($theTask);
-		$aNow = time();
-
-		$aStmt->bindParam(':creation_time', $aNow);
-		$aStmt->bindParam(':commit_hash', $theTask['hash']);
-		$aStmt->bindParam(':permutation_hash', $theTask['permutation']);
-		$aStmt->bindParam(':data', $aTaskSerialized);
-
-		$aOk = $aStmt->execute();
-		return $aOk;
-	}
-
-	private function dequeueTask() {
-	    $this->mLog->debug("Dequeueing task");
-
-		// Get a task from DB
-		$aStmt = $this->mDb->getPDO()->prepare("SELECT * FROM tasks WHERE 1 ORDER BY creation_time ASC LIMIT 1");
-		$aStmt->execute();
-		$aDbTask = $aStmt->fetch(\PDO::FETCH_ASSOC);
-
-		if($aDbTask === false) {
-			throw new \Exception('Unable to dequeu task, tasks queue is probably empty.');
-		}
-
-		$aTask = @unserialize($aDbTask['data']);
-
-		if($aTask === false) {
-			throw new \Exception('Unable to unserialize dequeued task.');
-		}
-
-		// Remove that tasks from the queue
-	    $aStmt = $this->mDb->getPDO()->prepare("DELETE FROM tasks WHERE id = :id");
-	    $aStmt->bindParam(':id', $aDbTask['id']);
-	    $aOk = $aStmt->execute();
-
-		if(!$aOk) {
-			throw new \Exception('Unable to delete task with id '.$aDbTask['id'].' from tasks queue.');
-		}
-
-		return $aTask;
 	}
 
 	private function createTask($theCommitHash, $theCommitMessage, $thePermutation) {
@@ -389,27 +344,13 @@ class App {
 	    return $aTasks;
 	}
 
-	private function writeTaskInfoFile($theTask) {
-	    file_put_contents($theTask['info_file'], json_encode($theTask, JSON_PRETTY_PRINT));
-	}
-
-	private function isTaskFinished($theTaskInfo) {
-	    $aTime = $theTaskInfo['exec_time_end'];
-	    return $aTime != 0;
-	}
-
-	private function loadTask($theInfoFilePath) {
-	    $aInfo = json_decode(file_get_contents($theInfoFilePath), true);
-	    return $aInfo;
-	}
-
 	private function runTask($theTask, $theMaxParallel) {
 	    $aSkipPerformedTasks = $this->config('skip_performed_tasks', false);
 	    $aTaskAlreadyPerformed = false;
 
 	    if(file_exists($theTask['info_file'])) {
-	        $aTaskInfo = $this->loadTask($theTask['info_file']);
-	        $aTaskAlreadyPerformed = $this->isTaskFinished($aTaskInfo);
+	        $aTaskInfo = $this->mTasks->loadTask($theTask['info_file']);
+	        $aTaskAlreadyPerformed = $this->mTasks->isTaskFinished($aTaskInfo);
 	    }
 
 	    if($aSkipPerformedTasks && $aTaskAlreadyPerformed) {
@@ -424,7 +365,7 @@ class App {
 	    $theTask['exec_time_start'] = time();
 
 	    $this->mLog->info('Running task (hash=' . $theTask['hash'] . ', permutation=' . $theTask['permutation'] . ')');
-	    $this->writeTaskInfoFile($theTask);
+	    $this->mTasks->writeTaskInfoFile($theTask);
 
 	    $aParallel = $theMaxParallel > 1;
 	    $this->execTaskCommand($theTask, $aParallel);
@@ -448,7 +389,8 @@ class App {
 
 	    if(count($aTasks) > 0) {
 	        foreach($aTasks as $aTask) {
-	            $this->enqueTask($aTask);
+				$this->mLog->debug("Enqueing task " . $aTask['hash'] . '-' . $aTask['permutation']);
+	            $this->mTasks->enqueTask($aTask);
 	        }
 	    }
 	}

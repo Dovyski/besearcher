@@ -6,9 +6,10 @@
  Author: Fernando Bevilacqua <fernando.bevilacqua@his.se>
  */
 
-require_once(dirname(__FILE__) . '/../inc/functions.php');
+require_once(dirname(__FILE__) . '/../inc/constants.php');
 require_once(dirname(__FILE__) . '/../inc/Db.class.php');
 require_once(dirname(__FILE__) . '/../inc/Context.class.php');
+require_once(dirname(__FILE__) . '/../inc/Tasks.class.php');
 
 function deleteFilesList($theList, $theExitCode = 1, $theVerbose = false) {
     foreach($theList as $aPath) {
@@ -105,12 +106,13 @@ if(!$aDb->hasTables()) {
 
 $aContext = new Besearcher\Context($aDb);
 $aContext->load();
+$aTasks = new Besearcher\Tasks($aDb);
 
 $aIsVerbose = isset($aArgs['v']) || isset($aArgs['verbose']);
 $aIsForce = isset($aArgs['f']) || isset($aArgs['force']);
 
 if(isset($aArgs['status'])) {
-    $aQueueSize = $aDb->tasksQueueSize();
+    $aQueueSize = $aTasks->queueSize();
     echo "Besearcher summary:\n";
     echo " Status: ".$aContext->get('status')."\n";
     echo " Last commit: ".$aContext->get('last_commit')."\n";
@@ -143,7 +145,7 @@ if(isset($aArgs['reload'])) {
     }
 
     $aDeleteList = array();
-    $aData = findTasksInfos($aDataDir);
+    $aData = $aTasks->findTasksInfos($aDataDir);
 
     foreach($aData as $aCommitHash => $aTasks) {
         foreach($aTasks as $aPermutation => $aTask) {
