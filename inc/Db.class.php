@@ -15,6 +15,7 @@ class Db {
 	}
 
 	public function shutdown() {
+		$mPDO = null;
 	}
 
 	public function hasTables() {

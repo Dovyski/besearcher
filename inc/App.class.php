@@ -393,6 +393,16 @@ class App {
 	    file_put_contents($theTask['info_file'], json_encode($theTask, JSON_PRETTY_PRINT));
 	}
 
+	private function isTaskFinished($theTaskInfo) {
+	    $aTime = $theTaskInfo['exec_time_end'];
+	    return $aTime != 0;
+	}
+
+	private function loadTask($theInfoFilePath) {
+	    $aInfo = json_decode(file_get_contents($theInfoFilePath), true);
+	    return $aInfo;
+	}
+
 	private function runTask($theTask, $theMaxParallel) {
 	    $aSkipPerformedTasks = $this->config('skip_performed_tasks', false);
 	    $aTaskAlreadyPerformed = false;
@@ -469,7 +479,7 @@ class App {
 	                continue;
 	            }
 
-	            $this->mLog->info("New commit (hash=" . $aHash . ", msg=" . trim($aMessage) . ")");
+	            $this->mLog->info("Processing new commit (hash=" . $aHash . ", msg=" . trim($aMessage) . ")");
 	            $this->handleNewCommit($aHash, $aMessage);
 	        }
 
@@ -512,19 +522,17 @@ class App {
 	private function step() {
 	    if($this->mContext->get('status') == BESEARCHER_STATUS_RUNNING) {
 	        $this->processGitCommits();
-
 	        // The config INI file may have changed with the pull, so
 	        // let's check current config params
 	        $this->performConfigHotReload();
-
-	        $aProcessQueue = true;
-	        while($aProcessQueue) {
-	            $aProcessQueue = $this->processQueuedTasks();
-	        }
+			
+			$aProcessQueue = true;
+			while($aProcessQueue) {
+				$aProcessQueue = $this->processQueuedTasks();
+			}
 	    }
 
 	    $this->monitorRunningTasks();
-
 	    return true;
 	}
 
@@ -750,5 +758,4 @@ class App {
 		return $this->mLog;
 	}
 }
-
 ?>

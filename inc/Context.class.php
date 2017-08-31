@@ -108,9 +108,13 @@ class Context {
 		}
 	}
 
+	public function load() {
+		$this->mValues = $this->getValuesFromDisk();
+	}
+
 	public function get($theKey) {
 		$this->ensureKeyExists($theKey);
-		$this->mValues = $this->getValuesFromDisk();
+		$this->load();
 
 		return $this->mValues[$theKey];
 	}
