@@ -157,7 +157,7 @@ class Tasks {
 		}
 
 	    $aIds = $this->castArrayEntriesToInt($theTaskIds);
-	    $aStmt = $mDb->getPDO()->prepare("UPDATE tasks SET creation_time = 0 WHERE id IN (".implode(',', $aIds).")");
+	    $aStmt = $this->mDb->getPDO()->prepare("UPDATE tasks SET creation_time = 0 WHERE id IN (".implode(',', $aIds).")");
 	    $aStmt->execute();
 	}
 
@@ -167,7 +167,7 @@ class Tasks {
 		}
 
 	    $aIds = $this->castArrayEntriesToInt($theTaskIds);
-	    $aStmt = $theDb->getPDO()->prepare("DELETE FROM tasks WHERE id IN (".implode(',', $aIds).")");
+	    $aStmt = $this->mDb->getPDO()->prepare("DELETE FROM tasks WHERE id IN (".implode(',', $aIds).")");
 	    $aStmt->execute();
 	}
 

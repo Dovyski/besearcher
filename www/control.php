@@ -11,6 +11,7 @@
     try {
         $aDbPath = $aINI['data_dir'] . DIRECTORY_SEPARATOR . BESEARCHER_DB_FILE;
         $aDb = new Besearcher\Db($aDbPath);
+        $aTasks = new Besearcher\Tasks($aDb);
 
         $aAction = isset($_REQUEST['action']) ? $_REQUEST['action'] : '';
 
@@ -29,17 +30,17 @@
             }
 
             if($_REQUEST['action'] == 'move') {
-                prioritizeTasksInQueue($aSelected, $aDb);
+                $aTasks->prioritizeTasksInQueue($aSelected, $aDb);
 
             } else if ($_REQUEST['action'] == 'delete') {
-                removeTasksFromQueue($aSelected, $aDb);
+                $aTasks->removeTasksFromQueue($aSelected, $aDb);
             }
 
             $aMessage = array('title' => 'Success!', 'body' => 'The tasks queue has been updated.', 'type' => 'success');
         }
 
         // Get pagination info
-        $aTasksCount = $aDb->tasksQueueSize();
+        $aTasksCount = $aTasks->queueSize();
         $aPage = isset($_REQUEST['page']) ? $_REQUEST['page'] + 0 : 1;
         $aSize = isset($_REQUEST['size']) ? $_REQUEST['size'] + 0 : 100;
         $aPagination = Besearcher\Utils::paginate($aPage, $aSize, $aTasksCount);

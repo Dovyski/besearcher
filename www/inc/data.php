@@ -4,6 +4,8 @@ namespace Besearcher;
 
 class Data {
 	private static $mINI;
+	private static $mDb;
+	private static $mTasks;
 	private static $mData;
 	private static $mLoaded;
 
@@ -14,6 +16,11 @@ class Data {
 		$aDataDir = self::$mINI['data_dir'];
 
 		if(file_exists($aDataDir)) {
+			$aDbPath = $aDataDir . DIRECTORY_SEPARATOR . BESEARCHER_DB_FILE;
+
+			self::$mDb = new Db($aDbPath);
+			self::$mTasks = new Tasks(self::$mDb);
+
 			$aCacheFile = $aDataDir . DIRECTORY_SEPARATOR . BESEARCHER_WEB_CACHE_FILE;
 			$aData = false;
 
@@ -26,7 +33,7 @@ class Data {
 			// If cache data is inexistent or invalid, load
 			// raw data instead
 			if($aData === false) {
-				$aData = findTasksInfos($aDataDir);
+				$aData = self::$mTasks->findTasksInfos($aDataDir);
 			}
 
 			self::$mData = $aData;

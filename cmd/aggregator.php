@@ -6,7 +6,10 @@
  Author: Fernando Bevilacqua <fernando.bevilacqua@his.se>
  */
 
-require_once(dirname(__FILE__) . '/../inc/functions.php');
+ require_once(dirname(__FILE__) . '/../inc/constants.php');
+ require_once(dirname(__FILE__) . '/../inc/Db.class.php');
+ require_once(dirname(__FILE__) . '/../inc/Context.class.php');
+ require_once(dirname(__FILE__) . '/../inc/Tasks.class.php');
 
 $aOptions = array(
     "ini:",
@@ -41,8 +44,18 @@ if(!file_exists($aDataDir)) {
     exit(1);
 }
 
+$aDbPath = $aINI['data_dir'] . DIRECTORY_SEPARATOR . BESEARCHER_DB_FILE;
+$aDb = new Besearcher\Db($aDbPath, false);
+
+if(!$aDb->hasTables()) {
+    echo "Besearcher database is not ready. Please, run besearcher at least once before using this \"aggregator\" command line tool.\n";
+    exit(2);
+}
+
+$aTasks = new Besearcher\Tasks($aDb);
+
 // Load the data
-$aData = findTasksInfos($aDataDir);
+$aData = $aTasks->findTasksInfos($aDataDir);
 
 $aShouldCreateCache = isset($aArgs['create-web-cache']);
 
