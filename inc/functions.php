@@ -155,25 +155,6 @@ function findTasksInfos($theDataDir) {
  * @param  boolean $theIncludeOverride [description]
  * @return [type]                      [description]
  */
-function loadContextFromDisk($theDataDir) {
-    $aContextPath = $theDataDir . DIRECTORY_SEPARATOR . BESEARCHER_CONTEXT_FILE;
-
-    $aContext = false;
-    $aContextRaw = @file_get_contents($aContextPath);
-
-    if($aContextRaw !== false) {
-        $aContext = @unserialize($aContextRaw);
-    }
-
-    return $aContext;
-}
-
-/**
- * [loadContextFromDisk description]
- * @param  [type]  $theDataDir         [description]
- * @param  boolean $theIncludeOverride [description]
- * @return [type]                      [description]
- */
 function loadOverrideContextFromDisk($theDataDir) {
     $aOverridePath = $theDataDir . DIRECTORY_SEPARATOR . BESEARCHER_CONTEXT_OVERRIDE_FILE;
     $aOverrideRaw = @file_get_contents($aOverridePath);
@@ -195,17 +176,6 @@ function loadOverrideContextFromDisk($theDataDir) {
 function hasOverrideContextInDisk($theDataDir) {
     $aOverridePath = $theDataDir . DIRECTORY_SEPARATOR . BESEARCHER_CONTEXT_OVERRIDE_FILE;
     return file_exists($aOverridePath);
-}
-
-function writeContextToDisk(& $theContext) {
-    $theDataDir = get_ini('data_dir', $theContext, '');
-    $aContextPath = $theDataDir . DIRECTORY_SEPARATOR . BESEARCHER_CONTEXT_FILE;
-    $aSerializedContext = serialize($theContext);
-    $aRet = @file_put_contents($aContextPath, $aSerializedContext);
-
-    Besearcher\Db::saveContext($theContext);
-
-    return $aRet;
 }
 
 function writeContextOverrideToDisk($theDataDir, $theDiff) {

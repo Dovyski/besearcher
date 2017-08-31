@@ -9,7 +9,8 @@
  */
 
 require_once(dirname(__FILE__) . '/inc/functions.php');
-require_once(dirname(__FILE__) . '/inc/db.php');
+require_once(dirname(__FILE__) . '/inc/Db.class.php');
+require_once(dirname(__FILE__) . '/inc/Context.class.php');
 
 define('SAY_ERROR', 3);
 define('SAY_WARN', 2);
@@ -69,6 +70,16 @@ function shouldWaitForUnfinishedTasks($theMaxParallel, $theContext) {
     return $aShouldWait;
 }
 
+function countEnquedTasks() {
+    $aDb = Besearcher\Db::instance();
+
+    $aStmt = $aDb->prepare("SELECT COUNT(*) AS num FROM tasks WHERE 1");
+    $aStmt->execute();
+    $aRow = $aStmt->fetch(\PDO::FETCH_ASSOC);
+
+    return $aRow['num'];
+}
+
 function processQueuedTasks(& $theContext) {
     $aSpawnedNewTask = false;
 
@@ -77,7 +88,7 @@ function processQueuedTasks(& $theContext) {
 
     $aWait = shouldWaitForUnfinishedTasks($aMaxParallelJobs, $theContext);
 
-    if(!$aWait && count($theContext['tasks_queue']) > 0) {
+    if(!$aWait && countEnquedTasks() > 0) {
         // There is room for another job. Let's spawn it.
         $aTask = array_shift($theContext['tasks_queue']);
         runTask($aTask, $aMaxParallelJobs, $theContext);
@@ -99,12 +110,8 @@ function loadLastKnownCommitFromFile($theContext) {
 
 function setLastKnownCommit(& $theContext, $theHash) {
     $theContext['last_commit'] = $theHash;
-
     say("Last known commit (on memory and on disk) changed to " . $theContext['last_commit'], SAY_INFO, $theContext);
-
-    $aDataDir = get_ini('data_dir', $theContext);
-    $aCommitFile = $aDataDir . DIRECTORY_SEPARATOR . 'beseacher.last-commit';
-    file_put_contents($aCommitFile, $theContext['last_commit']);
+    writeContextToDisk($theContext);
 }
 
 function performGitPull($theWatchDir, $theGitExe, $theContext) {
@@ -390,6 +397,7 @@ function processGitPulls(& $theContext) {
     if($aShouldPull) {
         $aAnyNewTask = processNewCommits($theContext);
         $theContext['time_last_pull'] = time();
+        writeContextToDisk($theContext);
     }
 }
 
@@ -548,10 +556,14 @@ function getPrepareTaskCommandResult(& $theContext) {
 }
 
 function setAppStatus(& $theContext, $theValue, $theLogMessage = '', $theLogType = SAY_INFO) {
-    if($theContext['status'] != $theValue) {
-        say('App status changed to ' . $theValue . '. ' . ($theLogMessage != '' ? 'Note: ' . $theLogMessage : ''), $theLogType, $theContext);
+    if($theContext['status'] == $theValue) {
+        return;
     }
+
+    say('App status changed to ' . $theValue . '. ' . ($theLogMessage != '' ? 'Note: ' . $theLogMessage : ''), $theLogType, $theContext);
     $theContext['status'] = $theValue;
+
+    writeContextToDisk($theContext);
 }
 
 function runPrepareTaskCommand(& $theContext) {
@@ -649,57 +661,31 @@ function performConfigHotReload(& $theContext) {
 
 function performContextMaintenance(& $theContext) {
     $aDataDir = get_ini('data_dir', $theContext, '');
-    $aStatus = $theContext['status'];
 
-    $aReplaceContext = array();
+    $aNewContext = loadContextFromDisk($aDataDir);
+    $aDiskHasValidData = $aNewContext['ini_path'] != '';
+    $aAreContextsDifferent = serialize($theContext) != serialize($aNewContext);
 
-    if($aStatus == BESEARCHER_STATUS_INITING) {
-        // We are initing besearcher. We are allowed to use a context
-        // from the disk
-        $aDiskContext = loadContextFromDisk($aDataDir);
+    if($aDiskHasValidData && $aAreContextsDifferent) {
+        say("Patching currently active context.", SAY_DEBUG, $theContext);
 
-        if($aDiskContext === false) {
-            say("No previous context found on disk, proceeding to create a new one.", SAY_INFO, $theContext);
-        } else {
-            say("Previous context found on disk. It will be used.", SAY_INFO, $theContext);
-            $aReplaceContext = $aDiskContext;
-        }
-    } else {
-        // We are not initing, so we can only get a new context from the disk
-        // if it comes from the override file.
-        $aOverrideContext = loadOverrideContextFromDisk($aDataDir);
-
-        if($aOverrideContext !== false) {
-            say("Context override found on disk, it will replace the currently active context.", SAY_DEBUG, $theContext);
-            $aReplaceContext = $aOverrideContext;
-        }
-    }
-
-    // Update the current context with the data from the new context, if any
-    if(count($aReplaceContext) > 0) {
-        // Save the log stream
-        $aLogStream = $theContext['log_file_stream'];
-
-        say("Patching currently active context.", SAY_INFO, $theContext);
-        foreach($aReplaceContext as $aKey => $aValue) {
-            $aIsAboutStream = $aKey == 'log_file_stream';
+        foreach($aNewContext as $aKey => $aValue) {
             $aIsDifferent = serialize($theContext[$aKey]) != serialize($aValue);
-            $aShouldLog = !$aIsAboutStream && $aIsDifferent;
-
-            if($aShouldLog) {
+            if($aIsDifferent) {
                 say('context.' . $aKey . ' = ' . (is_array($aValue) ? 'Array' : $aValue) . ' (old=' . (is_array($theContext[$aKey]) ? 'Array' : $theContext[$aKey]) . ')', SAY_DEBUG, $theContext);
+                $theContext[$aKey] = $aValue;
             }
-            $theContext[$aKey] = $aValue;
         }
-
-        // Restore the log stream
-        $theContext['log_file_stream'] = $aLogStream;
     }
 
-    $aOk = writeContextToDisk($theContext);
+    if($aAreContextsDifferent) {
+        echo "WRITE:\n";
+        //print_r($theContext);
+        $aOk = writeContextToDisk($theContext);
 
-    if($aOk === false) {
-        say("Unable to save context to disk.", SAY_ERROR, $theContext);
+        if($aOk === false) {
+            say("Unable to save context to disk.", SAY_ERROR, $theContext);
+        }
     }
 }
 
@@ -712,7 +698,7 @@ function performHotReloadProcedures(& $theContext) {
 
 function printSummary(& $theContext) {
     $aCountRunningTasks = $theContext['running_tasks'];
-    $aCountEnquedTasks = count($theContext['tasks_queue']);
+    $aCountEnquedTasks = countEnquedTasks();
     say('Running tasks: '. $aCountRunningTasks . ', queued tasks: ' . $aCountEnquedTasks . ', status: ' . $theContext['status'], SAY_INFO, $theContext);
 }
 
@@ -739,13 +725,14 @@ function initDatabase(& $theContext) {
 
 function say($theMessage, $theType, $theContext) {
     global $gSayStrings;
+    global $log_file_stream;
 
     $aLogLevel = get_ini('log_level', $theContext, 0);
     $aLabel = isset($gSayStrings[$theType]) ? $gSayStrings[$theType] : 'UNKNOWN';
     $aMessage = date('[Y-m-d H:i:s]') . ' [' . $aLabel . '] ' . $theMessage . "\n";
 
     if($theType >= $aLogLevel) {
-        fwrite($theContext['log_file_stream'] == null ? STDOUT : $theContext['log_file_stream'], $aMessage);
+        fwrite($log_file_stream == null ? STDOUT : $log_file_stream, $aMessage);
     }
 }
 
@@ -772,14 +759,25 @@ if($argc <= 1) {
      exit(1);
 }
 
+$d = new Besearcher\Db('test.sqlite');
+$c = new Besearcher\Context($d);
+$c->set('ini_hash', 55);
+echo 'ini_hash_BEFORE = ' . $c->get('ini_hash') . "\n";
+$c->sync();
+echo 'ini_hash_AFTER = ' . $c->get('ini_hash') . "\n";
+$c->set('last_commit', 2);
+$c->save();
+exit();
+
+global $tasks_queue;
+$tasks_queue = array();
+
 $aContext = array(
     'ini_path'         => isset($aArgs['ini']) ? $aArgs['ini'] : '',
     'ini_hash'         => '',
     'ini_values'       => '',
     'last_commit'      => '',
     'path_log_file'    => isset($aArgs['log']) ? $aArgs['log'] : '',
-    'log_file_stream'  => null,
-    'tasks_queue'      => array(),
     'time_last_pull'   => 0,
     'running_tasks'    => 0,
     'status'           => BESEARCHER_STATUS_INITING
@@ -790,7 +788,8 @@ register_shutdown_function('shutdown', $aContext);
 
 // Open the log file. Program messages will be printed to stdout
 // and to that file.
-$aContext['log_file_stream'] = empty($aContext['path_log_file']) ? STDOUT : fopen($aContext['path_log_file'], 'a');
+global $log_file_stream; // TODO: get rid of this!
+$log_file_stream = empty($aContext['path_log_file']) ? STDOUT : fopen($aContext['path_log_file'], 'a');
 
 say('Besearcher starting up. What a great day for science!', SAY_INFO, $aContext);
 
@@ -827,8 +826,8 @@ while($aActive) {
 
 say('Besearcher is done. Over and out!', SAY_INFO, $aContext);
 
-if($aContext['log_file_stream'] != null) {
-    fclose($aContext['log_file_stream']);
+if($log_file_stream != null) {
+    fclose($log_file_stream);
 }
 
 exit(0);
