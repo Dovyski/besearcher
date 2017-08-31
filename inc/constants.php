@@ -17,14 +17,10 @@ define('BESEARCHER_STATUS_STOPPING',         'STOPPING');
 define('BESEARCHER_STATUS_STOPED',           'STOPED');
 
 define('BESEARCHER_DB_FILE',                 'besearcher.sqlite');
-
 define('BESEARCHER_CACHE_FILE_EXT',          '.besearcher-cache');
 define('BESEARCHER_SETEUP_FILE',             'besearcher.setup_cmd-result');
 define('BESEARCHER_SETUP_LOG_FILE',          'setup_cmd.log');
-define('BESEARCHER_LAST_COMMIT_FILE',        'beseacher.last-commit');
 define('BESEARCHER_WEB_CACHE_FILE',          'beseacher.web-cache');
-define('BESEARCHER_CONTEXT_FILE',            'beseacher.context');
-define('BESEARCHER_CONTEXT_OVERRIDE_FILE',   'beseacher.context-override');
 
 define('BESEARCHER_COMMIT_SKIP_TOKEN',       '/\[(skip-ci|skip|skip-ic|skip-besearcher)\]/');
 

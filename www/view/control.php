@@ -20,19 +20,11 @@
         </div>
     <?php } ?>
 
-    <?php if($aData['has_override']) { ?>
-        <div class="row">
-            <div class="col-lg-12">
-                <div class="alert alert-danger" role="alert"><i class="fa fa-warning fa-3x" style="float: left; padding: 1px 15px 5px 5px;"></i><strong>CHANGES PENDING!</strong> A few changes issued to Besearcher are still pending. As a consequence, the data displayed below is not accurate (it does not reflect the pending changes). Wait a few seconds then refresh this page to get the most recent (and accurate) data Besearcher is using.</div>
-            </div>
-        </div>
-    <?php } ?>
-
     <div class="row">
         <div class="col-lg-12">
-            <h3>Global settings</h3>
-            <?php if(count($aData['settings']) == 0) { ?>
-                <p>There are no settings available for edit.</p>
+            <h3>Besearcher context</h3>
+            <?php if(count($aData['context']) == 0) { ?>
+                <p>There are no settings available to edit.</p>
 
             <?php } else { ?>
                 <table width="100%" class="table table-striped table-bordered table-hover">
@@ -43,7 +35,9 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr><td>status</td><td><?php echo $aData['settings']['status']; ?></td></tr>
+                        <tr><td>status</td><td><?php echo $aData['context']['status']; ?></td></tr>
+                        <tr><td>last_commit</td><td><?php echo $aData['context']['last_commit']; ?></td></tr>
+                        <tr><td>running_tasks</td><td><?php echo $aData['context']['running_tasks']; ?></td></tr>
                     </tbody>
                 </table>
             <?php } ?>
@@ -77,12 +71,12 @@
                             foreach($aData['tasks_queue'] as $aItem) {
                                 echo '<tr>';
                                     echo '<td>';
-                                        echo '<input type="checkbox" name="task_'.$aNum.'" value="'.$aItem['hash'].'-'.$aItem['permutation'].'" />';
+                                        echo '<input type="checkbox" name="task_'.$aNum.'" value="'.$aItem['id'].'" />';
                                     echo '</td>';
                                     echo '<td>'.($aData['start'] + $aNum + 1).'</td>';
-                                    echo '<td><a href="result.php?commit='.$aItem['hash'].'&permutation='.$aItem['permutation'].'" title="Click to view more information">'.substr($aItem['hash'], 0, 16).'-'.substr($aItem['permutation'], 0, 16).'</a></td>';
+                                    echo '<td><a href="result.php?commit='.$aItem['commit_hash'].'&permutation='.$aItem['permutation_hash'].'" title="Click to view more information">'.substr($aItem['commit_hash'], 0, 16).'-'.substr($aItem['permutation_hash'], 0, 16).'</a></td>';
                                     echo '<td>'.date('Y/m/d H:i:s', $aItem['creation_time']).'</td>';
-                                    echo '<td>'.$aItem['params'].'</td>';
+                                    echo '<td>'.$aItem['data']['params'].'</td>';
                                 echo '</tr>';
                                 $aNum++;
                             }
@@ -97,22 +91,20 @@
         <nav aria-label="Page navigation">
             <ul class="pagination">
                 <?php
-                    if($aData['page'] > 1) {
-                        echo '<li><a href="control.php?page='.($aData['page'] - 1).'&size='.$aData['size'].'" aria-label="Previous"><span aria-hidden="true">&laquo;</span></a></li>';
-                    } else {
-                        echo '<li class="disabled"><span aria-hidden="true">&laquo;</span>';
+                    echo '<li><a href="control.php?page=1&size='.$aData['size'].'" aria-label="First"><span aria-hidden="true">&laquo;</span></a></li>';
+
+                    $aLength = 10;
+                    $aStart = $aData['page'] - $aLength;
+                    $aEnd = $aData['page'] + $aLength;
+
+                    for($i = $aStart; $i <= $aEnd; $i++) {
+                        if($i >= 1 && $i <= $aData['pages']) {
+                            $aExtra = $aData['page'] == $i ? 'class="active"' : '';
+                            echo '<li ' . $aExtra . '><a href="control.php?page='.$i.'&size='.$aData['size'].'">' . $i . '</a></li>';
+                        }
                     }
 
-                    for($i = 1; $i <= $aData['pages']; $i++) {
-                        $aExtra = $aData['page'] == $i ? 'class="active"' : '';
-                        echo '<li ' . $aExtra . '><a href="control.php?page='.$i.'&size='.$aData['size'].'">' . $i . '</a></li>';
-                    }
-
-                    if($aData['page'] < $aData['pages']) {
-                        echo '<li><a href="control.php?page='.($aData['page'] + 1).'&size='.$aData['size'].'" aria-label="Next"><span aria-hidden="true">&raquo;</span></a></li>';
-                    } else {
-                        echo '<li class="disabled"><span aria-hidden="true">&raquo;</span>';
-                    }
+                    echo '<li><a href="control.php?page='.$aData['pages'].'&size='.$aData['size'].'" aria-label="Last"><span aria-hidden="true">&raquo;</span></a></li>';
                 ?>
             </ul>
         </nav>

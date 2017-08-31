@@ -20,10 +20,17 @@ class Db {
 	public function hasTables() {
 		$aStmt = $this->mPDO->prepare("SELECT COUNT(*) AS num FROM sqlite_master WHERE type='table' AND name='context'");
 		$aStmt->execute();
-		$aRows = array();
 		$aRow = $aStmt->fetch(\PDO::FETCH_ASSOC);
 
 		return $aRow['num'] > 0;
+	}
+
+	public function tasksCount() {
+		$aStmt = $this->mPDO->prepare("SELECT COUNT(*) AS num FROM tasks WHERE 1");
+		$aStmt->execute();
+		$aRow = $aStmt->fetch(\PDO::FETCH_ASSOC);
+
+		return $aRow['num'];
 	}
 
 	public function createTables() {

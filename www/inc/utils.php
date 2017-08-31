@@ -3,25 +3,23 @@
 namespace Besearcher;
 
 class Utils {
-	public static function paginate($theArray, $thePageNum, $theSize) {
+	public static function paginate($thePageNum, $thePageSize, $theTotal) {
 		$thePageNum += 0; // cast to int
-		$theSize += 0; // cast to int
+		$thePageSize += 0; // cast to int
 
-		$aTotal = count($theArray);
 		$thePageNum = $thePageNum <= 0 ? 1 : $thePageNum;
-		$theSize = $theSize > $aTotal ? $aTotal : $theSize;
-		$theSize = $theSize <= 0 ? 1 : $theSize;
-		$aPages = ceil($aTotal / $theSize);
+		$thePageSize = $thePageSize > $theTotal ? $theTotal : $thePageSize;
+		$thePageSize = $thePageSize <= 0 ? 1 : $thePageSize;
+		$aPages = ceil($theTotal / $thePageSize);
 
-		$aRet = array('page' => $thePageNum, 'size' => $theSize, 'pages' => $aPages, 'start' => 0, 'data' => array());
+		$aRet = array('page' => $thePageNum, 'size' => $thePageSize, 'pages' => $aPages, 'start' => 0, 'total' => $theTotal);
 
-		if($aTotal == 0) {
+		if($theTotal == 0) {
 			return $aRet;
 		}
 
-		$aStart = ($thePageNum - 1) * $theSize;
+		$aStart = ($thePageNum - 1) * $thePageSize;
 		$aRet['start'] = $aStart;
-		$aRet['data'] = array_slice($theArray, $aStart, $theSize);
 
 		return $aRet;
 	}

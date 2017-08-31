@@ -8,27 +8,6 @@
 
 require_once(dirname(__FILE__) . '/constants.php');
 
-/**
-  * Get a value from the INI file. The key is first looked up
-  * at the action section. If nothing is found, the key is
-  * looked up at the whole INI file scope.
-  *
-  * @param  string $theKey      Key that represents an entry in the INI file.
-  * @param  array $theContext   Array containing informatio regarding the app context.
-  * @param  mixed $theDefault   Value to be returned if nothing is found.
-  * @return mixed               Value of the informed key.
-  */
-function get_ini($theKey, $theContext, $theDefault = null) {
-    $aINI = $theContext['ini_values'];
-    $aRet = $theDefault;
-
-    if(isset($aINI[$theKey])) {
-        $aRet = $aINI[$theKey];
-    }
-
-    return $aRet;
-}
-
 function findBesearcherLogTags($theLogFilePath) {
     $aRet = array();
     $aFile = @fopen($theLogFilePath, 'r');
@@ -173,20 +152,6 @@ function loadOverrideContextFromDisk($theDataDir) {
     return $aContext;
 }
 
-function hasOverrideContextInDisk($theDataDir) {
-    $aOverridePath = $theDataDir . DIRECTORY_SEPARATOR . BESEARCHER_CONTEXT_OVERRIDE_FILE;
-    return file_exists($aOverridePath);
-}
-
-function writeContextOverrideToDisk($theDataDir, $theDiff) {
-    $aOverridePath = $theDataDir . DIRECTORY_SEPARATOR . BESEARCHER_CONTEXT_OVERRIDE_FILE;
-    $aSerializedOverride = serialize($theDiff);
-    $aRet = @file_put_contents($aOverridePath, $aSerializedOverride);
-
-    return $aRet;
-}
-
-
 /**
  * Change the order of some tasks in the queue of tasks. The informed
  * taskes will be moved to the begining of the queue, so they are more likely
@@ -195,62 +160,33 @@ function writeContextOverrideToDisk($theDataDir, $theDiff) {
  * @param  array $theTasks array with the tasks to be prioritized. Each entry in the array is an associtive array with the fields 'hash' and 'permutation'.
  * @param  array $theQueue queue of tasks
   */
-function prioritizeTasksInQueue($theTasks, $theQueue) {
-    $aExistingTasks = array();
-    $aRelocatedTasks = array();
+function prioritizeTasksInQueue($theTaskIds, Besearcher\Db $theDb) {
+    $aCastedIds = array();
 
-    if(count($theTasks) == 0) {
-        throw new Exception('Unable to prioritize the selected elements.');
+    foreach($theTaskIds as $aId) {
+        $aCastedIds[] = $aId + 0;
     }
 
-    foreach($theTasks as $aItem) {
-        foreach($theQueue as $aQueueItem) {
-            if($aQueueItem['hash'] == $aItem['hash'] && $aQueueItem['permutation'] == $aItem['permutation']) {
-                $aRelocatedTasks[] = $aQueueItem;
-            }
-        }
-    }
-
-    foreach($theQueue as $aQueueItem) {
-        $aWasRelocatedBefore = false;
-        foreach($aRelocatedTasks as $aItem) {
-            if($aQueueItem['hash'] == $aItem['hash'] && $aQueueItem['permutation'] == $aItem['permutation']) {
-                $aWasRelocatedBefore = true;
-                break;
-            }
-        }
-
-        if(!$aWasRelocatedBefore) {
-            $aRelocatedTasks[] = $aQueueItem;
-        }
-    }
-
-    return $aRelocatedTasks;
-}
-
-function removeTasksFromQueue($theTasks, $theQueue) {
-    $aFilteredQueue = array();
-
-    if(count($theTasks) == 0) {
+    if(count($aCastedIds) == 0) {
         throw new Exception('Nothing has been selected for removal.');
     }
 
-    foreach($theQueue as $aQueueItem) {
-        $aFound = false;
-
-        foreach($theTasks as $aItem) {
-            if($aQueueItem['hash'] == $aItem['hash'] && $aQueueItem['permutation'] == $aItem['permutation']) {
-                $aFound = true;
-                break;
-            }
-        }
-
-        if(!$aFound) {
-            $aFilteredQueue[] = $aQueueItem;
-        }
-    }
-
-    return $aFilteredQueue;
+    $aStmt = $theDb->getPDO()->prepare("UPDATE tasks SET creation_time = 0 WHERE id IN (".implode(',', $aCastedIds).")");
+    $aStmt->execute();
 }
 
+function removeTasksFromQueue($theTaskIds, Besearcher\Db $theDb) {
+    $aCastedIds = array();
+
+    foreach($theTaskIds as $aId) {
+        $aCastedIds[] = $aId + 0;
+    }
+
+    if(count($aCastedIds) == 0) {
+        throw new Exception('Nothing has been selected for removal.');
+    }
+
+    $aStmt = $theDb->getPDO()->prepare("DELETE FROM tasks WHERE id IN (".implode(',', $aCastedIds).")");
+    $aOk = $aStmt->execute();
+}
 ?>

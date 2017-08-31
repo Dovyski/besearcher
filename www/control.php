@@ -6,35 +6,23 @@
     $aError = Besearcher\Data::init();
     $aINI = Besearcher\Data::ini();
 
-    $aMessage = array('title' => 'Oops!', 'body' => '', 'type' => 'warning');
+    $aMessage = array('title' => 'Oops!', 'body' => '', 'type' => 'danger');
     $aTasksQueue = array();
-    $aSettings = array();
+    $aContext = array();
 
     try {
-        $aContext = loadContextFromDisk($aINI['data_dir'], false);
-
-        if($aContext === false) {
-            throw new Exception('Unable to load Besearcher context.');
-        }
-
-        $aTasksQueue = isset($aContext['tasks_queue']) ? $aContext['tasks_queue'] : array();
-        $aSettings = $aContext;
-        $aOverride = array();
+        $aDbPath = $aINI['data_dir'] . DIRECTORY_SEPARATOR . BESEARCHER_DB_FILE;
+        $aDb = new Besearcher\Db($aDbPath);
 
         $aAction = isset($_REQUEST['action']) ? $_REQUEST['action'] : '';
 
-        if($aAction != '' && hasOverrideContextInDisk($aINI['data_dir'])) {
-            throw new Exception('There are changes still pending to be loaded by Besearcher, it is not safe to perform more changes now. Try again in a few seconds.');
-        }
-
         if($aAction == 'move' || $aAction == 'delete') {
             $aSelected = array();
-            $aNewQueue = array();
 
             foreach($_REQUEST as $aKey => $aValue) {
                 if(stripos($aKey, 'task_') !== false) {
-                    $aParts = explode('-', $aValue);
-                    $aSelected[] = array('hash' => $aParts[0], 'permutation' => $aParts[1]);
+                    $aValue = $aValue + 0; // cast id to int
+                    $aSelected[] = $aValue;
                 }
             }
 
@@ -43,39 +31,48 @@
             }
 
             if($_REQUEST['action'] == 'move') {
-                $aNewQueue = prioritizeTasksInQueue($aSelected, $aContext['tasks_queue']);
+                prioritizeTasksInQueue($aSelected, $aDb);
 
             } else if ($_REQUEST['action'] == 'delete') {
-                $aNewQueue = removeTasksFromQueue($aSelected, $aContext['tasks_queue']);
+                removeTasksFromQueue($aSelected, $aDb);
             }
 
-            $aOverride = array('tasks_queue' => $aNewQueue);
+            $aMessage = array('title' => 'Success!', 'body' => 'The tasks queue has been updated.', 'type' => 'success');
         }
 
-        if(count($aOverride) > 0) {
-            $aOk = writeContextOverrideToDisk($aINI['data_dir'], $aOverride);
+        // Get pagination info
+        $aTasksCount = $aDb->tasksCount();
+        $aPage = isset($_REQUEST['page']) ? $_REQUEST['page'] + 0 : 1;
+        $aSize = isset($_REQUEST['size']) ? $_REQUEST['size'] + 0 : 100;
+        $aPagination = Besearcher\Utils::paginate($aPage, $aSize, $aTasksCount);
 
-            if($aOk) {
-                $aMessage = array('title' => 'Success!', 'body' => 'The changes were sent to Besearcher. It will load them in a few seconds.', 'type' => 'success');
-            }
+        // Fetch the tasks in the database
+        $aStmt = $aDb->getPDO()->prepare('SELECT * FROM tasks WHERE 1 ORDER BY creation_time ASC LIMIT ' . $aPagination['start'] . ',' . $aPagination['size']);
+        $aStmt->execute();
+
+        while($aRow = $aStmt->fetch(\PDO::FETCH_ASSOC)) {
+            $aRow['data'] = unserialize($aRow['data']);
+            $aTasksQueue[] = $aRow;
+        }
+
+        $aStmt = $aDb->getPDO()->prepare('SELECT * FROM context WHERE 1');
+        $aStmt->execute();
+        $aContext = $aStmt->fetch(\PDO::FETCH_ASSOC);
+
+        if($aContext === false) {
+            throw new Exception('Unable to load Besearcher context.');
         }
     } catch(Exception $e) {
         $aMessage['body'] = $e->getMessage();
     }
 
-    // Paginate the results
-    $aPage = isset($_REQUEST['page']) ? $_REQUEST['page'] + 0 : 1;
-    $aSize = isset($_REQUEST['size']) ? $_REQUEST['size'] + 0 : 100;
-    $aPagination = Besearcher\Utils::paginate($aTasksQueue, $aPage, $aSize);
-
     Besearcher\View::render('control', array(
         'message'       => $aMessage,
-        'tasks_queue'   => $aPagination['data'],
+        'tasks_queue'   => $aTasksQueue,
         'pages'         => $aPagination['pages'],
         'page'          => $aPagination['page'],
         'size'          => $aPagination['size'],
         'start'         => $aPagination['start'],
-        'has_override'  => hasOverrideContextInDisk($aINI['data_dir']),
-        'settings'      => $aSettings
+        'context'       => $aContext
     ));
 ?>
