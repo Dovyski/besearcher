@@ -4,6 +4,7 @@ namespace Besearcher;
 
 class Context {
 	private $mDb;
+	private $mLog;
 	private $mAutoSave;
 	private $mValues = array(
 		'ini_hash'         => '',
@@ -26,8 +27,9 @@ class Context {
 		}
 	}
 
-	public function __construct(Db $theDb = null, array $theInitialValues = array()) {
+	public function __construct(Db $theDb = null, Log $theLog = null, array $theInitialValues = array()) {
 		$this->mDb = $theDb;
+		$this->mLog = $theLog;
 		$this->mAutoSave = true;
 
 		foreach($this->mValues as $aKey => $aValue) {
@@ -85,16 +87,25 @@ class Context {
 				// Disk has valid data, so it takes priority. Let's update
 				// the in-memory values with data from the disk
 				foreach($aDiskValues as $aKey => $aValue) {
-					echo 'context.' . $aKey . ' = ' . (is_array($aValue) ? 'Array' : $aValue) . ' (old=' . (is_array($this->mValues[$aKey]) ? 'Array' : $this->mValues[$aKey]) . ')' . "\n";
+					$this->logKeyChange($aKey, $aValue);
 					$this->mValues[$aKey] = $aValue;
 				}
 			} else {
 				// Disk is invalid, so let's update it with what we have in memory
+				if($this->mLog != null) {
+					$this->mLog->info('Context info from disk is invalid, replacing it with currently in use values.');
+				}
 				$this->save();
 			}
 		}
 
 		return $aAreValuesDifferent;
+	}
+
+	private function logKeyChange($theKey, $theNewValue) {
+		if($this->mLog != null) {
+			$this->mLog->debug('context.' . $theKey . ' = ' . (is_array($theNewValue) ? 'Array' : $theNewValue) . ' (old=' . (is_array($this->mValues[$theKey]) ? 'Array' : $this->mValues[$theKey]) . ')');
+		}
 	}
 
 	public function get($theKey) {
@@ -106,6 +117,8 @@ class Context {
 
 	public function set($theKey, $theValue) {
 		$this->ensureKeyExists($theKey);
+
+		$this->logKeyChange($theKey, $theValue);
 		$this->mValues[$theKey] = $theValue;
 
 		if($this->mAutoSave) {

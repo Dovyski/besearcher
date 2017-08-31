@@ -63,7 +63,7 @@ class App {
 		// Get all life support components up and running
 		$aDbPath = $this->config('data_dir') . DIRECTORY_SEPARATOR . BESEARCHER_DB_FILE;
 		$this->mDb = new Db($aDbPath);
-		$this->mContext = new Context($this->mDb);
+		$this->mContext = new Context($this->mDb, $this->mLog);
 
 		// Load context data from disk and merge it with in-memory data
 		$this->mContext->sync();
