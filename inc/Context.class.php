@@ -9,12 +9,13 @@ class Context {
 	private $mValues = array(
 		'ini_hash'         => '',
 		'experiment_hash'  => '',
+		'experiment_ready' => 0,
 		'running_tasks'    => 0,
 		'status'           => ''
 	);
 
 	private function ensureKeyExists($theKey) {
-		if(!isset($this->mValues[$theKey])) {
+		if(!in_array($theKey, array_keys($this->mValues))) {
 			throw new \Exception('Unknown context key "' . $theKey . '".');
 		}
 	}
@@ -45,7 +46,8 @@ class Context {
 	            context
 	        SET
 	            ini_hash = :ini_hash,
-	            experiment_hash = :experiment_hash,
+				experiment_hash = :experiment_hash,
+	            experiment_ready = :experiment_ready,
 	            running_tasks = :running_tasks,
 	            status = :status
 	        WHERE
@@ -53,10 +55,11 @@ class Context {
 
 	    $aStmt = $this->mDb->getPDO()->prepare($aSql);
 
-	    $aStmt->bindParam(':ini_hash',        $this->mValues['ini_hash']);
-	    $aStmt->bindParam(':experiment_hash', $this->mValues['experiment_hash']);
-	    $aStmt->bindParam(':running_tasks',   $this->mValues['running_tasks']);
-	    $aStmt->bindParam(':status',          $this->mValues['status']);
+	    $aStmt->bindParam(':ini_hash',         $this->mValues['ini_hash']);
+		$aStmt->bindParam(':experiment_hash',  $this->mValues['experiment_hash']);
+	    $aStmt->bindParam(':experiment_ready', $this->mValues['experiment_ready']);
+	    $aStmt->bindParam(':running_tasks',    $this->mValues['running_tasks']);
+	    $aStmt->bindParam(':status',           $this->mValues['status']);
 
 	    $aOk = $aStmt->execute();
 	    return $aOk;
@@ -82,10 +85,12 @@ class Context {
 			if($aIsDiskValid) {
 				// Disk has valid data, so it takes priority. Let's update
 				// the in-memory values with data from the disk
+				$aAutoSave = $this->mAutoSave;
+				$this->setAutoSave(false);
 				foreach($aDiskValues as $aKey => $aValue) {
-					$this->logKeyChange($aKey, $aValue);
-					$this->mValues[$aKey] = $aValue;
+					$this->set($aKey, $aValue);
 				}
+				$this->setAutoSave($aAutoSave);
 			} else {
 				// Disk is invalid, so let's update it with what we have in memory
 				if($this->mLog != null) {
