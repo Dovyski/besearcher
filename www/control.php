@@ -9,6 +9,7 @@
     $aContext = array();
 
     try {
+        // TODO: move all this fragmented code into Besearcher\Data and make it manage db and pagination
         $aDbPath = $aINI['data_dir'] . DIRECTORY_SEPARATOR . BESEARCHER_DB_FILE;
         $aDb = new Besearcher\Db($aDbPath);
         $aTasks = new Besearcher\Tasks($aDb);
