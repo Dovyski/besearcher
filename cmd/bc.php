@@ -63,12 +63,13 @@ if(isset($aArgs['h']) || isset($aArgs['help']) || $argc == 1) {
      echo " --stop               Stop Besearcher, but wait for all running tasks to\n";
      echo "                      finish first.";
      echo " --resume             Make Besearcher resume its operation, if it is paused.\n";
-     echo " --reload             Clear the last known commit and task cache files on disk,\n";
-     echo "                      forcing Besearcher to perform tasks since the last commit\n";
-     echo "                      informed in the INI file (via start_commit_hash). If the\n";
-     echo "                      directive skip_performed_tasks is true, already performed\n";
-     echo "                      tasks will be skipped.\n";
-     echo " --reset              Clear the context and the last known commit info on disk.\n";
+     echo " --reload             Clear cache files on disk forcing Besearcher to create\n";
+     echo "                      and perform experiment tasks. If the directive \n";
+     echo "                      skip_performed_tasks is true, already performed tasks\n";
+     echo "                      will be skipped.\n";
+     echo " --reset              Delete *ALL* control settings, like records of enqued\n";
+     echo "                      tasks. Result files created by previous completed tasks\n";
+     echo "                      are preserved.\n";
      echo " --force, -f          Perform operations without asking for confirmation.\n";
      echo " --verbose, -v        Print extra info for performed actions.\n";
      echo " --help, -h           Show this help.\n";
@@ -115,7 +116,8 @@ if(isset($aArgs['status'])) {
     $aQueueSize = $aTasks->queueSize();
     echo "Besearcher summary:\n";
     echo " Status: ".$aContext->get('status')."\n";
-    echo " Last commit: ".$aContext->get('last_commit')."\n";
+    echo " Experiment hash: ".$aContext->get('experiment_hash')."\n";
+    echo " Experiment description: ".trim($aINI['experiment_description'])."\n";
     echo " Tasks waiting in queue: ". $aQueueSize."\n";
     echo " Tasks running: ". $aContext->get('running_tasks')."\n";
 }
@@ -155,7 +157,7 @@ if(isset($aArgs['reload'])) {
     }
 
     deleteFilesList($aDeleteList, 2, $aIsVerbose);
-    $aContext->set('last_commit', '');
+    $aContext->set('experiment_hash', '');
 
     echo "Ok, besearcher was reloaded successfully!\n";
 }

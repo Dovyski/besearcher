@@ -22,8 +22,6 @@ define('BESEARCHER_SETEUP_FILE',             'besearcher.setup_cmd-result');
 define('BESEARCHER_SETUP_LOG_FILE',          'setup_cmd.log');
 define('BESEARCHER_WEB_CACHE_FILE',          'beseacher.web-cache');
 
-define('BESEARCHER_COMMIT_SKIP_TOKEN',       '/\[(skip-ci|skip|skip-ic|skip-besearcher)\]/');
-
 // Below are the definitions of the expressions that are
 // expandable in the INI file.
 

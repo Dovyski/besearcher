@@ -19,6 +19,8 @@ class App {
 
 	        $this->mContext->set('ini_hash', $aContentHash);
 	        $this->loadINI($this->mINIPath);
+
+			$this->mLog->setLevel($this->config('log_level'));
 	    }
 	}
 
@@ -177,71 +179,12 @@ class App {
 	    return $aSpawnedNewTask;
 	}
 
-	private function setLastKnownCommit($theHash) {
-		if($theHash == $this->mContext->get('last_commit')) {
+	private function setExperimentHash($theHash) {
+		if($theHash == $this->mContext->get('experiment_hash')) {
 			return;
 		}
-	    $this->mContext->set('last_commit', $theHash);
-	    $this->mLog->info("Last known commit changed to " . $theHash);
-	}
-
-	private function performGitPull($theWatchDir, $theGitExe) {
-	    $aEntries = array();
-
-	    $this->mLog->debug("Updating repo with git pull");
-	    $aOutput = exec('cd ' . $theWatchDir . ' & ' . $theGitExe . ' pull', $aEntries);
-	    $this->mLog->debug(implode("\n", $aEntries));
-	}
-
-	private function findCommitsFromGitLog($theWatchDir, $theGitExe) {
-	    $aCommits = array();
-	    $aPrettyFormat = '--pretty=format:"%HBESEARCHER-CONTENT-BREAK%BBESEARCHER-CONTENT-END"';
-
-	    $aLines = array();
-	    $aGitLog = exec('cd ' . $theWatchDir . ' & ' . $theGitExe . ' --no-pager log ' . $aPrettyFormat, $aLines);
-	    $aContent = '';
-
-	    foreach($aLines as $aLine) {
-	        if(stripos($aLine, 'BESEARCHER-CONTENT-END') !== false) {
-	            // We have enough data for a single commit
-	            $aParts = explode('BESEARCHER-CONTENT-BREAK', $aContent);
-	            if(count($aParts) == 2) {
-	                $aCommits[] = array('hash' => $aParts[0], 'message' => $aParts[1]);
-	            }
-	            $aContent = '';
-	        } else {
-	            $aContent .= $aLine . ' ';
-	        }
-	    }
-
-	    return $aCommits;
-	}
-
-	private function findNewCommits($theWatchDir, $theGitExe, $theLastCommitHash) {
-	    $aNewCommits = array();
-	    $aPerformPull = $this->config('perform_git_pull', false);
-
-	    if($aPerformPull) {
-	        $this->performGitPull($theWatchDir, $theGitExe);
-	    }
-
-	    $aCommits = $this->findCommitsFromGitLog($theWatchDir, $theGitExe);
-	    $aShouldInclude = false;
-
-	    for($i = count($aCommits) - 1; $i >= 0; $i--) {
-	        $aCommit = $aCommits[$i];
-	        $aHash = $aCommit['hash'];
-
-	        if($aHash == $theLastCommitHash || $theLastCommitHash == '') {
-	            $aShouldInclude = true;
-	        }
-
-	        if($aShouldInclude && $aHash != $theLastCommitHash) {
-	            $aNewCommits[] = $aCommit;
-	        }
-	    }
-
-	    return $aNewCommits;
+	    $this->mContext->set('experiment_hash', $theHash);
+	    $this->mLog->info("Last known experiment hash changed to " . $theHash);
 	}
 
 	private function createTask($theCommitHash, $theCommitMessage, $thePermutation) {
@@ -331,7 +274,7 @@ class App {
 	    return $aPermutations;
 	}
 
-	private function createTasksFromCommit($theHash, $theMessage) {
+	private function createTasksFromExperimentHash($theHash, $theMessage) {
 	    $aTasks = array();
 	    $aPermutations = $this->generateTaskCmdPermutations();
 
@@ -380,12 +323,25 @@ class App {
 	    }
 	}
 
-	private function handleNewCommit($theHash, $theMessage) {
-	    $aTasks = $this->createTasksFromCommit($theHash, $theMessage);
+	private function setupExperiment() {
+		$aHash = $this->config('experiment_hash', $this->mContext->get('ini_hash'));
+		$aMessage = $this->config('experiment_description', '');
+
+		if($this->mContext->get('experiment_ready')) {
+			$this->mLog->info("Skipping experiment setup, it was already performed (experiment_hash=" . $aHash . ", experiment_description=" . trim($aMessage) . ")");
+			return;
+		}
+
+		$this->mLog->info("Setting up experiment: experiment_hash=" . $aHash . ", experiment_description=" . trim($aMessage));
+		$this->mLog->info("Creating experiment tasks");
+
+	    $aTasks = $this->createTasksFromExperimentHash($aHash, $aMessage);
 
 	    // Create a folder to house the results of the tasks
 	    // originated from the present commit
-	    $this->createTaskResultsFolder($theHash);
+	    $this->createTaskResultsFolder($aHash);
+
+		$this->mLog->info("Enqueuing experiment tasks");
 
 	    if(count($aTasks) > 0) {
 	        foreach($aTasks as $aTask) {
@@ -393,44 +349,9 @@ class App {
 	            $this->mTasks->enqueTask($aTask);
 	        }
 	    }
-	}
 
-	private function textHasSkipToken($theMessage) {
-	    $aMatches = array();
-	    $aHits = preg_match_all(BESEARCHER_COMMIT_SKIP_TOKEN, $theMessage, $aMatches);
-
-	    return $aHits !== false && $aHits > 0;
-	}
-
-	private function processNewCommits() {
-	    $aWatchDir   = $this->config('watch_dir');
-	    $aGitExe     = $this->config('git');
-
-	    $aTasks      = $this->findNewCommits($aWatchDir, $aGitExe, $this->mContext->get('last_commit'));
-	    $aLastHash   = '';
-	    $aTasksCount = count($aTasks);
-
-	    if($aTasksCount > 0) {
-	        foreach($aTasks as $aCommit) {
-	            $aHash     = $aCommit['hash'];
-	            $aMessage  = $aCommit['message'];
-	            $aLastHash = $aHash;
-
-	            if($this->textHasSkipToken($aMessage)) {
-	                $this->mLog->info("Skipping commit due to skip token (hash=" . $aHash . ", msg=" . trim($aMessage) . ")");
-	                continue;
-	            }
-
-	            $this->mLog->info("Processing new commit (hash=" . $aHash . ", msg=" . trim($aMessage) . ")");
-	            $this->handleNewCommit($aHash, $aMessage);
-	        }
-
-	        if($aLastHash != '') {
-	            $this->setLastKnownCommit($aLastHash);
-	        }
-	    }
-
-	    return $aTasksCount > 0;
+		$this->mLog->info('Experiment "' . $aHash . '" setup up successfully!');
+		$this->mContext->set('experiment_ready', 1);
 	}
 
 	private function monitorRunningTasks() {
@@ -451,27 +372,15 @@ class App {
 	    }
 	}
 
-	private function processGitCommits() {
-	    $aPullInterval = $this->config('git_pull_interval', 10);
-	    $aShouldPull = time() - $this->mContext->get('time_last_pull') >= $aPullInterval;
-
-	    if($aShouldPull) {
-	        $aAnyNewTask = $this->processNewCommits();
-	        $this->mContext->set('time_last_pull', time());
-	    }
-	}
-
 	private function step() {
 	    if($this->mContext->get('status') == BESEARCHER_STATUS_RUNNING) {
-	        $this->processGitCommits();
-	        // The config INI file may have changed with the pull, so
-	        // let's check current config params
-	        $this->performConfigHotReload();
+			$aExperimentReady = $this->mContext->get('experiment_ready');
 
-			$aProcessQueue = true;
-			while($aProcessQueue) {
-				$aProcessQueue = $this->processQueuedTasks();
+			if(!$aExperimentReady) {
+	        	$this->setupExperiment();
 			}
+
+			$aSpawendTaskProcess = $this->processQueuedTasks();
 	    }
 
 	    $this->monitorRunningTasks();
@@ -670,21 +579,21 @@ class App {
 	    }
 	}
 
-	private function ensureLastCommitIsNotEmpty() {
-	    $aLastCommit = $this->mContext->get('last_commit');
+	private function ensureExperimentHashIsNotEmpty() {
+	    $aExperimentHash = $this->mContext->get('experiment_hash');
 
 	    // If we don't have any information regarding the last commit, we use
 	    // the one provided in the ini file.
-	    if(empty($aLastCommit)) {
-	        $aLastCommit = $this->config('start_commit_hash', '');
-	        $this->mLog->info("Replacing last known commit with info from INI: " . $aLastCommit);
-			$this->setLastKnownCommit($aLastCommit);
+	    if(empty($aExperimentHash)) {
+	        $aExperimentHash = $this->config('experiment_hash', '');
+	        $this->mLog->info("Replacing last known experiment hash with info from INI: " . $aExperimentHash);
+			$this->setExperimentHash($aExperimentHash);
 	    }
 	}
 
 	private function performHotReloadProcedures() {
 	    $this->performConfigHotReload();
-	    $this->ensureLastCommitIsNotEmpty();
+	    $this->ensureExperimentHashIsNotEmpty();
 	    $this->checkPrepareTaskCommandProcedures();
 	}
 

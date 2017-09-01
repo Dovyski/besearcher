@@ -8,9 +8,7 @@ class Context {
 	private $mAutoSave;
 	private $mValues = array(
 		'ini_hash'         => '',
-		'ini_values'       => '',
-		'last_commit'      => '',
-		'time_last_pull'   => 0,
+		'experiment_hash'  => '',
 		'running_tasks'    => 0,
 		'status'           => ''
 	);
@@ -47,8 +45,7 @@ class Context {
 	            context
 	        SET
 	            ini_hash = :ini_hash,
-	            last_commit = :last_commit,
-	            time_last_pull = :time_last_pull,
+	            experiment_hash = :experiment_hash,
 	            running_tasks = :running_tasks,
 	            status = :status
 	        WHERE
@@ -56,11 +53,10 @@ class Context {
 
 	    $aStmt = $this->mDb->getPDO()->prepare($aSql);
 
-	    $aStmt->bindParam(':ini_hash',       $this->mValues['ini_hash']);
-	    $aStmt->bindParam(':last_commit',    $this->mValues['last_commit']);
-	    $aStmt->bindParam(':time_last_pull', $this->mValues['time_last_pull']);
-	    $aStmt->bindParam(':running_tasks',  $this->mValues['running_tasks']);
-	    $aStmt->bindParam(':status',         $this->mValues['status']);
+	    $aStmt->bindParam(':ini_hash',        $this->mValues['ini_hash']);
+	    $aStmt->bindParam(':experiment_hash', $this->mValues['experiment_hash']);
+	    $aStmt->bindParam(':running_tasks',   $this->mValues['running_tasks']);
+	    $aStmt->bindParam(':status',          $this->mValues['status']);
 
 	    $aOk = $aStmt->execute();
 	    return $aOk;
