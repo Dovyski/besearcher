@@ -61,22 +61,52 @@ class App {
 
 		$this->mLog = new Log($thePathLogFile);
 		$this->mLog->setLevel($this->config('log_level'));
-		$this->mLog->info('Besearcher starting up. What a great day for science!');
+		$this->mLog->info('Besearcher is starting up. What a great day for science!');
 
 		// Get all life support components up and running
 		$aDbPath = $this->config('data_dir') . DIRECTORY_SEPARATOR . BESEARCHER_DB_FILE;
 		$this->mDb = new Db($aDbPath);
-		$this->mContext = new Context($this->mDb, $this->mLog, array('status' => BESEARCHER_STATUS_INITING));
+		$this->mContext = new Context($this->mDb, $this->mLog, array('status' => BESEARCHER_STATUS_STOPED));
 		$this->mTasks = new Tasks($this->mDb);
 
 		// Load context data from disk and merge it with in-memory data
 		$this->mContext->sync();
 
 		// It is time to proceed with the initialization of everything else.
-		$this->performHotReloadProcedures();
-		$this->mActive = true;
+		$this->mActive = true;//
+		$this->ensureStatusHealth();
 
 		$this->printSummary();
+	}
+
+	private function ensureStatusHealth() {
+		$aStatus = $this->mContext->get('status');
+
+		if($aStatus == BESEARCHER_STATUS_STOPED) {
+		   // App was shutdown correctly last time, so the stoped status was written
+		   // to the context on disk. Let's continue with the init procedure.
+		   $this->mLog->debug('Besearcher was shutdown correctly last time. Thank you!');
+		   $this->setStatus(BESEARCHER_STATUS_INITING);
+
+	   } else {
+		   $this->mLog->warn('Besearcher was not shutdown correctly last time. Please check if everything is ok.');
+
+		   if($aStatus == BESEARCHER_STATUS_STOPPING) {
+			   // We cant have a stopping status during startup.
+			   $this->setStatus(BESEARCHER_STATUS_INITING);
+
+		   } else if($aStatus == BESEARCHER_STATUS_PAUSED) {
+			   $this->mLog->info('Restoring previous PAUSED status, so the setup task will be skipped.');
+
+		   } else if($aStatus == BESEARCHER_STATUS_INITING || $aStatus == BESEARCHER_STATUS_WAITING_SETUP || $aStatus == BESEARCHER_STATUS_RUNNING) {
+			   $this->mLog->warn('Restoring previous status: ' . $aStatus);
+
+		   } else {
+			   // Ths status was really fucked up, we don't even recognize it.
+			   $this->mLog->warn('Previous status found on the disk ('.$aStatus.') is unknown, so probably there is corrupted data. Proceed with a full inspection of your data. Status will be set to ' . BESEARCHER_STATUS_INITING . ' to ensure a normal start up.');
+			   $this->setStatus(BESEARCHER_STATUS_INITING);
+		   }
+	   }
 	}
 
 	public function shutdown() {
@@ -373,7 +403,9 @@ class App {
 	}
 
 	private function step() {
-	    if($this->mContext->get('status') == BESEARCHER_STATUS_RUNNING) {
+		$aStatus = $this->mContext->get('status');
+
+	    if($aStatus == BESEARCHER_STATUS_RUNNING) {
 			$aExperimentReady = $this->mContext->get('experiment_ready');
 
 			if(!$aExperimentReady) {
@@ -381,7 +413,12 @@ class App {
 			}
 
 			$aSpawendTaskProcess = $this->processQueuedTasks();
-	    }
+
+	    } else if($aStatus == BESEARCHER_STATUS_INITING || $aStatus == BESEARCHER_STATUS_WAITING_SETUP) {
+			// App is starting up or it is running the setup task.
+			// Let's wait until that is complete.
+			$this->checkSetupTaskProcedures();
+		}
 
 	    $this->monitorRunningTasks();
 	    return true;
@@ -548,7 +585,7 @@ class App {
 	    }
 	}
 
-	private function checkPrepareTaskCommandProcedures() {
+	private function checkSetupTaskProcedures() {
 	    $aHasPrepareCmd = $this->config('setup_cmd', '') != '';
 
 	    if(!$aHasPrepareCmd) {
@@ -594,7 +631,6 @@ class App {
 	private function performHotReloadProcedures() {
 	    $this->performConfigHotReload();
 	    $this->ensureExperimentHashIsNotEmpty();
-	    $this->checkPrepareTaskCommandProcedures();
 	}
 
 	private function printSummary() {
