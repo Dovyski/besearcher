@@ -10,12 +10,33 @@ CREATE TABLE `context` (
 
 CREATE TABLE `tasks` (
 	`id`	INTEGER PRIMARY KEY AUTOINCREMENT,
-	`creation_time`	INTEGER NOT NULL,
-	`commit_hash`	TEXT NOT NULL,
+	`cmd`	TEXT NOT NULL,
+	`log_file`	TEXT NOT NULL,
+	`working_dir`	TEXT NOT NULL,
+	`experiment_hash`	TEXT NOT NULL,
 	`permutation_hash`	TEXT NOT NULL,
-	`data`	TEXT NOT NULL
+	`params`	TEXT NOT NULL,
+	`creation_time`	INTEGER NOT NULL
 );
 
 --split
 
-INSERT INTO "context" (ini_hash, experiment_hash, status) VALUES ('', '', '');
+CREATE TABLE `results` (
+	`id`	INTEGER PRIMARY KEY,
+	`cmd`	TEXT NOT NULL,
+	`cmd_return_code`	INTEGER,
+	`log_file`	TEXT NOT NULL,
+	`working_dir`	TEXT NOT NULL,
+	`experiment_hash`	TEXT NOT NULL,
+	`permutation_hash`	TEXT NOT NULL,
+	`params`	TEXT NOT NULL,
+	`creation_time`	INTEGER NOT NULL,
+	`exec_time_start`	INTEGER NOT NULL,
+	`exec_time_end`	INTEGER NOT NULL,
+	`progress`	REAL NOT NULL DEFAULT 0,
+	`running`	INTEGER NOT NULL
+);
+
+--split
+
+INSERT INTO `context` (ini_hash, experiment_hash, status) VALUES ('', '', '');

@@ -54,6 +54,7 @@ try {
     }
 
     echo $e->getMessage() . "\n";
+    echo $e->getTraceAsString() . "\n";
     exit(2);
 }
 

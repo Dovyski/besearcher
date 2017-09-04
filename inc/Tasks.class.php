@@ -15,21 +15,94 @@ class Tasks {
 		$this->mDb = $theDb;
 	}
 
-	public function writeTaskInfoFile($theTask) {
-	    file_put_contents($theTask['info_file'], json_encode($theTask, JSON_PRETTY_PRINT));
+	public function createResultEntryFromTask($theTask) {
+		$aSql =
+		"INSERT INTO
+			results (
+				id,
+				cmd,
+				cmd_return_code,
+				log_file,
+				working_dir,
+				experiment_hash,
+				permutation_hash,
+				params,
+				creation_time,
+				exec_time_start,
+				exec_time_end,
+				progress,
+				running
+			)
+		VALUES (
+			:id,
+			:cmd,
+			:cmd_return_code,
+			:log_file,
+			:working_dir,
+			:experiment_hash,
+			:permutation_hash,
+			:params,
+			:creation_time,
+			:exec_time_start,
+			:exec_time_end,
+			:progress,
+			:running
+		)";
+
+		$aStmt = $this->mDb->getPDO()->prepare($aSql);
+		$aNow = time();
+		$aZero = 0;
+
+		$aStmt->bindParam(':id', $theTask['id']);
+		$aStmt->bindParam(':cmd', $theTask['cmd']);
+		$aStmt->bindParam(':cmd_return_code', $theTask['cmd_return_code']);
+		$aStmt->bindParam(':log_file', $theTask['log_file']);
+		$aStmt->bindParam(':working_dir', $theTask['working_dir']);
+		$aStmt->bindParam(':experiment_hash', $theTask['experiment_hash']);
+		$aStmt->bindParam(':permutation_hash', $theTask['permutation_hash']);
+		$aStmt->bindParam(':params', $theTask['params']);
+		$aStmt->bindParam(':creation_time', $theTask['creation_time']);
+		$aStmt->bindParam(':exec_time_start', $aNow);
+		$aStmt->bindParam(':exec_time_end', $aZero);
+		$aStmt->bindParam(':progress', $aZero);
+		$aStmt->bindParam(':running', $aZero);
+
+		$aOk = $aStmt->execute();
+		return $aOk;
 	}
 
-	public function enqueTask($theTask) {
-		$aSql = "INSERT INTO tasks (creation_time, commit_hash, permutation_hash, data) VALUES (:creation_time, :commit_hash, :permutation_hash, :data)";
-		$aStmt = $this->mDb->getPDO()->prepare($aSql);
+	public function enqueueTask($theTask) {
+		$aSql =
+		"INSERT INTO
+			tasks (
+				cmd,
+				log_file,
+				working_dir,
+				experiment_hash,
+				permutation_hash,
+				params,
+				creation_time
+			)
+		VALUES (
+			:cmd,
+			:log_file,
+			:working_dir,
+			:experiment_hash,
+			:permutation_hash,
+			:params,
+			:creation_time
+		)";
 
-		$aTaskSerialized = serialize($theTask);
+		$aStmt = $this->mDb->getPDO()->prepare($aSql);
 		$aNow = time();
 
+		$aStmt->bindParam(':cmd', $theTask['cmd']);
+		$aStmt->bindParam(':log_file', $theTask['log_file']);
+		$aStmt->bindParam(':working_dir', $theTask['working_dir']);
+		$aStmt->bindParam(':experiment_hash', $theTask['experiment_hash']);
+		$aStmt->bindParam(':permutation_hash', $theTask['permutation_hash']);
+		$aStmt->bindParam(':params', $theTask['params']);
 		$aStmt->bindParam(':creation_time', $aNow);
-		$aStmt->bindParam(':commit_hash', $theTask['hash']);
-		$aStmt->bindParam(':permutation_hash', $theTask['permutation']);
-		$aStmt->bindParam(':data', $aTaskSerialized);
 
 		$aOk = $aStmt->execute();
 		return $aOk;
@@ -39,25 +112,19 @@ class Tasks {
 		// Get a task from DB
 		$aStmt = $this->mDb->getPDO()->prepare("SELECT * FROM tasks WHERE 1 ORDER BY creation_time ASC LIMIT 1");
 		$aStmt->execute();
-		$aDbTask = $aStmt->fetch(\PDO::FETCH_ASSOC);
-
-		if($aDbTask === false) {
-			throw new \Exception('Unable to dequeu task, tasks queue is probably empty.');
-		}
-
-		$aTask = @unserialize($aDbTask['data']);
+		$aTask = $aStmt->fetch(\PDO::FETCH_ASSOC);
 
 		if($aTask === false) {
-			throw new \Exception('Unable to unserialize dequeued task.');
+			throw new \Exception('Unable to dequeu task, tasks queue is probably empty.');
 		}
 
 		// Remove that tasks from the queue
 	    $aStmt = $this->mDb->getPDO()->prepare("DELETE FROM tasks WHERE id = :id");
-	    $aStmt->bindParam(':id', $aDbTask['id']);
+	    $aStmt->bindParam(':id', $aTask['id']);
 	    $aOk = $aStmt->execute();
 
 		if(!$aOk) {
-			throw new \Exception('Unable to delete task with id '.$aDbTask['id'].' from tasks queue.');
+			throw new \Exception('Unable to delete task with id '.$aTask['id'].' from tasks queue.');
 		}
 
 		return $aTask;
@@ -71,14 +138,29 @@ class Tasks {
 		return $aRow['num'];
 	}
 
-	public function isTaskFinished($theTaskInfo) {
-	    $aTime = $theTaskInfo['exec_time_end'];
-	    return $aTime != 0;
+	public function isResultFinished($theResultId) {
+		$aStmt = $this->mDb->getPDO()->prepare("SELECT running,exec_time_end FROM results WHERE id = :id");
+		$aStmt->bindParam(':id', $theResultId);
+		$aStmt->execute();
+
+		$aResult = $aStmt->fetch(\PDO::FETCH_ASSOC);
+
+	    $aFinished = $aResult['running'] == 0 && $aResult['exec_time_end'] != 0;
+	    return $aFinished;
 	}
 
-	public function loadTask($theInfoFilePath) {
-	    $aInfo = json_decode(file_get_contents($theInfoFilePath), true);
-	    return $aInfo;
+	public function getResultById($theResultId) {
+		$aStmt = $this->mDb->getPDO()->prepare("SELECT * FROM results WHERE id = :id");
+		$aStmt->bindParam(':id', $theResultId);
+		$aStmt->execute();
+
+		$aResult = null;
+
+		if($aStmt->rowCount() == 1) {
+			$aResult = $aStmt->fetch(\PDO::FETCH_ASSOC);
+		}
+
+	    return $aResult;
 	}
 
 	function calculateTaskProgressFromTags(array $theBesearcherLogTags) {

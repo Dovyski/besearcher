@@ -140,7 +140,6 @@ class App {
 	private function execTaskCommand($theTask, $theParallel) {
 	    $aCmd = $theTask['cmd'];
 	    $aLogFile = $theTask['log_file'];
-	    $aInfoFile = $theTask['info_file'];
 
 	    $aCmdTemplate = '%s > "%s"';
 	    $aFinalCmd = sprintf($aCmdTemplate, $aCmd, $aLogFile);
@@ -148,7 +147,7 @@ class App {
 	    $this->mLog->debug($aFinalCmd);
 
 	    if($theParallel) {
-	        $aFinalCmd = sprintf('start "Job" /b cmd.exe /c "%s "%s" "%s" "%s""', RUNNER_CMD, $aCmd, $aLogFile, $aInfoFile);
+	        $aFinalCmd = sprintf('start "Job" /b cmd.exe /c "%s "%s" "%s""', RUNNER_CMD, $aCmd, $aLogFile);
 	    }
 
 	    pclose(popen($aFinalCmd, 'r'));
@@ -217,27 +216,21 @@ class App {
 	    $this->mLog->info("Last known experiment hash changed to " . $theHash);
 	}
 
-	private function createTask($theCommitHash, $theCommitMessage, $thePermutation) {
-	    $aUid = $theCommitHash . '-' . $thePermutation['hash'];
+	private function createTask($theExperimentHash, $thePermutation) {
+	    $aUid = $theExperimentHash . '-' . $thePermutation['hash'];
 
 	    $aDataDir = $this->config('data_dir');
-	    $aTaskDir = $aDataDir . DIRECTORY_SEPARATOR . $theCommitHash . DIRECTORY_SEPARATOR;
+	    $aTaskDir = $aDataDir . DIRECTORY_SEPARATOR . $theExperimentHash . DIRECTORY_SEPARATOR;
 	    $aLogFile = $aTaskDir . $aUid . '.log';
-	    $aInfoFile = $aTaskDir . $aUid . '.json';
 
 	    $aTask = array(
 	        'cmd' => $thePermutation['cmd'],
-	        'cmd_return_code' => -1,
 	        'log_file' => $aLogFile,
-	        'info_file' => $aInfoFile,
 	        'working_dir' => $this->config('task_cmd_working_dir'),
-	        'hash' => $theCommitHash,
-	        'message' => $theCommitMessage,
-	        'permutation' => $thePermutation['hash'],
+	        'experiment_hash' => $theExperimentHash,
+	        'permutation_hash' => $thePermutation['hash'],
 	        'params' => $thePermutation['params'],
-	        'creation_time' => time(),
-	        'exec_time_start' => 0,
-	        'exec_time_end' => 0
+	        'creation_time' => time()
 	    );
 
 	    return $aTask;
@@ -304,13 +297,14 @@ class App {
 	    return $aPermutations;
 	}
 
-	private function createTasksFromExperimentHash($theHash, $theMessage) {
+	private function createExperimentTasks($theHash) {
 	    $aTasks = array();
 	    $aPermutations = $this->generateTaskCmdPermutations();
 
 	    if(count($aPermutations) > 0) {
 	        foreach($aPermutations as $aPermutation) {
-	            $aTasks[] = $this->createTask($theHash, $theMessage, $aPermutation);
+				$aTask = $this->createTask($theHash, $aPermutation);
+	            $aTasks[] = $this->mTasks->enqueueTask($aTask);
 	        }
 	    }
 
@@ -321,24 +315,25 @@ class App {
 	    $aSkipPerformedTasks = $this->config('skip_performed_tasks', false);
 	    $aTaskAlreadyPerformed = false;
 
-	    if(file_exists($theTask['info_file'])) {
-	        $aTaskInfo = $this->mTasks->loadTask($theTask['info_file']);
-	        $aTaskAlreadyPerformed = $this->mTasks->isTaskFinished($aTaskInfo);
+		$aResult = $this->mTasks->getResultById($theTask['id']);
+
+	    if($aResult != null) {
+	        $aTaskAlreadyPerformed = $this->mTasks->isResultFinished($theTask['id']);
 	    }
 
 	    if($aSkipPerformedTasks && $aTaskAlreadyPerformed) {
 	        // It seems the task at hand already has already
 	        // been executed in the past. Since we were instructed
 	        // to skip already performed tasks, we stop here.
-	        $this->mLog->warn('Skipping already performed task (hash=' . $theTask['hash'] . ', permutation=' . $theTask['permutation'] . ')');
+	        $this->mLog->warn('Skipping already performed task (hash=' . $theTask['experiment_hash'] . ', permutation=' . $theTask['permutation_hash'] . ')');
 	        return;
 	    }
 
 	    // Update exec time
 	    $theTask['exec_time_start'] = time();
 
-	    $this->mLog->info('Running task (hash=' . $theTask['hash'] . ', permutation=' . $theTask['permutation'] . ')');
-	    $this->mTasks->writeTaskInfoFile($theTask);
+	    $this->mLog->info('Running task (hash=' . $theTask['experiment_hash'] . ', permutation=' . $theTask['permutation_hash'] . ')');
+	    $this->mTasks->createResultEntryFromTask($theTask);
 
 	    $aParallel = $theMaxParallel > 1;
 	    $this->execTaskCommand($theTask, $aParallel);
@@ -365,20 +360,11 @@ class App {
 		$this->mLog->info("Setting up experiment: experiment_hash=" . $aHash . ", experiment_description=" . trim($aMessage));
 		$this->mLog->info("Creating experiment tasks");
 
-	    $aTasks = $this->createTasksFromExperimentHash($aHash, $aMessage);
+	    $aTasks = $this->createExperimentTasks($aHash);
 
 	    // Create a folder to house the results of the tasks
-	    // originated from the present commit
+	    // originated from the present experiment
 	    $this->createTaskResultsFolder($aHash);
-
-		$this->mLog->info("Enqueuing experiment tasks");
-
-	    if(count($aTasks) > 0) {
-	        foreach($aTasks as $aTask) {
-				$this->mLog->debug("Enqueing task " . $aTask['hash'] . '-' . $aTask['permutation']);
-	            $this->mTasks->enqueTask($aTask);
-	        }
-	    }
 
 		$this->mLog->info('Experiment "' . $aHash . '" setup up successfully!');
 		$this->mContext->set('experiment_ready', 1);
