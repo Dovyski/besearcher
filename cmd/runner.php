@@ -7,13 +7,13 @@
  Author: Fernando Bevilacqua <fernando.bevilacqua@his.se>
  */
 
- require_once(dirname(__FILE__) . '/../inc/constants.php');
- require_once(dirname(__FILE__) . '/../inc/Db.class.php');
- require_once(dirname(__FILE__) . '/../inc/Context.class.php');
- require_once(dirname(__FILE__) . '/../inc/Tasks.class.php');
- require_once(dirname(__FILE__) . '/../inc/Log.class.php');
- require_once(dirname(__FILE__) . '/../inc/App.class.php');
- require_once(dirname(__FILE__) . '/../inc/ResultOutputParser.class.php');
+require_once(dirname(__FILE__) . '/../inc/constants.php');
+require_once(dirname(__FILE__) . '/../inc/Db.class.php');
+require_once(dirname(__FILE__) . '/../inc/Context.class.php');
+require_once(dirname(__FILE__) . '/../inc/Tasks.class.php');
+require_once(dirname(__FILE__) . '/../inc/Log.class.php');
+require_once(dirname(__FILE__) . '/../inc/App.class.php');
+require_once(dirname(__FILE__) . '/../inc/ResultOutputParser.class.php');
 
 $aIniPath = $argv[1];
 $aTaskId = $argv[2];

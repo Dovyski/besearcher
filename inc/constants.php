@@ -17,10 +17,8 @@ define('BESEARCHER_STATUS_STOPPING',         'STOPPING');
 define('BESEARCHER_STATUS_STOPED',           'STOPED');
 
 define('BESEARCHER_DB_FILE',                 'besearcher.sqlite');
-define('BESEARCHER_CACHE_FILE_EXT',          '.besearcher-cache');
 define('BESEARCHER_SETEUP_FILE',             'besearcher.setup_cmd-result');
 define('BESEARCHER_SETUP_LOG_FILE',          'setup_cmd.log');
-define('BESEARCHER_WEB_CACHE_FILE',          'beseacher.web-cache');
 
 // Below are the definitions of the expressions that are
 // expandable in the INI file.
