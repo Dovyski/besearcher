@@ -1,6 +1,6 @@
 <?php
     $aData = Besearcher\View::data();
-    $aInfo = $aData['info'];
+    $aResult = $aData['result'];
 ?>
 
 <?php require_once(dirname(__FILE__) . '/header.php'); ?>
@@ -27,7 +27,6 @@
             <table width="100%" class="table table-striped table-bordered table-hover">
                 <thead>
                     <tr>
-                        <th>Permutation hash</th>
                         <th>Creation</th>
                         <th>Start</th>
                         <th>End</th>
@@ -37,11 +36,10 @@
                 <tbody>
                     <?php
                         echo '<tr>';
-                            echo '<td>'.$aInfo['permutation'].'</td>';
-                            echo '<td>'.date('Y/m/d H:i:s', $aInfo['creation_time']).'</td>';
-                            echo '<td>'.date('Y/m/d H:i:s', $aInfo['exec_time_start']).'</td>';
-                            echo '<td>'.($aInfo['exec_time_end'] != 0 ? date('Y/m/d H:i:s', $aInfo['exec_time_end']) : '-').'</td>';
-                            echo '<td>'.Besearcher\View::prettyStatusName($aInfo, true).'</td>';
+                            echo '<td>'.date('Y/m/d H:i:s', $aResult['creation_time']).'</td>';
+                            echo '<td>'.date('Y/m/d H:i:s', $aResult['exec_time_start']).'</td>';
+                            echo '<td>'.($aResult['exec_time_end'] != 0 ? date('Y/m/d H:i:s', $aResult['exec_time_end']) : '-').'</td>';
+                            echo '<td>'.Besearcher\View::prettyStatusName($aResult, true).'</td>';
                         echo '</tr>';
                     ?>
                 </tbody>
@@ -57,15 +55,15 @@
             <table width="100%" class="table table-striped table-bordered table-hover">
                 <thead>
                     <tr>
-                        <th>Commit hash</th>
-                        <th>Commit message</th>
+                        <th>Experiment hash</th>
+                        <th>Permutation hash</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php
                         echo '<tr>';
-                            echo '<td>'.$aInfo['commit'].'</td>';
-                            echo '<td>'.Besearcher\View::out($aInfo['commit_message']).'</td>';
+                            echo '<td>'.$aResult['experiment_hash'].'</td>';
+                            echo '<td>'.$aResult['permutation_hash'].'</td>';
                         echo '</tr>';
                     ?>
                 </tbody>
@@ -88,8 +86,8 @@
                 <tbody>
                     <?php
                         echo '<tr>';
-                            echo '<td>'.$aInfo['cmd'].'</td>';
-                            echo '<td>'.$aInfo['raw']['cmd_return_code'].'</td>';
+                            echo '<td>'.$aResult['cmd'].'</td>';
+                            echo '<td>'.$aResult['cmd_return_code'].'</td>';
                         echo '</tr>';
                     ?>
                 </tbody>
@@ -107,7 +105,7 @@
                     <tr><th>Params</th></tr>
                 </thead>
                 <tbody>
-                    <tr><td><?php echo $aInfo['params']; ?></td></tr>
+                    <tr><td><?php echo $aResult['params']; ?></td></tr>
                 </tbody>
             </table>
             <!-- /.table-responsive -->

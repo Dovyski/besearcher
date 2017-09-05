@@ -3,24 +3,18 @@
 
     Besearcher\Auth::allowAuthenticated();
 
-    $aCommit = isset($_REQUEST['commit']) ? $_REQUEST['commit'] : '';
-    $aPermutation = isset($_REQUEST['permutation']) ? $_REQUEST['permutation'] : '';
+    $aExperimentHash = isset($_REQUEST['experiment_hash']) ? $_REQUEST['experiment_hash'] : '';
+    $aPermutationHash = isset($_REQUEST['permutation_hash']) ? $_REQUEST['permutation_hash'] : '';
 
-    $aTasks = Besearcher\Data::tasks();
+    $aApp = Besearcher\WebApp::instance();
+    $aResult = $aApp->getData()->getResultByHashes($aExperimentHash, $aPermutationHash);
     $aError = '';
-    $aData = array();
 
-    if(isset($aTasks[$aCommit])) {
-        if(isset($aTasks[$aCommit][$aPermutation])) {
-            $aData = $aTasks[$aCommit][$aPermutation];
-        } else {
-            $aError = 'Unknown result with hash ' . Besearcher\view::out($aPermutation);
-        }
-    } else {
-        $aError = 'Unknown task with commit ' . Besearcher\view::out($aCommit);
+    if($aResult == false) {
+        $aError = 'Unknown result with experiment hash ' . Besearcher\view::out($aExperimentHash) . ' and permutation hash ' . $aPermutationHash;
     }
 
-    $aLogPath = @$aData['raw']['log_file'];
+    $aLogPath = @$aResult['log_file'];
     $aLogContent = '';
 
     if(!empty($aLogPath)) {
@@ -28,9 +22,10 @@
     }
 
     $aMeta = array();
+    $aTags = @unserialize($aResult['log_file_tags']);
 
-    if(isset($aData['meta'])) {
-        foreach($aData['meta'] as $aItem) {
+    if($aTags !== false) {
+        foreach($aTags as $aItem) {
             if($aItem['type'] != BESEARCHER_TAG_TYPE_PROGRESS) {
                 $aMeta[] = $aItem;
             }
@@ -38,7 +33,7 @@
     }
 
     Besearcher\View::render('result', array(
-        'info' => $aData,
+        'result' => $aResult,
         'meta' => $aMeta,
         'log_content' => $aLogContent,
         'error' => $aError,
