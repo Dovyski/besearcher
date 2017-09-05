@@ -208,7 +208,7 @@ class App {
 	    $this->mLog->debug($theTask['cmd'] . ' > ' . $theTask['log_file']);
 
 	    if($theParallel) {
-	        $aFinalCmd = sprintf('start "Job" /b cmd.exe /c "%s "%s" %s"', RUNNER_CMD, $this->mINIPath, $aId);
+	        $aFinalCmd = sprintf('start "Job" /b cmd.exe /c "%s "%s" %s"', BESEARCHER_RUNNER_CMD, $this->mINIPath, $aId);
 	    }
 
 	    pclose(popen($aFinalCmd, 'r'));
@@ -320,6 +320,15 @@ class App {
 	    }
 
 	    $aTaskCmdParams = isset($this->mINIValues['task_cmd_params']) ? $this->mINIValues['task_cmd_params'] : array();
+
+		// Add special replace tokens
+		$aTaskCmdParams['besearcher_home'] = BESEARCHER_HOME;
+		$aTaskCmdParams['besearcher_cmd_dir'] = BESEARCHER_CMD_DIR;
+		$aTaskCmdParams['besearcher_time'] = time();
+		$aTaskCmdParams['besearcher_os'] = PHP_OS;
+		$aTaskCmdParams['ini_data_dir'] = $this->config('data_dir');
+		$aTaskCmdParams['ini_experiment_hash'] = $this->config('experiment_hash');
+		$aTaskCmdParams['ini_experiment_description'] = $this->config('experiment_description');
 
 	    if(count($aTaskCmdParams) > 0) {
 	        $aCmds = array();

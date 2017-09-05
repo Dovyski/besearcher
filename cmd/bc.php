@@ -127,15 +127,6 @@ if(isset($aArgs['reload'])) {
         confirmOperation();
     }
 
-    $aDeleteList = array();
-    $aResults = $aData->findResults();
-
-    foreach($aResults as $aResult) {
-        $aCachePath = $aResult['log_file'] . BESEARCHER_CACHE_FILE_EXT;
-        $aDeleteList[] = $aCachePath;
-    }
-
-    deleteFilesList($aDeleteList, 2, $aIsVerbose);
     $aContext->set('experiment_hash', '');
     $aContext->set('experiment_ready', 0);
 
