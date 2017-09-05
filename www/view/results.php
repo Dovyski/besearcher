@@ -8,7 +8,7 @@
 <div id="page-wrapper">
     <div class="row">
         <div class="col-lg-12">
-            <h1 class="page-header">Tasks</h1>
+            <h1 class="page-header">Results</h1>
         </div>
         <!-- /.col-lg-12 -->
     </div>
@@ -20,7 +20,7 @@
                 <thead>
                     <tr>
                         <th><i class="fa fa-info-circle"></i></th>
-                        <th>Commit-permutation</th>
+                        <th>Hash-permutation</th>
                         <th>Creation</th>
                         <th>Start</th>
                         <th>Params</th>
