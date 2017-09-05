@@ -13,6 +13,7 @@
  require_once(dirname(__FILE__) . '/../inc/Tasks.class.php');
  require_once(dirname(__FILE__) . '/../inc/Log.class.php');
  require_once(dirname(__FILE__) . '/../inc/App.class.php');
+ require_once(dirname(__FILE__) . '/../inc/ResultOutputParser.class.php');
 
 $aIniPath = $argv[1];
 $aTaskId = $argv[2];
@@ -31,14 +32,26 @@ if($aResult === false) {
 $aCmd = $aResult['cmd'];
 $aPathLogFile = $aResult['log_file'];
 
-$aData->markResultAsRunning($aResult['id'], time());
+$aData->updateResult($aResult['id'], array(
+    'running' => 1,
+    'exec_time_start' => time()
+));
 
 $aOutput = array();
 $aReturnCode = -1;
 $aLastLine = exec($aCmd . ' > "'.$aPathLogFile.'"', $aOutput, $aReturnCode);
 
-// TODO: parse besearcher tags in the log file
+// From this point on, the result finished executing. Let's
+// parse its output to find special Besearcher tags
+$aParser = new Besearcher\ResultOutputParser($aResult);
+$aTags = $aParser->getTags();
 
-$aData->markResultAsFinished($aResult['id'], $aReturnCode, time());
+$aData->updateResult($aResult['id'], array(
+    'running' => 0,
+    'progress' => 1.0,
+    'cmd_return_code' => $aReturnCode,
+    'exec_time_end' => time(),
+    'log_file_tags' => serialize($aTags)
+));
 
 exit(0);

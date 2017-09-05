@@ -23,6 +23,7 @@ class Tasks {
 				cmd,
 				cmd_return_code,
 				log_file,
+				log_file_tags,
 				working_dir,
 				experiment_hash,
 				permutation_hash,
@@ -38,6 +39,7 @@ class Tasks {
 			:cmd,
 			:cmd_return_code,
 			:log_file,
+			:log_file_tags,
 			:working_dir,
 			:experiment_hash,
 			:permutation_hash,
@@ -52,11 +54,13 @@ class Tasks {
 		$aStmt = $this->mDb->getPDO()->prepare($aSql);
 		$aNow = time();
 		$aZero = 0;
+		$aSerializedTags = serialize(array());
 
 		$aStmt->bindParam(':id', $theTask['id']);
 		$aStmt->bindParam(':cmd', $theTask['cmd']);
 		$aStmt->bindParam(':cmd_return_code', $theTask['cmd_return_code']);
 		$aStmt->bindParam(':log_file', $theTask['log_file']);
+		$aStmt->bindParam(':log_file_tags', $aSerializedTags);
 		$aStmt->bindParam(':working_dir', $theTask['working_dir']);
 		$aStmt->bindParam(':experiment_hash', $theTask['experiment_hash']);
 		$aStmt->bindParam(':permutation_hash', $theTask['permutation_hash']);
@@ -200,76 +204,26 @@ class Tasks {
 	    return $aResults;
 	}
 
-	public function markResultAsFinished($theId, $theCmdReturnCode, $theExecTimeEnd) {
-		$aStmt = $this->mDb->getPDO()->prepare("UPDATE results SET running = 0, progress = 1.0, cmd_return_code = :cmd_return_code, exec_time_end = :exec_time_end WHERE id = :id");
-		$aStmt->bindParam(':cmd_return_code', $theCmdReturnCode);
-		$aStmt->bindParam(':exec_time_end', $theExecTimeEnd);
-	    $aStmt->bindParam(':id', $theId);
+	public function updateResult($theId, $theKeyValuePairs) {
+		$aFields = array_keys($theKeyValuePairs);
+		$aParts = array();
 
+		foreach($aFields as $aField) {
+			$aParts[] = $aField . ' = ' . ':' . $aField;
+		}
+print_r("UPDATE results SET ".implode(', ', $aParts)." WHERE id = :id\n");
+		$aStmt = $this->mDb->getPDO()->prepare("UPDATE results SET ".implode(', ', $aParts)." WHERE id = :id");
+
+		foreach($aFields as $aField) {
+			$aStmt->bindParam(':' . $aField, $theKeyValuePairs[$aField]);
+			echo ':' . $aField . " = " . $theKeyValuePairs[$aField] . "\n";
+		}
+
+		$aStmt->bindParam(':id', $theId);
+		echo ':id = ' . $theId . "\n";
 		$aOk = $aStmt->execute();
+
 		return $aOk;
-	}
-
-	public function markResultAsRunning($theId, $theExecTimeStart) {
-		$aStmt = $this->mDb->getPDO()->prepare("UPDATE results SET running = 1, exec_time_start = :exec_time_start WHERE id = :id");
-		$aStmt->bindParam(':exec_time_start', $theExecTimeStart);
-	    $aStmt->bindParam(':id', $theId);
-
-		$aOk = $aStmt->execute();
-		return $aOk;
-	}
-
-	function calculateTaskProgressFromTags(array $theBesearcherLogTags) {
-	    $aProgresses = $this->findTagsByType($theBesearcherLogTags, BESEARCHER_TAG_TYPE_PROGRESS);
-	    $aCount = count($aProgresses);
-
-	    $aProgress =  $aCount > 0 ? $aProgresses[$aCount - 1]['data'] : -1;
-	    return $aProgress;
-	}
-
-	public function aggredateTaskInfos($theTaskJsonFiles) {
-	    $aInfos = array();
-
-	    foreach($theTaskJsonFiles as $aFile) {
-	        $aInfo = $this->loadTask($aFile);
-	        $aPermutation = $aInfo['permutation'];
-
-	        // Find special marks in the log file that inform
-	        // Besearcher about things
-	        $aTags = $this->handleBesearcherLogTags($aInfo);
-
-	        $aInfos[$aPermutation] = array(
-	            'commit'          => $aInfo['hash'],
-	            'commit_message'  => @$aInfo['message'],
-	            'permutation'     => $aPermutation,
-	            'creation_time'   => @$aInfo['creation_time'],
-	            'exec_time_start' => @$aInfo['exec_time_start'],
-	            'exec_time_end'   => @$aInfo['exec_time_end'],
-	            'params'          => $aInfo['params'],
-	            'cmd'             => $aInfo['cmd'],
-	            'progress'        => $this->calculateTaskProgressFromTags($aTags),
-	            'meta'            => $aTags,
-	            'raw'             => $aInfo
-	        );
-	    }
-
-	    return $aInfos;
-	}
-
-	public function findTasksInfos($theDataDir) {
-	    $aData = array();
-	    $aTasks = scandir($theDataDir);
-
-	    foreach($aTasks as $aItem) {
-	        $aPath = $theDataDir . DIRECTORY_SEPARATOR . $aItem;
-
-	        if($aItem[0] != '.' && is_dir($aPath)) {
-	            $aFiles = glob($aPath . DIRECTORY_SEPARATOR . '*.json');
-	            $aData[$aItem] = $this->aggredateTaskInfos($aFiles);
-	        }
-	    }
-
-	    return $aData;
 	}
 
 	private function castArrayEntriesToInt($theArray) {
@@ -308,64 +262,6 @@ class Tasks {
 	    $aStmt = $this->mDb->getPDO()->prepare("DELETE FROM tasks WHERE id IN (".implode(',', $aIds).")");
 	    $aStmt->execute();
 	}
-
-	public function handleBesearcherLogTags($theTaskInfo, $theUseCache = true) {
-		$aTags = array();
-
-		if($this->isTaskFinished($theTaskInfo) && $theUseCache) {
-			// Task has finished, it might be a cached version of the log file.
-			$aCacheFilePath = $theTaskInfo['log_file'] . BESEARCHER_CACHE_FILE_EXT;
-
-			if(file_exists($aCacheFilePath)) {
-				$aTags = unserialize(file_get_contents($aCacheFilePath));
-			} else {
-				$aTags = $this->findBesearcherLogTags($theTaskInfo['log_file']);
-				file_put_contents($aCacheFilePath, serialize($aTags));
-			}
-		} else {
-			$aTags = $this->findBesearcherLogTags($theTaskInfo['log_file']);
-		}
-
-		return $aTags;
-	}
-
-	function findBesearcherLogTags($theLogFilePath) {
-	    $aRet = array();
-	    $aFile = @fopen($theLogFilePath, 'r');
-
-	    if (!$aFile) {
-	        return $aRet;
-	    }
-
-	    $aLimit = strlen(BESEARCHER_TAG);
-
-	    while (($aLine = fgets($aFile)) !== false) {
-	        if(!empty($aLine) && $aLine != '') {
-	            $aMarker = substr($aLine, 0, $aLimit);
-
-	            if($aMarker == BESEARCHER_TAG) {
-	                $aText = substr($aLine, $aLimit);
-	                $aRet[] = json_decode(trim($aText), true);
-	            }
-	        }
-	    }
-
-	    fclose($aFile);
-	    return $aRet;
-	}
-
-	function findTagsByType(array $theBesearcherLogTags, $theType) {
-	    $aRet = array();
-
-	    foreach($theBesearcherLogTags as $aItem) {
-	        if($aItem['type'] == $theType) {
-	            $aRet[] = $aItem;
-	        }
-	    }
-
-	    return $aRet;
-	}
-
 }
 
 ?>

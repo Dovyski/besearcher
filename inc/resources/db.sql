@@ -25,6 +25,7 @@ CREATE TABLE `results` (
 	`cmd`	TEXT NOT NULL,
 	`cmd_return_code`	INTEGER,
 	`log_file`	TEXT NOT NULL,
+	`log_file_tags`	TEXT NOT NULL,
 	`working_dir`	TEXT NOT NULL,
 	`experiment_hash`	TEXT NOT NULL,
 	`permutation_hash`	TEXT NOT NULL,
