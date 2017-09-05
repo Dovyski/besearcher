@@ -205,24 +205,7 @@ class Tasks {
 	}
 
 	public function updateResult($theId, $theKeyValuePairs) {
-		$aFields = array_keys($theKeyValuePairs);
-		$aParts = array();
-
-		foreach($aFields as $aField) {
-			$aParts[] = $aField . ' = ' . ':' . $aField;
-		}
-print_r("UPDATE results SET ".implode(', ', $aParts)." WHERE id = :id\n");
-		$aStmt = $this->mDb->getPDO()->prepare("UPDATE results SET ".implode(', ', $aParts)." WHERE id = :id");
-
-		foreach($aFields as $aField) {
-			$aStmt->bindParam(':' . $aField, $theKeyValuePairs[$aField]);
-			echo ':' . $aField . " = " . $theKeyValuePairs[$aField] . "\n";
-		}
-
-		$aStmt->bindParam(':id', $theId);
-		echo ':id = ' . $theId . "\n";
-		$aOk = $aStmt->execute();
-
+		$aOk = $this->mDb->update('results', $theId, $theKeyValuePairs);
 		return $aOk;
 	}
 

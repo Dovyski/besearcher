@@ -34,32 +34,7 @@ class ResultOutputParser {
 
         // Find special marks in the log file that inform
         // Besearcher about things
-        $this->mTags = $this->handleBesearcherLogTags($this->mResult);
-	}
-
-	private function isResultFinished($theResult) {
-		$aFinished = $theResult['running'] == 0 && $theResult['exec_time_end'] != 0;
-		return $aFinished;
-	}
-
-	private function handleBesearcherLogTags($theTaskInfo, $theUseCache = true) {
-		$aTags = array();
-
-		if($this->isResultFinished($theTaskInfo) && $theUseCache) {
-			// Task has finished, it might be a cached version of the log file.
-			$aCacheFilePath = $theTaskInfo['log_file'] . BESEARCHER_CACHE_FILE_EXT;
-
-			if(file_exists($aCacheFilePath)) {
-				$aTags = unserialize(file_get_contents($aCacheFilePath));
-			} else {
-				$aTags = $this->findBesearcherLogTags($theTaskInfo['log_file']);
-				file_put_contents($aCacheFilePath, serialize($aTags));
-			}
-		} else {
-			$aTags = $this->findBesearcherLogTags($theTaskInfo['log_file']);
-		}
-
-		return $aTags;
+        $this->mTags = $this->findBesearcherLogTags($this->mResult['log_file']);
 	}
 
 	private function findBesearcherLogTags($theLogFilePath) {

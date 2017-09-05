@@ -48,6 +48,26 @@ class Db {
 		}
 	}
 
+	public function update($theTable, $theId, $theKeyValuePairs) {
+		$aFields = array_keys($theKeyValuePairs);
+		$aParts = array();
+
+		foreach($aFields as $aField) {
+			$aParts[] = $aField . ' = ' . ':' . $aField;
+		}
+
+		$aStmt = $this->mPDO->prepare("UPDATE ".$theTable." SET ".implode(', ', $aParts)." WHERE id = :id");
+
+		foreach($aFields as $aField) {
+			$aStmt->bindParam(':' . $aField, $theKeyValuePairs[$aField]);
+		}
+
+		$aStmt->bindParam(':id', $theId);
+		$aOk = $aStmt->execute();
+
+		return $aOk;
+	}
+
 	public function getPDO() {
 		return $this->mPDO;
 	}
