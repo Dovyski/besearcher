@@ -3,9 +3,12 @@
 namespace Besearcher;
 
 class Auth {
-	public static function init() {
+	private static $mSessionName;
+
+	public static function init($theSessionName) {
+		self::$mSessionName = $theSessionName;
 		session_start();
-		session_name(BESERCHER_SESSION_NAME);
+		session_name(self::$mSessionName);
 	}
 
 	public static function isValidUser($theUser, $thePassword) {

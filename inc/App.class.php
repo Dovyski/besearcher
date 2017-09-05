@@ -691,5 +691,13 @@ class App {
 	public function getData() {
 		return $this->mTasks;
 	}
+
+	public function getINIPath() {
+		return $this->mINIPath;
+	}
+
+	public function getINIValues() {
+		return $this->mINIValues;
+	}
 }
 ?>

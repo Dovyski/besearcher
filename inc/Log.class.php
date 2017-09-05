@@ -20,7 +20,8 @@ class Log {
 
 	public function __construct($thePathLogFile, $theSilent = false) {
 		$this->mSilent = $theSilent;
-		$this->mStream = empty($thePathLogFile) ? STDOUT : fopen($thePathLogFile, 'a');
+		$aStdOut = defined('STDOUT') ? STDOUT : null;
+		$this->mStream = empty($thePathLogFile) ? $aStdOut : fopen($thePathLogFile, 'a');
 		$this->setLevel(Log::DEBUG);
 	}
 
