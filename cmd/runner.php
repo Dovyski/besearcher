@@ -9,30 +9,19 @@
 
  require_once(dirname(__FILE__) . '/../inc/constants.php');
  require_once(dirname(__FILE__) . '/../inc/Db.class.php');
+ require_once(dirname(__FILE__) . '/../inc/Context.class.php');
  require_once(dirname(__FILE__) . '/../inc/Tasks.class.php');
+ require_once(dirname(__FILE__) . '/../inc/Log.class.php');
+ require_once(dirname(__FILE__) . '/../inc/App.class.php');
 
 $aIniPath = $argv[1];
 $aTaskId = $argv[2];
 
-if(!file_exists($aIniPath)) {
-    echo "Unable to load INI file: " . $aIniPath . "\n";
-    exit(1);
-}
+$aApp = new Besearcher\App();
+$aApp->init($aIniPath, '', true);
 
-$aINI = parse_ini_file($aIniPath);
-$aDataDir = @$aINI['data_dir'];
-
-if(!file_exists($aDataDir)) {
-    echo "Unable to access data directory informed in INI file: " . $aDataDir . "\n";
-    exit(1);
-}
-
-$aDbPath = $aINI['data_dir'] . DIRECTORY_SEPARATOR . BESEARCHER_DB_FILE;
-
-$aDb = new Besearcher\Db($aDbPath, false);
-$aTasks = new Besearcher\Tasks($aDb);
-
-$aResult = $aTasks->getResultById($aTaskId);
+$aData = $aApp->getData();
+$aResult = $aData->getResultById($aTaskId);
 
 if($aResult === false) {
     echo "Unable to load result with task id=" . $aTaskId . ".\n";
@@ -42,7 +31,7 @@ if($aResult === false) {
 $aCmd = $aResult['cmd'];
 $aPathLogFile = $aResult['log_file'];
 
-$aTasks->markResultAsRunning($aResult['id'], time());
+$aData->markResultAsRunning($aResult['id'], time());
 
 $aOutput = array();
 $aReturnCode = -1;
@@ -50,6 +39,6 @@ $aLastLine = exec($aCmd . ' > "'.$aPathLogFile.'"', $aOutput, $aReturnCode);
 
 // TODO: parse besearcher tags in the log file
 
-$aTasks->markResultAsFinished($aResult['id'], $aReturnCode, time());
+$aData->markResultAsFinished($aResult['id'], $aReturnCode, time());
 
 exit(0);

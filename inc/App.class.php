@@ -32,7 +32,7 @@ class App {
 	  * @param  mixed $theDefault   Value to be returned if nothing is found.
 	  * @return mixed               Value of the informed key.
 	  */
-	private function config($theKey, $theDefault = null) {
+	public function config($theKey, $theDefault = null) {
 	    $aINI = $this->mINIValues;
 	    $aRet = $theDefault;
 
@@ -51,16 +51,22 @@ class App {
 		$this->mINIPath = $theINIPath;
 	    $this->mINIValues = parse_ini_file($this->mINIPath, true);
 
+		$aDataDir = @$this->mINIValues['data_dir'];
+
+		if(!file_exists($aDataDir)) {
+			throw new \Exception("Unable to access data directory informed in INI file: " . $aDataDir . "\n");
+		}
+
 	    // Interpret the special syntax in the INI file
 	    // to expand expressions, e.g. 0..10:1 becomes 0,1,2,3,..,10
 	    $this->mINIValues = $this->processSpecialExpressions($this->mINIValues);
 	}
 
-	public function init($thePathINIFile, $thePathLogFile) {
+	public function init($thePathINIFile, $thePathLogFile, $theSimplified = false) {
 		// Load INI file because we need the bare minimum to start everything up.
 		$this->loadINI($thePathINIFile);
 
-		$this->mLog = new Log($thePathLogFile);
+		$this->mLog = new Log($thePathLogFile, $theSimplified);
 		$this->mLog->setLevel($this->config('log_level'));
 		$this->mLog->info('Besearcher is starting up. What a great day for science!');
 
@@ -70,15 +76,19 @@ class App {
 		$this->mContext = new Context($this->mDb, $this->mLog, array('status' => BESEARCHER_STATUS_STOPED));
 		$this->mTasks = new Tasks($this->mDb);
 
-		// Load context data from disk and merge it with in-memory data
-		$this->mContext->sync();
-
-		// It is time to proceed with the initialization of everything else.
-		$this->mActive = true;
 		$this->mRunningTasksCount = 0;
-		$this->ensureStatusHealth();
 
-		$this->printSummary();
+		if($theSimplified) {
+			// Load context data from disk and don't make any changes to it.
+			$this->mContext->load();
+		} else {
+			// Load context data from disk and merge it with in-memory data.
+			$this->mContext->sync();
+
+			$this->mActive = true;
+			$this->ensureStatusHealth();
+			$this->printSummary();
+		}
 	}
 
 	private function ensureStatusHealth() {
@@ -150,7 +160,7 @@ class App {
 	    pclose(popen($aFinalCmd, 'r'));
 	}
 
-	private function countRunningTasks() {
+	public function countRunningTasks() {
 		$aRunningTasks = $this->mTasks->findRunningTasks();
 		$aCount = count($aRunningTasks);
 		return $aCount;
@@ -185,7 +195,7 @@ class App {
 	    return $aSpawnedNewTask;
 	}
 
-	private function setExperimentHash($theHash) {
+	public function setExperimentHash($theHash) {
 		if($theHash == $this->mContext->get('experiment_hash')) {
 			return;
 		}
@@ -512,7 +522,7 @@ class App {
 	    return $aResult;
 	}
 
-	private function setStatus($theValue, $theLogMessage = '', $theLogType = Log::INFO) {
+	public function setStatus($theValue, $theLogMessage = '', $theLogType = Log::INFO) {
 	    if($this->mContext->get('status') == $theValue) {
 	        return;
 	    }
@@ -595,7 +605,7 @@ class App {
 	    $this->ensureExperimentHashIsNotEmpty();
 	}
 
-	private function printSummary() {
+	public function printSummary() {
 		$aRunningTasksCount = $this->countRunningTasks();
 	    $aQueueSize = $this->mTasks->queueSize();
 		$aStatus = $this->mContext->get('status');
@@ -605,6 +615,18 @@ class App {
 
 	public function getLogger() {
 		return $this->mLog;
+	}
+
+	public function getContext() {
+		return $this->mContext;
+	}
+
+	public function getDb() {
+		return $this->mDb;
+	}
+
+	public function getData() {
+		return $this->mTasks;
 	}
 }
 ?>

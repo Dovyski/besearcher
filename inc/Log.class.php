@@ -8,6 +8,7 @@ class Log {
 	const INFO = 1;
 	const DEBUG = 0;
 
+	private $mSilent;
 	private $mStream;
 	private $mLevel;
 	private $mStrings = array(
@@ -17,7 +18,8 @@ class Log {
 	    Log::DEBUG => 'DEBUG'
 	);
 
-	public function __construct($thePathLogFile) {
+	public function __construct($thePathLogFile, $theSilent = false) {
+		$this->mSilent = $theSilent;
 		$this->mStream = empty($thePathLogFile) ? STDOUT : fopen($thePathLogFile, 'a');
 		$this->setLevel(Log::DEBUG);
 	}
@@ -49,6 +51,10 @@ class Log {
 	}
 
 	public function say($theMessage, $theType) {
+		if($this->mSilent) {
+			return;
+		}
+
 	    $aLabel = isset($this->mStrings[$theType]) ? $this->mStrings[$theType] : 'UNKNOWN';
 	    $aMessage = date('[Y-m-d H:i:s]') . ' [' . $aLabel . '] ' . $theMessage . "\n";
 
