@@ -7,6 +7,9 @@ log_level = 1
 ; Number of seconds to wait to check for tasks to run or changes in this INI file
 refresh_interval = 1
 
+; Number of seconds to wait between internal cron jobs, such as e-mails
+cron_jobs_interval = 10
+
 ; Directory the app will use to store results produced by issued
 ; commands, as well as internal info.
 data_dir = "C:\wamp\www\besearcher\data\"
@@ -36,7 +39,7 @@ max_parallel_tasks = 5
 ; [BSR] {"type": "progress", "data": 0.1}
 ; [BSR] {"type": "result", "name": "Accuracy", "data": 0.1}
 ;
-task_cmd = "ping.exe {@domain} -n {@jumps}"
+task_cmd = "php {@besearcher_cmd_dir}dummy.php {@domain} {@jumps}"
 
 ; Command to be executed once as a preparation for "task_cmd"
 ; to be executed. While "task_cmd" is executed for every new
@@ -47,7 +50,7 @@ task_cmd = "ping.exe {@domain} -n {@jumps}"
 ; continue. If the command returns a non-zero value, Besearcher
 ; assumes a problem occured and it interrups the execution of
 ; the task commands until the problem is solved.
-setup_cmd = "dir"
+setup_cmd = "ping google.com"
 
 ; An absolute path to the directory to be used as the working
 ; directory for issued commands.
