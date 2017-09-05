@@ -142,6 +142,21 @@ class Tasks {
 		return $aRow['num'];
 	}
 
+	public function findEnquedTasks($theStart, $theHowMany) {
+		$aTasksQueue = array();
+		$theStart = $theStart + 0;
+		$theHowMany = $theHowMany + 0;
+
+		$aStmt = $this->mDb->getPDO()->prepare('SELECT * FROM tasks WHERE 1 ORDER BY creation_time ASC LIMIT ' . $theStart . ',' . $theHowMany);
+        $aStmt->execute();
+
+        while($aRow = $aStmt->fetch(\PDO::FETCH_ASSOC)) {
+            $aTasksQueue[] = $aRow;
+        }
+
+		return $aTasksQueue;
+	}
+
 	public function findRunningTasks() {
 		$aStmt = $this->mDb->getPDO()->prepare("SELECT * FROM results WHERE running = 1");
 		$aStmt->execute();

@@ -117,6 +117,10 @@ class Context {
 		return $this->mValues[$theKey];
 	}
 
+	public function values() {
+		return $this->mValues;
+	}
+
 	public function set($theKey, $theValue) {
 		$this->ensureKeyExists($theKey);
 

@@ -44,7 +44,7 @@
     </div>
 
 
-    <form action="control.php" method="post">
+    <form action="queue.php" method="post">
 
     <div class="row">
         <div class="col-lg-12">
@@ -58,8 +58,8 @@
                     <thead>
                         <tr>
                             <th></th>
-                            <th>#</th>
-                            <th>Commit-permutation</th>
+                            <th>Id</th>
+                            <th>Hash-permutation</th>
                             <th>Creation</th>
                             <th>Params</th>
                         </tr>
@@ -72,10 +72,10 @@
                                     echo '<td>';
                                         echo '<input type="checkbox" name="task_'.$aNum.'" value="'.$aItem['id'].'" />';
                                     echo '</td>';
-                                    echo '<td>'.($aData['start'] + $aNum + 1).'</td>';
-                                    echo '<td><a href="result.php?commit='.$aItem['commit_hash'].'&permutation='.$aItem['permutation_hash'].'" title="Click to view more information">'.substr($aItem['commit_hash'], 0, 16).'-'.substr($aItem['permutation_hash'], 0, 16).'</a></td>';
+                                    echo '<td>'.$aItem['id'].'</td>';
+                                    echo '<td><a href="result.php?experiment_hash='.$aItem['experiment_hash'].'&permutation_hash='.$aItem['permutation_hash'].'" title="Click to view more information">'.substr($aItem['experiment_hash'], 0, 16).'-'.substr($aItem['permutation_hash'], 0, 16).'</a></td>';
                                     echo '<td>'.date('Y/m/d H:i:s', $aItem['creation_time']).'</td>';
-                                    echo '<td>'.$aItem['data']['params'].'</td>';
+                                    echo '<td>'.$aItem['params'].'</td>';
                                 echo '</tr>';
                                 $aNum++;
                             }
@@ -90,20 +90,21 @@
         <nav aria-label="Page navigation">
             <ul class="pagination">
                 <?php
-                    echo '<li><a href="control.php?page=1&size='.$aData['size'].'" aria-label="First"><span aria-hidden="true">&laquo;</span></a></li>';
+                    echo '<li style="margin: 10px;">Showing '.$aData['pagination']['size'].' of '.$aData['pagination']['total'].'</li>';
+                    echo '<li><a href="queue.php?page=1&size='.$aData['pagination']['size'].'" aria-label="First" title="Jump to first page"><i class="fa fa-step-backward"></i></a></li>';
 
                     $aLength = 10;
-                    $aStart = $aData['page'] - $aLength;
-                    $aEnd = $aData['page'] + $aLength;
+                    $aStart = $aData['pagination']['page'] - $aLength;
+                    $aEnd = $aData['pagination']['page'] + $aLength;
 
                     for($i = $aStart; $i <= $aEnd; $i++) {
-                        if($i >= 1 && $i <= $aData['pages']) {
-                            $aExtra = $aData['page'] == $i ? 'class="active"' : '';
-                            echo '<li ' . $aExtra . '><a href="control.php?page='.$i.'&size='.$aData['size'].'">' . $i . '</a></li>';
+                        if($i >= 1 && $i <= $aData['pagination']['pages']) {
+                            $aExtra = $aData['pagination']['page'] == $i ? 'class="active"' : '';
+                            echo '<li ' . $aExtra . '><a href="queue.php?page='.$i.'&size='.$aData['pagination']['size'].'">' . $i . '</a></li>';
                         }
                     }
 
-                    echo '<li><a href="control.php?page='.$aData['pages'].'&size='.$aData['size'].'" aria-label="Last"><span aria-hidden="true">&raquo;</span></a></li>';
+                    echo '<li><a href="queue.php?page='.$aData['pagination']['pages'].'&size='.$aData['pagination']['size'].'" aria-label="Last" title="Jump to last page"><i class="fa fa-step-forward"></i></a></li>';
                 ?>
             </ul>
         </nav>
