@@ -14,6 +14,7 @@ require_once(dirname(__FILE__) . '/inc/Log.class.php');
 require_once(dirname(__FILE__) . '/inc/Context.class.php');
 require_once(dirname(__FILE__) . '/inc/Tasks.class.php');
 require_once(dirname(__FILE__) . '/inc/App.class.php');
+require_once(dirname(__FILE__) . '/inc/ResultOutputParser.class.php');
 
 define('RUNNER_CMD', 'php "' . dirname(__FILE__) . DIRECTORY_SEPARATOR . 'cmd' . DIRECTORY_SEPARATOR . 'runner.php"');
 

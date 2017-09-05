@@ -34,31 +34,13 @@ $aIniPath = isset($aArgs['ini']) ? $aArgs['ini'] : '';
 $aApp = new Besearcher\App();
 $aApp->init($aIniPath, '', true);
 
-$aResults = $aApp->getData()->findRunningTasks();
-$aSize = count($aResults);
+$aUpdated = $aApp->updateProgressRunningResults();
+echo 'Finished! ';
 
-if($aSize > 0) {
-    echo 'Running results: ' . count($aResults) . "\n";
-
-    foreach($aResults as $aResult) {
-        $aParser = new Besearcher\ResultOutputParser($aResult);
-
-        echo ' result ' . $aResult['id'] . ' progress: ';
-
-        $aTags = $aParser->getTags();
-        $aProgress = $aParser->calculateTaskProgress();
-
-        $aApp->getData()->updateResult($aResult['id'], array(
-            'progress' => $aProgress,
-            'log_file_tags' => serialize($aTags)
-        ));
-
-        $aParser = null;
-        echo sprintf('%.2f%%', $aProgress * 100) . "\n";
-    }
-    echo 'Finished!' . "\n";
+if($aUpdated > 0) {
+    echo 'Updated results: ' . $aUpdated . ".\n";
 } else {
-    echo 'No results are currently running.' . "\n";
+    echo 'Nothing to update because no results are running.' . "\n";
 }
 
 exit(0);

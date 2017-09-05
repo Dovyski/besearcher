@@ -11,6 +11,7 @@ class App {
 	private $mINIValues;
 	private $mRunningTasksCount;
 	private $mActive;
+	private $mNextCronJob;
 
 	private function performConfigHotReload() {
 	    $aContentHash = md5(file_get_contents($this->mINIPath));
@@ -77,6 +78,7 @@ class App {
 		$this->mTasks = new Tasks($this->mDb);
 
 		$this->mRunningTasksCount = 0;
+		$this->scheduleNextCronJob();
 
 		if($theSimplified) {
 			// Load context data from disk and don't make any changes to it.
@@ -121,6 +123,57 @@ class App {
 	   }
 	}
 
+	private function scheduleNextCronJob() {
+		$this->mNextCronJob = time() + $this->config('cron_jobs_interval');
+	}
+
+	private function isTimeForCronJobs() {
+		return time() >= $this->mNextCronJob;
+	}
+
+	private function handleCronJobs() {
+		if($this->isTimeForCronJobs()) {
+			$this->updateProgressRunningResults();
+			$this->scheduleNextCronJob();
+		}
+	}
+
+	public function updateProgressRunningResults() {
+		$aRunningResults = $this->mTasks->findRunningTasks();
+		$aCount = count($aRunningResults);
+
+		if($aCount == 0) {
+			return 0;
+		}
+
+		$aUpdated = 0;
+		$this->mLog->debug('Updating progress of '.$aCount.' running results.');
+
+	    foreach($aRunningResults as $aResult) {
+	        $aParser = new ResultOutputParser($aResult);
+			$aTags = $aParser->getTags();
+	        $aProgress = $aParser->calculateTaskProgress();
+
+			// Let's get the most recent info from the disk to confirm
+			// the result is still running. If it is not, i.e. it finished
+			// while we parsed the log, let's just ignore it.
+			if($this->mTasks->isResultFinished($aResult['id'])) {
+				continue;
+			}
+
+	        $this->mTasks->updateResult($aResult['id'], array(
+	            'progress' => $aProgress,
+	            'log_file_tags' => serialize($aTags)
+	        ));
+
+	        $aParser = null;
+			$this->mLog->debug('Result id='.$aResult['id'].' is '.sprintf('%.2f%%', $aProgress * 100).' complete.');
+			$aUpdated++;
+	    }
+
+		return $aUpdated;
+	}
+
 	public function shutdown() {
 		$this->mLog->info('Besearcher is done. Over and out!');
 		$this->mLog->shutdown();
@@ -131,6 +184,7 @@ class App {
 		while($this->mActive) {
 		    $this->mActive = $this->step();
 		    $this->performHotReloadProcedures();
+			$this->handleCronJobs();
 
 		    // Wait for the next check
 		    $aWaitTime = $this->config('refresh_interval', 1);
