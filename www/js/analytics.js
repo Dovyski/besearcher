@@ -32,7 +32,7 @@ function renderMetricDataValues(theData, theMetric, theContainerId) {
 	'<table width="100%" class="table table-striped table-bordered table-hover">' +
 		'<thead>' +
 			'<tr>' +
-				'<th>Commit-permutation</th>' +
+				'<th>Hash-permutation</th>' +
 				'<th>Value</th>' +
 			'</tr>' +
 		'</thead>' +
@@ -41,7 +41,7 @@ function renderMetricDataValues(theData, theMetric, theContainerId) {
 	for(var i = 0; i < aValues.length; i++) {
 		aText +=
 			'<tr>' +
-				'<td><a href="result.php?commit=' + aValues[i].commit + '&permutation=' + aValues[i].permutation + '">' + aValues[i].commit + '-' + aValues[i].permutation + '</a></td>' +
+				'<td><a href="result.php?experiment_hash=' + aValues[i].experiment_hash + '&permutation_hash=' + aValues[i].permutation_hash + '">' + aValues[i].experiment_hash + '-' + aValues[i].permutation_hash + '</a></td>' +
 				'<td>' + aValues[i].value + '</td>' +
 			'</tr>';
 	}

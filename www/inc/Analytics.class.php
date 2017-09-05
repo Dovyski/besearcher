@@ -3,32 +3,34 @@
 namespace Besearcher;
 
 class Analytics {
-	public static function compileMetricStats($theTasks) {
+	public static function compileMetricStats($theResults) {
 		$aStats = array();
 
-		foreach($theTasks as $aTask) {
-			foreach($aTask as $aResult) {
-				$aMeta = $aResult['meta'];
+		foreach($theResults as $aResult) {
+			$aMeta = @unserialize($aResult['log_file_tags']);
 
-				foreach($aMeta as $aItem) {
-					if($aItem['type'] != BESEARCHER_TAG_TYPE_PROGRESS) {
-						$aMetric = $aItem['name'];
-						$aData = $aItem['data'];
+			if($aMeta === false) {
+				continue;
+			}
 
-						if(is_array($aData)) {
-							continue;
-						}
+			foreach($aMeta as $aItem) {
+				if($aItem['type'] != BESEARCHER_TAG_TYPE_PROGRESS) {
+					$aMetric = $aItem['name'];
+					$aData = $aItem['data'];
 
-						if(!isset($aStats[$aMetric])) {
-							$aStats[$aMetric] = array();
-						}
-
-						$aStats[$aMetric][] = array(
-							'commit' => $aResult['commit'],
-							'permutation' => $aResult['permutation'],
-							'value' => $aData
-						);
+					if(is_array($aData)) {
+						continue;
 					}
+
+					if(!isset($aStats[$aMetric])) {
+						$aStats[$aMetric] = array();
+					}
+
+					$aStats[$aMetric][] = array(
+						'experiment_hash' => $aResult['experiment_hash'],
+						'permutation_hash' => $aResult['permutation_hash'],
+						'value' => $aData
+					);
 				}
 			}
 		}
@@ -46,8 +48,8 @@ class Analytics {
 
 			if(!isset($aAnalytics[$aMetric])) {
 				$aAnalytics[$aMetric] = array(
-					'min' => array('commit' => $aItems[0]['commit'], 'permutation' => $aItems[0]['permutation'], 'value' => $aItems[0]['value']),
-					'max' => array('commit' => $aItems[0]['commit'], 'permutation' => $aItems[0]['permutation'], 'value' => $aItems[0]['value']),
+					'min' => array('experiment_hash' => $aItems[0]['experiment_hash'], 'permutation_hash' => $aItems[0]['permutation_hash'], 'value' => $aItems[0]['value']),
+					'max' => array('experiment_hash' => $aItems[0]['experiment_hash'], 'permutation_hash' => $aItems[0]['permutation_hash'], 'value' => $aItems[0]['value']),
 				);
 			}
 

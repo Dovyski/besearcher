@@ -11,9 +11,11 @@
 
     Besearcher\Auth::allowAuthenticated();
 
-    $aTasks = Besearcher\Data::tasks();
-    $aStats = Besearcher\Data::compileMetricStats($aTasks);
-    $aAnalytics = Besearcher\Data::compileAnalyticsFromMetricStats($aStats);
+    $aApp = Besearcher\WebApp::instance();
+    $aResults = $aApp->getData()->findResults();
+
+    $aStats = Besearcher\Analytics::compileMetricStats($aResults);
+    $aAnalytics = Besearcher\Analytics::compileAnalyticsFromMetricStats($aStats);
 
     // Get a list of all available metrics
     $aMetrics = array_keys($aStats);
