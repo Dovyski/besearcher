@@ -138,6 +138,18 @@ class Tasks {
 		return $aRow['num'];
 	}
 
+	public function findRunningTasks() {
+		$aStmt = $this->mDb->getPDO()->prepare("SELECT * FROM results WHERE running = 1");
+		$aStmt->execute();
+		$aTasks = array();
+
+		while($aRow = $aStmt->fetch(\PDO::FETCH_ASSOC)) {
+			$aTasks[] = $aRow;
+		}
+
+		return $aTasks;
+	}
+
 	public function isResultFinished($theResultId) {
 		$aStmt = $this->mDb->getPDO()->prepare("SELECT running,exec_time_end FROM results WHERE id = :id");
 		$aStmt->bindParam(':id', $theResultId);

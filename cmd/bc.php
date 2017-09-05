@@ -114,12 +114,13 @@ $aIsForce = isset($aArgs['f']) || isset($aArgs['force']);
 
 if(isset($aArgs['status'])) {
     $aQueueSize = $aTasks->queueSize();
+    $aRunningTasks = count($aTasks->findRunningTasks());
     echo "Besearcher summary:\n";
     echo " Status: ".$aContext->get('status')."\n";
     echo " Experiment hash: ".$aContext->get('experiment_hash')."\n";
     echo " Experiment description: ".trim($aINI['experiment_description'])."\n";
     echo " Tasks waiting in queue: ". $aQueueSize."\n";
-    echo " Tasks running: ". $aContext->get('running_tasks')."\n";
+    echo " Tasks running: ". $aRunningTasks."\n";
 }
 
 if(isset($aArgs['pause']) || isset($aArgs['resume']) || isset($aArgs['stop'])) {

@@ -10,7 +10,6 @@ class Context {
 		'ini_hash'         => '',
 		'experiment_hash'  => '',
 		'experiment_ready' => 0,
-		'running_tasks'    => 0,
 		'status'           => ''
 	);
 
@@ -48,7 +47,6 @@ class Context {
 	            ini_hash = :ini_hash,
 				experiment_hash = :experiment_hash,
 	            experiment_ready = :experiment_ready,
-	            running_tasks = :running_tasks,
 	            status = :status
 	        WHERE
 	            1";
@@ -58,7 +56,6 @@ class Context {
 	    $aStmt->bindParam(':ini_hash',         $this->mValues['ini_hash']);
 		$aStmt->bindParam(':experiment_hash',  $this->mValues['experiment_hash']);
 	    $aStmt->bindParam(':experiment_ready', $this->mValues['experiment_ready']);
-	    $aStmt->bindParam(':running_tasks',    $this->mValues['running_tasks']);
 	    $aStmt->bindParam(':status',           $this->mValues['status']);
 
 	    $aOk = $aStmt->execute();

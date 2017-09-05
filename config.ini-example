@@ -38,13 +38,6 @@ max_parallel_tasks = 5
 ;
 task_cmd = "ping.exe {@domain} -n {@jumps}"
 
-; The name of the command in the system task list. If you are
-; executing the cmd "ping.exe google.com", for instance, the name
-; of the cmd in the system task list is "ping.exe". The name will
-; be used by besearcher to count how many commands are currently
-; running, so it can decide on spawning more councurrent tasks.
-task_cmd_list_name = "ping.exe"
-
 ; Command to be executed once as a preparation for "task_cmd"
 ; to be executed. While "task_cmd" is executed for every new
 ; commit that arrives, "setup_cmd" is executed only once.

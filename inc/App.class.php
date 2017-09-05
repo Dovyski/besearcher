@@ -9,6 +9,7 @@ class App {
 	private $mContext;
 	private $mINIPath;
 	private $mINIValues;
+	private $mRunningTasksCount;
 	private $mActive;
 
 	private function performConfigHotReload() {
@@ -73,7 +74,8 @@ class App {
 		$this->mContext->sync();
 
 		// It is time to proceed with the initialization of everything else.
-		$this->mActive = true;//
+		$this->mActive = true;
+		$this->mRunningTasksCount = 0;
 		$this->ensureStatusHealth();
 
 		$this->printSummary();
@@ -149,18 +151,9 @@ class App {
 	}
 
 	private function countRunningTasks() {
-	    $aTaskCmdApp = $this->config('task_cmd_list_name', '');
-	    $aCount = 0;
-	    $aLines = array();
-	    $aProcesses = exec("tasklist", $aLines);
-
-	    foreach($aLines as $aProcess) {
-	        if(stripos($aProcess, $aTaskCmdApp) !== FALSE) {
-	            $aCount++;
-	        }
-	    }
-
-	    return $aCount;
+		$aRunningTasks = $this->mTasks->findRunningTasks();
+		$aCount = count($aRunningTasks);
+		return $aCount;
 	}
 
 	private function shouldWaitForUnfinishedTasks($theMaxParallel) {
@@ -175,23 +168,12 @@ class App {
 	    return $aShouldWait;
 	}
 
-	private function countEnquedTasks() {
-	    $aStmt = $this->mDb->getPDO()->prepare("SELECT COUNT(*) AS num FROM tasks WHERE 1");
-	    $aStmt->execute();
-	    $aRow = $aStmt->fetch(\PDO::FETCH_ASSOC);
-
-	    return $aRow['num'];
-	}
-
 	private function processQueuedTasks() {
 	    $aSpawnedNewTask = false;
-
-	    $aCmdName = $this->config('task_cmd_list_name', '');
 	    $aMaxParallelJobs = $this->config('max_parallel_tasks', 1);
-
 	    $aWait = $this->shouldWaitForUnfinishedTasks($aMaxParallelJobs);
 
-	    if(!$aWait && $this->countEnquedTasks() > 0) {
+	    if(!$aWait && $this->mTasks->queueSize() > 0) {
 	        // There is room for another job. Let's spawn it.
 	        $this->mLog->debug("Dequeueing task");
 	        $aTask = $this->mTasks->dequeueTask();
@@ -366,20 +348,19 @@ class App {
 	}
 
 	private function monitorRunningTasks() {
-		$aTasksBefore = $this->mContext->get('running_tasks');
 	    $aTasksNow = $this->countRunningTasks();
 
-	    if($aTasksBefore != $aTasksNow) {
+	    if($this->mRunningTasksCount != $aTasksNow) {
 	        if($aTasksNow > 0) {
 	            $this->mLog->info('Tasks running now: ' . $aTasksNow);
 	        }
 
-	        $this->mContext->set('running_tasks', $aTasksNow);
-
-	        if($aTasksNow == 0 && $aTasksBefore > 0) {
+	        if($aTasksNow == 0 && $this->mRunningTasksCount > 0) {
 	            $this->mLog->info('All runnings tasks finished!');
 	            $this->printSummary();
 	        }
+
+			$this->mRunningTasksCount = $aTasksNow;
 	    }
 	}
 
@@ -615,11 +596,11 @@ class App {
 	}
 
 	private function printSummary() {
-	    $aCountRunningTasks = $this->mContext->get('running_tasks');
-	    $aCountEnquedTasks = $this->countEnquedTasks();
+		$aRunningTasksCount = $this->countRunningTasks();
+	    $aQueueSize = $this->mTasks->queueSize();
 		$aStatus = $this->mContext->get('status');
 
-	    $this->mLog->info('Running tasks: '. $aCountRunningTasks . ', queued tasks: ' . $aCountEnquedTasks . ', status: ' . $aStatus);
+	    $this->mLog->info('Running tasks: '. $aRunningTasksCount . ', queued tasks: ' . $aQueueSize . ', status: ' . $aStatus);
 	}
 
 	public function getLogger() {

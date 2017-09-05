@@ -2,7 +2,6 @@ CREATE TABLE `context` (
 	`ini_hash`	TEXT NOT NULL,
 	`experiment_hash`	TEXT NOT NULL,
 	`experiment_ready`	INTEGER DEFAULT 0,
-	`running_tasks`	INTEGER DEFAULT 0,
 	`status`	TEXT NOT NULL
 );
 

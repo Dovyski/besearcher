@@ -37,7 +37,6 @@
                     <tbody>
                         <tr><td>status</td><td><?php echo $aData['context']['status']; ?></td></tr>
                         <tr><td>experiment_hash</td><td><?php echo $aData['context']['experiment_hash']; ?></td></tr>
-                        <tr><td>running_tasks</td><td><?php echo $aData['context']['running_tasks']; ?></td></tr>
                     </tbody>
                 </table>
             <?php } ?>
