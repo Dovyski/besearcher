@@ -190,7 +190,7 @@ class App {
 			return;
 		}
 	    $this->mContext->set('experiment_hash', $theHash);
-	    $this->mLog->info("Last known experiment hash changed to " . $theHash);
+	    $this->mLog->info("Experiment hash changed to " . $theHash);
 	}
 
 	private function createTask($theExperimentHash, $thePermutation) {
@@ -292,10 +292,10 @@ class App {
 	    $aSkipPerformedTasks = $this->config('skip_performed_tasks', false);
 	    $aTaskAlreadyPerformed = false;
 
-		$aResult = $this->mTasks->getResultById($theTask['id']);
+		$aResult = $this->mTasks->getResultByHashes($theTask['experiment_hash'], $theTask['permutation_hash']);
 
 	    if($aResult !== false) {
-	        $aTaskAlreadyPerformed = $this->mTasks->isResultFinished($theTask['id']);
+	        $aTaskAlreadyPerformed = $this->mTasks->isResultFinished($aResult);
 	    }
 
 	    if($aSkipPerformedTasks && $aTaskAlreadyPerformed) {
@@ -585,7 +585,7 @@ class App {
 	    // the one provided in the ini file.
 	    if(empty($aExperimentHash)) {
 	        $aExperimentHash = $this->config('experiment_hash', '');
-	        $this->mLog->info("Replacing last known experiment hash with info from INI: " . $aExperimentHash);
+	        $this->mLog->info("Replacing experiment hash with info from INI: " . $aExperimentHash);
 			$this->setExperimentHash($aExperimentHash);
 	    }
 	}

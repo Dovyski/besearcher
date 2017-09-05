@@ -126,14 +126,16 @@ if(isset($aArgs['status'])) {
 if(isset($aArgs['pause']) || isset($aArgs['resume']) || isset($aArgs['stop'])) {
     $aStatus = '';
     $aText = '';
+    $aRunningTasks = count($aTasks->findRunningTasks());
 
     if(isset($aArgs['pause'])) { $aStatus = BESEARCHER_STATUS_PAUSED; $aText = 'pause'; }
     if(isset($aArgs['resume'])) { $aStatus = BESEARCHER_STATUS_RUNNING; $aText = 'resume'; }
 
     if(isset($aArgs['stop'])) {
-        if(!$aIsForce) {
-            confirmOperation("Stop and lose data from unfinished tasks");
+        if(!$aIsForce && $aRunningTasks > 0) {
+            confirmOperation('Stop and cancel '.$aRunningTasks.' unfinished tasks');
         }
+        // TODO: cancel running tasks
         $aStatus = BESEARCHER_STATUS_STOPPING;
         $aText = 'stop';
     }
@@ -148,17 +150,16 @@ if(isset($aArgs['reload'])) {
     }
 
     $aDeleteList = array();
-    $aData = $aTasks->findTasksInfos($aDataDir);
+    $aResults = $aTasks->findResults();
 
-    foreach($aData as $aCommitHash => $aTasks) {
-        foreach($aTasks as $aPermutation => $aTask) {
-            $aCachePath = $aTask['raw']['log_file'] . BESEARCHER_CACHE_FILE_EXT;
-            $aDeleteList[] = $aCachePath;
-        }
+    foreach($aResults as $aResult) {
+        $aCachePath = $aResult['log_file'] . BESEARCHER_CACHE_FILE_EXT;
+        $aDeleteList[] = $aCachePath;
     }
 
     deleteFilesList($aDeleteList, 2, $aIsVerbose);
     $aContext->set('experiment_hash', '');
+    $aContext->set('experiment_ready', 0);
 
     echo "Ok, besearcher was reloaded successfully!\n";
 }

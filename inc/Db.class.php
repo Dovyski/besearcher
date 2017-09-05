@@ -20,6 +20,7 @@ class Db {
 
 	public function destroy() {
 		$this->mPDO->exec("DROP TABLE tasks");
+		$this->mPDO->exec("DROP TABLE results");
 		$this->mPDO->exec("DROP TABLE context");
 		$this->createTables();
 	}

@@ -150,12 +150,17 @@ class Tasks {
 		return $aTasks;
 	}
 
-	public function isResultFinished($theResultId) {
-		$aStmt = $this->mDb->getPDO()->prepare("SELECT running,exec_time_end FROM results WHERE id = :id");
-		$aStmt->bindParam(':id', $theResultId);
-		$aStmt->execute();
+	public function isResultFinished($theResult) {
+		$aResult = null;
 
-		$aResult = $aStmt->fetch(\PDO::FETCH_ASSOC);
+		if(is_array($theResult)) {
+			$aResult = $theResult;
+		} else {
+			$aStmt = $this->mDb->getPDO()->prepare("SELECT running,exec_time_end FROM results WHERE id = :id");
+			$aStmt->bindParam(':id', $theResult);
+			$aStmt->execute();
+			$aResult = $aStmt->fetch(\PDO::FETCH_ASSOC);
+		}
 
 	    $aFinished = $aResult['running'] == 0 && $aResult['exec_time_end'] != 0;
 	    return $aFinished;
@@ -169,6 +174,30 @@ class Tasks {
 		$aResult = $aStmt->fetch(\PDO::FETCH_ASSOC);
 
 	    return $aResult;
+	}
+
+	public function getResultByHashes($theExperimentHash, $thePermutationHash) {
+		$aStmt = $this->mDb->getPDO()->prepare("SELECT * FROM results WHERE experiment_hash = :experiment_hash AND permutation_hash = :permutation_hash");
+		$aStmt->bindParam(':experiment_hash', $theExperimentHash);
+		$aStmt->bindParam(':permutation_hash', $thePermutationHash);
+		$aStmt->execute();
+
+		$aResult = $aStmt->fetch(\PDO::FETCH_ASSOC);
+
+	    return $aResult;
+	}
+
+	public function findResults() {
+		$aStmt = $this->mDb->getPDO()->prepare("SELECT * FROM results WHERE 1");
+		$aStmt->execute();
+
+		$aResults = array();
+
+		while($aResult = $aStmt->fetch(\PDO::FETCH_ASSOC)) {
+			$aResults[] = $aResult;
+		}
+
+	    return $aResults;
 	}
 
 	public function markResultAsFinished($theId, $theCmdReturnCode, $theExecTimeEnd) {
