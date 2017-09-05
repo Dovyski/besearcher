@@ -311,6 +311,20 @@ class App {
 	    }
 	}
 
+	private function replaceSpecialTokens($theString) {
+		// Replace tokens
+		$aSpecialTokens['{@besearcher_home}'] = BESEARCHER_HOME;
+		$aSpecialTokens['{@besearcher_cmd_dir}'] = BESEARCHER_CMD_DIR;
+		$aSpecialTokens['{@besearcher_time}'] = time();
+		$aSpecialTokens['{@besearcher_os}'] = PHP_OS;
+		$aSpecialTokens['{@ini_data_dir}'] = $this->config('data_dir');
+		$aSpecialTokens['{@ini_experiment_hash}'] = $this->config('experiment_hash');
+		$aSpecialTokens['{@ini_experiment_description}'] = $this->config('experiment_description');
+
+		$aString = str_ireplace(array_keys($aSpecialTokens), array_values($aSpecialTokens), $theString);
+		return $aString;
+	}
+
 	private function generateTaskCmdPermutations() {
 	    $aPermutations = array();
 	    $aTaskCmd = $this->config('task_cmd');
@@ -320,15 +334,7 @@ class App {
 	    }
 
 	    $aTaskCmdParams = isset($this->mINIValues['task_cmd_params']) ? $this->mINIValues['task_cmd_params'] : array();
-
-		// Add special replace tokens
-		$aTaskCmdParams['besearcher_home'] = BESEARCHER_HOME;
-		$aTaskCmdParams['besearcher_cmd_dir'] = BESEARCHER_CMD_DIR;
-		$aTaskCmdParams['besearcher_time'] = time();
-		$aTaskCmdParams['besearcher_os'] = PHP_OS;
-		$aTaskCmdParams['ini_data_dir'] = $this->config('data_dir');
-		$aTaskCmdParams['ini_experiment_hash'] = $this->config('experiment_hash');
-		$aTaskCmdParams['ini_experiment_description'] = $this->config('experiment_description');
+		$aTaskCmd = $this->replaceSpecialTokens($aTaskCmd);
 
 	    if(count($aTaskCmdParams) > 0) {
 	        $aCmds = array();

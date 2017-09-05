@@ -1,6 +1,6 @@
 <?php
     $aData = Besearcher\View::data();
-    $aTasks = $aData['tasks'];
+    $aResults = $aData['results'];
 ?>
 
 <?php require_once(dirname(__FILE__) . '/header.php'); ?>
@@ -29,16 +29,14 @@
                 <tbody>
                     <?php
                         $aNum = 0;
-                        foreach($aTasks as $aTask) {
-                            foreach($aTask as $aItem) {
-                                echo '<tr class="'.($aNum++ % 2 == 0 ? 'even' : 'odd').'">';
-                                    echo '<td>'.Besearcher\View::prettyStatusName($aItem, true).'</td>';
-                                    echo '<td><a href="result.php?commit='.$aItem['commit'].'&permutation='.$aItem['permutation'].'" title="Click to view more information">'.substr($aItem['commit'], 0, 16).'-'.substr($aItem['permutation'], 0, 16).'</a></td>';
-                                    echo '<td>'.date('Y/m/d H:i:s', $aItem['creation_time']).'</td>';
-                                    echo '<td>'.date('Y/m/d H:i:s', $aItem['exec_time_start']).'</td>';
-                                    echo '<td>'.$aItem['params'].'</td>';
-                                echo '</tr>';
-                            }
+                        foreach($aResults as $aResult) {
+                            echo '<tr>';
+                                echo '<td>'.Besearcher\View::prettyStatusName($aResult, true).'</td>';
+                                echo '<td><a href="result.php?commit='.$aResult['experiment_hash'].'&permutation='.$aResult['permutation_hash'].'" title="Click to view more information">'.substr($aResult['experiment_hash'], 0, 16).'-'.substr($aResult['permutation_hash'], 0, 16).'</a></td>';
+                                echo '<td>'.date('Y/m/d H:i:s', $aResult['creation_time']).'</td>';
+                                echo '<td>'.date('Y/m/d H:i:s', $aResult['exec_time_start']).'</td>';
+                                echo '<td>'.$aResult['params'].'</td>';
+                            echo '</tr>';
                         }
                     ?>
                 </tbody>

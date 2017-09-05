@@ -18,12 +18,13 @@ class View {
 		return htmlspecialchars($theText);
 	}
 
-	public static function prettyStatusName($theItem, $theShowText = false) {
-		$aProgress 	 = $theItem['progress'];
-		$aReturnCode = $theItem['raw']['cmd_return_code'];
-		$aTimeEnd    = $theItem['raw']['exec_time_end'];
+	public static function prettyStatusName($theResult, $theShowText = false) {
+		$aProgress 	 = $theResult['progress'];
+		$aRunning 	 = $theResult['running'];
+		$aReturnCode = $theResult['cmd_return_code'];
+		$aTimeEnd    = $theResult['exec_time_end'];
 		$aRet        = '<i class="fa fa-question-circle-o"></i> Unknown';
-		$aFinished   = $aTimeEnd != 0 || $aProgress >= 1.0;
+		$aFinished   = $aTimeEnd != 0 && $aRunning == 0;
 
 		if(!$aFinished) {
 			$aProgressText = sprintf('%.1f%%', $aProgress < 0 ? 0 : $aProgress * 100);
