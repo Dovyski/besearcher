@@ -138,16 +138,11 @@ class App {
 	}
 
 	private function execTaskCommand($theTask, $theParallel) {
-	    $aCmd = $theTask['cmd'];
-	    $aLogFile = $theTask['log_file'];
-
-	    $aCmdTemplate = '%s > "%s"';
-	    $aFinalCmd = sprintf($aCmdTemplate, $aCmd, $aLogFile);
-
-	    $this->mLog->debug($aFinalCmd);
+	    $aId = $theTask['id'];
+	    $this->mLog->debug($theTask['cmd'] . ' > ' . $theTask['log_file']);
 
 	    if($theParallel) {
-	        $aFinalCmd = sprintf('start "Job" /b cmd.exe /c "%s "%s" "%s""', RUNNER_CMD, $aCmd, $aLogFile);
+	        $aFinalCmd = sprintf('start "Job" /b cmd.exe /c "%s "%s" %s"', RUNNER_CMD, $this->mINIPath, $aId);
 	    }
 
 	    pclose(popen($aFinalCmd, 'r'));
@@ -317,7 +312,7 @@ class App {
 
 		$aResult = $this->mTasks->getResultById($theTask['id']);
 
-	    if($aResult != null) {
+	    if($aResult !== false) {
 	        $aTaskAlreadyPerformed = $this->mTasks->isResultFinished($theTask['id']);
 	    }
 

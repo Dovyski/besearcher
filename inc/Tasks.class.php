@@ -154,13 +154,28 @@ class Tasks {
 		$aStmt->bindParam(':id', $theResultId);
 		$aStmt->execute();
 
-		$aResult = null;
-
-		if($aStmt->rowCount() == 1) {
-			$aResult = $aStmt->fetch(\PDO::FETCH_ASSOC);
-		}
+		$aResult = $aStmt->fetch(\PDO::FETCH_ASSOC);
 
 	    return $aResult;
+	}
+
+	public function markResultAsFinished($theId, $theCmdReturnCode, $theExecTimeEnd) {
+		$aStmt = $this->mDb->getPDO()->prepare("UPDATE results SET running = 0, progress = 1.0, cmd_return_code = :cmd_return_code, exec_time_end = :exec_time_end WHERE id = :id");
+		$aStmt->bindParam(':cmd_return_code', $theCmdReturnCode);
+		$aStmt->bindParam(':exec_time_end', $theExecTimeEnd);
+	    $aStmt->bindParam(':id', $theId);
+
+		$aOk = $aStmt->execute();
+		return $aOk;
+	}
+
+	public function markResultAsRunning($theId, $theExecTimeStart) {
+		$aStmt = $this->mDb->getPDO()->prepare("UPDATE results SET running = 1, exec_time_start = :exec_time_start WHERE id = :id");
+		$aStmt->bindParam(':exec_time_start', $theExecTimeStart);
+	    $aStmt->bindParam(':id', $theId);
+
+		$aOk = $aStmt->execute();
+		return $aOk;
 	}
 
 	function calculateTaskProgressFromTags(array $theBesearcherLogTags) {

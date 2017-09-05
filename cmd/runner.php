@@ -7,33 +7,49 @@
  Author: Fernando Bevilacqua <fernando.bevilacqua@his.se>
  */
 
- function writeDataToTaskInfoFile($thePathInfoFile, $theKeyValue) {
-     $aContent = file_get_contents($thePathInfoFile);
-     $aJson = json_decode($aContent, true);
+ require_once(dirname(__FILE__) . '/../inc/constants.php');
+ require_once(dirname(__FILE__) . '/../inc/Db.class.php');
+ require_once(dirname(__FILE__) . '/../inc/Tasks.class.php');
 
-     foreach($theKeyValue as $aKey => $aValue) {
-         $aJson[$aKey] = $aValue;
-     }
+$aIniPath = $argv[1];
+$aTaskId = $argv[2];
 
-     file_put_contents($thePathInfoFile, json_encode($aJson, JSON_PRETTY_PRINT));
- }
-
-if($argc != 4) {
-    echo "No params informed." . "\n";
+if(!file_exists($aIniPath)) {
+    echo "Unable to load INI file: " . $aIniPath . "\n";
     exit(1);
 }
 
-$aCmd = $argv[1];
-$aPathLogFile = $argv[2];
-$aPathInfoFile = $argv[3];
+$aINI = parse_ini_file($aIniPath);
+$aDataDir = @$aINI['data_dir'];
+
+if(!file_exists($aDataDir)) {
+    echo "Unable to access data directory informed in INI file: " . $aDataDir . "\n";
+    exit(1);
+}
+
+$aDbPath = $aINI['data_dir'] . DIRECTORY_SEPARATOR . BESEARCHER_DB_FILE;
+
+$aDb = new Besearcher\Db($aDbPath, false);
+$aTasks = new Besearcher\Tasks($aDb);
+
+$aResult = $aTasks->getResultById($aTaskId);
+
+if($aResult === false) {
+    echo "Unable to load result with task id=" . $aTaskId . ".\n";
+    exit(2);
+}
+
+$aCmd = $aResult['cmd'];
+$aPathLogFile = $aResult['log_file'];
+
+$aTasks->markResultAsRunning($aResult['id'], time());
 
 $aOutput = array();
 $aReturnCode = -1;
 $aLastLine = exec($aCmd . ' > "'.$aPathLogFile.'"', $aOutput, $aReturnCode);
 
-writeDataToTaskInfoFile($aPathInfoFile, array(
-    'cmd_return_code' => $aReturnCode,
-    'exec_time_end' => time()
-));
+// TODO: parse besearcher tags in the log file
+
+$aTasks->markResultAsFinished($aResult['id'], $aReturnCode, time());
 
 exit(0);
