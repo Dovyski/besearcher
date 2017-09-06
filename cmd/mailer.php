@@ -68,7 +68,7 @@ if(empty($aTo) || empty($aText)) {
 }
 
 $aConfig = $aApp->getINIValues();
-$aConfig = $aConfig['mail'];
+$aConfig = $aConfig['alerts'];
 
 $aMailer = new PHPMailer\PHPMailer\PHPMailer();
 $aMailer->isSMTP();

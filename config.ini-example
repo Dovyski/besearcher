@@ -116,12 +116,32 @@ domain[] = "google.com"
 domain[] = "google.se"
 jumps = 5
 
-; Besearcher can send e-mails to inform you about important events. Below
-; you can configure everything related to such process.
-[mail]
-active = 1
-to =
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; This section control the process of sending e-mails to
+; alert you about important events.
+;
+[alerts]
 
+; Destination e-mail that will receive all messages
+email =
+
+; If Besearcher should alert you about changes of metric values in the
+; analytics page.
+alert_when_analytics_change = 1
+
+; Informs Besearcher which metrics and how it should monitor them.
+; You can use "analytics_monitor_min" to tell Besearcher to send an
+; e-mail if the min value of a metric has changed, or "analytics_monitor_max"
+; to alert if the max value of a matric has changed.
+; E.g.
+;    analytics_monitor_min[] = Accuracy
+; will send an e-mail every time the min value of the metric "Accuracy" changes.
+; You can monitor several metrics at the same time, e.g.:
+;    analytics_monitor_min[] = Accuracy
+;    analytics_monitor_max[] = Accuracy
+;    analytics_monitor_max[] = Precision
+
+; Below are the SMTP settings that will be used to send the e-mails
 smtp_host = smtp.gmail.com
 smtp_user =
 smtp_password =
