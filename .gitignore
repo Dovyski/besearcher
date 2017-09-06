@@ -1,2 +1,4 @@
 /www/config.ini
 /config.ini
+/inc/vendor/*
+!/inc/vendor/README.md

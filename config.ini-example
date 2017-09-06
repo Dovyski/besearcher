@@ -115,3 +115,17 @@ task_cmd_working_dir = "C:\wamp\www\besearcher\"
 domain[] = "google.com"
 domain[] = "google.se"
 jumps = 5
+
+; Besearcher can send e-mails to inform you about important events. Below
+; you can configure everything related to such process.
+[mail]
+active = 1
+to =
+
+smtp_host = smtp.gmail.com
+smtp_user =
+smtp_password =
+sender_email = besearcher@besearcher.com
+sender_name = Besearcher
+subject_tag = [BESEARCHER]
+text_footer = ----\nThis message was automatically sent by Besearcher.
