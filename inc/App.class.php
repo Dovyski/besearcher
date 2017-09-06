@@ -203,15 +203,17 @@ class App {
 		}
 	}
 
+	private function asyncExec($theCmd) {
+		$aFinalCmd = 'start "Job" /b cmd.exe /c "'.$theCmd.'"';
+		pclose(popen($aFinalCmd, 'r'));
+	}
+
 	private function execTaskCommand($theTask, $theParallel) {
 	    $aId = $theTask['id'];
 	    $this->mLog->debug($theTask['cmd'] . ' > ' . $theTask['log_file']);
 
-	    if($theParallel) {
-	        $aFinalCmd = sprintf('start "Job" /b cmd.exe /c "%s "%s" %s"', BESEARCHER_RUNNER_CMD, $this->mINIPath, $aId);
-	    }
-
-	    pclose(popen($aFinalCmd, 'r'));
+        $aCmd = sprintf('%s "%s" %s', BESEARCHER_RUNNER_CMD, $this->mINIPath, $aId);
+		$this->asyncExec($aCmd);
 	}
 
 	public function countRunningTasks() {
