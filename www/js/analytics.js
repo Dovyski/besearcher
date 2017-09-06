@@ -12,7 +12,7 @@ function renderMetricChart(theData, theMetric, theContainerId) {
 
 	aChartValues.push(['Commit-permutation', 'value']);
 	for(var i = 0; i < theData.values.length; i++) {
-		aChartValues.push([theData.values[i].commit + '-' + theData.values[i].permutation, theData.values[i].value]);
+		aChartValues.push([theData.values[i].experiment_hash + '-' + theData.values[i].permutation_hash, theData.values[i].value]);
 	}
 
 	var aOptions = {
