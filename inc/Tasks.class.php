@@ -15,7 +15,23 @@ class Tasks {
 		$this->mDb = $theDb;
 	}
 
+	public function removeResult($theResultId) {
+	    $aStmt = $this->mDb->getPDO()->prepare("DELETE FROM results WHERE id = :id");
+		$aStmt->bindParam(':id', $theResultId);
+	    $aOk = $aStmt->execute();
+
+		return $aOk;
+	}
+
 	public function createResultEntryFromTask($theTask) {
+		$aExistingResult = $this->getResultByHashes($theTask['experiment_hash'], $theTask['permutation_hash']);
+
+		if($aExistingResult !== false) {
+			// A result identical to this one already exists. Let's remove it to prevent
+			// results with identical hashes.
+			$aOk = $this->removeResult($aExistingResult['id']);
+		}
+
 		$aSql =
 		"INSERT INTO
 			results (
