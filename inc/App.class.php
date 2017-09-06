@@ -13,6 +13,20 @@ class App {
 	private $mActive;
 	private $mNextCronJob;
 
+	/**
+	 * Invoked when a given task that was running finished.
+	 */
+	private function onTaskFinishedRunning() {
+		$this->updateAnalytics();
+	}
+
+	/**
+	 * Invoked when all running tasks finished running. More tasks could
+	 * be on the queue, however the ones that were running finished.
+	 */
+	private function onAllRunningTasksFinished() {
+	}
+
 	private function performConfigHotReload() {
 	    $aContentHash = md5(file_get_contents($this->mINIPath));
 
@@ -135,6 +149,48 @@ class App {
 		if($this->isTimeForCronJobs()) {
 			$this->updateProgressRunningResults();
 			$this->scheduleNextCronJob();
+		}
+	}
+
+	private function handleAlertsAboutAnalytics($theMetric, $theChangedValues) {
+		// TODO: implement alert stuff
+	}
+
+	private function updateAnalytics() {
+		$aAnalytics = new Analytics();
+
+		$aResults = $this->getData()->findResults();
+		$aAnalytics->process($aResults);
+		$aReport = $aAnalytics->getReport();
+
+		if(count($aReport) == 0) {
+			return;
+		}
+
+		$aDiskAnalytics = $this->getData()->findAnalytics();
+
+		foreach($aReport as $aMetric => $aItem) {
+			$aDiskEntry = isset($aDiskAnalytics[$aMetric]) ? $aDiskAnalytics[$aMetric] : false;
+
+			if($aDiskEntry === false) {
+				$this->getData()->createAnalytics($aMetric, $aItem['min']['value'], $aItem['max']['value']);
+				continue;
+			}
+
+			$aChangedValues = array();
+
+			if($aItem['min']['value'] != $aDiskEntry['min']) {
+				$aChangedValues['min'] = $aItem['min']['value'];
+			}
+
+			if($aItem['max']['value'] != $aDiskEntry['max']) {
+				$aChangedValues['max'] = $aItem['max']['value'];
+			}
+
+			if(count($aChangedValues) > 0) {
+				$this->getData()->updateAnalytics($aDiskEntry['id'], $aChangedValues);
+				$this->handleAlertsAboutAnalytics($aMetric, $aChangedValues);
+			}
 		}
 	}
 
@@ -434,9 +490,11 @@ class App {
 	    if($this->mRunningTasksCount != $aTasksNow) {
 	        if($aTasksNow > 0) {
 	            $this->mLog->info('Tasks running now: ' . $aTasksNow);
+				$this->onTaskFinishedRunning();
 	        }
 
 	        if($aTasksNow == 0 && $this->mRunningTasksCount > 0) {
+				$this->onAllRunningTasksFinished();
 	            $this->mLog->info('All runnings tasks finished!');
 	            $this->printSummary();
 	        }

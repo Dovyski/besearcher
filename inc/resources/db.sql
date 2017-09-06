@@ -40,4 +40,14 @@ CREATE TABLE `results` (
 
 --split
 
+CREATE TABLE `analytics` (
+	`id`	INTEGER PRIMARY KEY AUTOINCREMENT,
+	`metric`	TEXT NOT NULL,
+	`min`	REAL,
+	`max`	REAL,
+	`last_update`	INTEGER DEFAULT 0
+);
+
+--split
+
 INSERT INTO `context` (ini_hash, experiment_hash, status) VALUES ('', '', '');

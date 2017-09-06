@@ -239,6 +239,34 @@ class Tasks {
 	    return $aResults;
 	}
 
+	public function findAnalytics() {
+		$aStmt = $this->mDb->getPDO()->prepare("SELECT * FROM analytics WHERE 1");
+		$aStmt->execute();
+
+		$aAnalytics = array();
+
+		while($aEntry = $aStmt->fetch(\PDO::FETCH_ASSOC)) {
+			$aAnalytics[$aEntry['metric']] = $aEntry;
+		}
+
+	    return $aAnalytics;
+	}
+
+	public function createAnalytics($theMetric, $theMin, $theMax) {
+		$aNow = time();
+		$aStmt = $this->mDb->getPDO()->prepare("INSERT INTO analytics (metric, min, max, last_update) VALUES (:metric, :min, :max, :last_update) ");
+		$aStmt->bindParam(':metric', $theMetric);
+		$aStmt->bindParam(':min', $theMin);
+		$aStmt->bindParam(':max', $theMax);
+		$aStmt->bindParam(':last_update', $aNow);
+		$aStmt->execute();
+	}
+
+	public function updateAnalytics($theId, $theKeyValuePairs) {
+		$aOk = $this->mDb->update('analytics', $theId, $theKeyValuePairs);
+		return $aOk;
+	}
+
 	public function updateResult($theId, $theKeyValuePairs) {
 		$aOk = $this->mDb->update('results', $theId, $theKeyValuePairs);
 		return $aOk;
