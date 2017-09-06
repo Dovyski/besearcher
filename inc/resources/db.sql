@@ -15,7 +15,8 @@ CREATE TABLE `tasks` (
 	`experiment_hash`	TEXT NOT NULL,
 	`permutation_hash`	TEXT NOT NULL,
 	`params`	TEXT NOT NULL,
-	`creation_time`	INTEGER NOT NULL
+	`creation_time`	INTEGER NOT NULL,
+	`priority`	INTEGER NOT NULL DEFAULT 10
 );
 
 --split

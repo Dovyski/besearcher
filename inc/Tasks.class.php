@@ -85,7 +85,8 @@ class Tasks {
 				experiment_hash,
 				permutation_hash,
 				params,
-				creation_time
+				creation_time,
+				priority
 			)
 		VALUES (
 			:cmd,
@@ -94,11 +95,13 @@ class Tasks {
 			:experiment_hash,
 			:permutation_hash,
 			:params,
-			:creation_time
+			:creation_time,
+			:priority
 		)";
 
 		$aStmt = $this->mDb->getPDO()->prepare($aSql);
 		$aNow = time();
+		$aPriority = 10;
 
 		$aStmt->bindParam(':cmd', $theTask['cmd']);
 		$aStmt->bindParam(':log_file', $theTask['log_file']);
@@ -107,6 +110,7 @@ class Tasks {
 		$aStmt->bindParam(':permutation_hash', $theTask['permutation_hash']);
 		$aStmt->bindParam(':params', $theTask['params']);
 		$aStmt->bindParam(':creation_time', $aNow);
+		$aStmt->bindParam(':priority', $aPriority);
 
 		$aOk = $aStmt->execute();
 		return $aOk;
@@ -114,7 +118,7 @@ class Tasks {
 
 	public function dequeueTask() {
 		// Get a task from DB
-		$aStmt = $this->mDb->getPDO()->prepare("SELECT * FROM tasks WHERE 1 ORDER BY creation_time ASC LIMIT 1");
+		$aStmt = $this->mDb->getPDO()->prepare("SELECT * FROM tasks WHERE 1 ORDER BY priority ASC, creation_time ASC LIMIT 1");
 		$aStmt->execute();
 		$aTask = $aStmt->fetch(\PDO::FETCH_ASSOC);
 
@@ -147,7 +151,7 @@ class Tasks {
 		$theStart = $theStart + 0;
 		$theHowMany = $theHowMany + 0;
 
-		$aStmt = $this->mDb->getPDO()->prepare('SELECT * FROM tasks WHERE 1 ORDER BY creation_time ASC LIMIT ' . $theStart . ',' . $theHowMany);
+		$aStmt = $this->mDb->getPDO()->prepare('SELECT * FROM tasks WHERE 1 ORDER BY priority ASC, creation_time ASC LIMIT ' . $theStart . ',' . $theHowMany);
         $aStmt->execute();
 
         while($aRow = $aStmt->fetch(\PDO::FETCH_ASSOC)) {
@@ -241,13 +245,14 @@ class Tasks {
 	 *
 	 * @param  array $theTaskIds array with the ids of the tasks to be prioritized.
 	  */
-	public function prioritizeTasksInQueue($theTaskIds) {
+	public function updateTasksPriority($theTaskIds, $thePriority = 0) {
 		if(count($theTaskIds) == 0) {
-			throw new Exception('Nothing has been selected to prioritize.');
+			throw new Exception('Nothing has been selected for update.');
 		}
 
 	    $aIds = $this->castArrayEntriesToInt($theTaskIds);
-	    $aStmt = $this->mDb->getPDO()->prepare("UPDATE tasks SET creation_time = 0 WHERE id IN (".implode(',', $aIds).")");
+	    $aStmt = $this->mDb->getPDO()->prepare("UPDATE tasks SET priority = :priority WHERE id IN (".implode(',', $aIds).")");
+		$aStmt->bindParam(':priority', $thePriority);
 	    $aStmt->execute();
 	}
 

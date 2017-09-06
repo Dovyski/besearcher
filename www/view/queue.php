@@ -47,9 +47,17 @@
     <form action="queue.php" method="post">
 
     <div class="row">
-        <div class="col-lg-12">
+        <div class="col-lg-11">
             <h3>Queued tasks <i class="fa fa-question-circle" title="Tasks that are scheduled to be executed in the near future, but are currently waiting CPU time due to the value of max_parallel_tasks."></i></h3>
+        </div>
 
+        <div class="col-lg-1" style="padding-top: 25px; text-align: center;">
+            <p><?php echo count($aData['tasks_queue']) != 0 ? 'Size: ' . $aData['pagination']['total'] : ''; ?></p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-12">
             <?php if(count($aData['tasks_queue']) == 0) { ?>
                 <p>There are no tasks queued for execution.</p>
 
@@ -87,38 +95,44 @@
     </div>
 
     <?php if(count($aData['tasks_queue']) != 0) { ?>
-        <nav aria-label="Page navigation">
-            <ul class="pagination">
-                <?php
-                    echo '<li style="margin: 10px;">Showing '.$aData['pagination']['size'].' of '.$aData['pagination']['total'].'</li>';
-                    echo '<li><a href="queue.php?page=1&size='.$aData['pagination']['size'].'" aria-label="First" title="Jump to first page"><i class="fa fa-step-backward"></i></a></li>';
+        <div class="row">
+            <div class="col-lg-5">
+                <?php if($aData['pagination']['pages'] > 1) { ?>
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination">
+                            <?php
+                                echo '<li><a href="queue.php?page=1&size='.$aData['pagination']['size'].'" aria-label="First" title="Jump to first page"><i class="fa fa-step-backward"></i></a></li>';
 
-                    $aLength = 10;
-                    $aStart = $aData['pagination']['page'] - $aLength;
-                    $aEnd = $aData['pagination']['page'] + $aLength;
+                                $aLength = 10;
+                                $aStart = $aData['pagination']['page'] - $aLength;
+                                $aEnd = $aData['pagination']['page'] + $aLength;
 
-                    for($i = $aStart; $i <= $aEnd; $i++) {
-                        if($i >= 1 && $i <= $aData['pagination']['pages']) {
-                            $aExtra = $aData['pagination']['page'] == $i ? 'class="active"' : '';
-                            echo '<li ' . $aExtra . '><a href="queue.php?page='.$i.'&size='.$aData['pagination']['size'].'">' . $i . '</a></li>';
-                        }
-                    }
+                                for($i = $aStart; $i <= $aEnd; $i++) {
+                                    if($i >= 1 && $i <= $aData['pagination']['pages']) {
+                                        $aExtra = $aData['pagination']['page'] == $i ? 'class="active"' : '';
+                                        echo '<li ' . $aExtra . '><a href="queue.php?page='.$i.'&size='.$aData['pagination']['size'].'">' . $i . '</a></li>';
+                                    }
+                                }
 
-                    echo '<li><a href="queue.php?page='.$aData['pagination']['pages'].'&size='.$aData['pagination']['size'].'" aria-label="Last" title="Jump to last page"><i class="fa fa-step-forward"></i></a></li>';
-                ?>
-            </ul>
-        </nav>
+                                echo '<li><a href="queue.php?page='.$aData['pagination']['pages'].'&size='.$aData['pagination']['size'].'" aria-label="Last" title="Jump to last page"><i class="fa fa-step-forward"></i></a></li>';
+                            ?>
+                        </ul>
+                    </nav>
+                <?php } ?>
+            </div>
 
-        <div class="row" style="padding-bottom: 20px;">
-            <div class="col-lg-8">
-                <button type="submit" class="btn btn-primary" name="action" value="move"><i class="fa fa-sort"></i> Move selected to the begining of queue</button>
+            <div class="col-lg-2" style="padding-top: 25px; text-align: center;">
+                <p>Showing <?php echo $aData['pagination']['size'] ?> of <?php echo $aData['pagination']['total']; ?></p>
+            </div>
+
+            <div class="col-lg-5" style="padding-top: 20px; text-align: right;">
+                <button type="submit" class="btn btn-default" name="action" value="prioritize"><i class="fa fa-chevron-up"></i> Prioritize selected</button>
+                <button type="submit" class="btn btn-default" name="action" value="deprioritize"><i class="fa fa-chevron-down"></i> Deprioritize selected</button>
                 <button type="submit" class="btn btn-danger" name="action" value="delete"><i class="fa fa-trash"></i> Delete selected</button>
             </div>
         </div>
     <?php } ?>
-
     </form>
-
 </div>
 <!-- /#page-wrapper -->
 

@@ -5,13 +5,12 @@
     $aApp = Besearcher\WebApp::instance();
 
     $aMessage = array('title' => 'Oops!', 'body' => '', 'type' => 'danger');
-    $aTasksQueue = array();
     $aContext = $aApp->getContext()->values();
 
     try {
         $aAction = isset($_REQUEST['action']) ? $_REQUEST['action'] : '';
 
-        if($aAction == 'move' || $aAction == 'delete') {
+        if($aAction != '') {
             $aSelected = array();
 
             foreach($_REQUEST as $aKey => $aValue) {
@@ -25,27 +24,27 @@
                 throw new Exception('Nothing was selected.');
             }
 
-            if($_REQUEST['action'] == 'move') {
-                $aApp->getData()->prioritizeTasksInQueue($aSelected);
+            if($aAction == 'prioritize' || $aAction == 'deprioritize') {
+                $aPriority = $aAction == 'prioritize' ? 0 : 10;
+                $aApp->getData()->updateTasksPriority($aSelected, $aPriority);
 
-            } else if ($_REQUEST['action'] == 'delete') {
+            } else if ($aAction == 'delete') {
                 $aApp->getData()->removeTasksFromQueue($aSelected);
             }
 
-            $aMessage = array('title' => 'Success!', 'body' => 'The tasks queue has been updated.', 'type' => 'success');
+            $aMessage = array('title' => 'Success!', 'body' => 'The queue has been updated.', 'type' => 'success');
         }
-
-        // Get pagination info
-        $aTasksCount = $aApp->getData()->queueSize();
-        $aPage = isset($_REQUEST['page']) ? $_REQUEST['page'] + 0 : 1;
-        $aSize = isset($_REQUEST['size']) ? $_REQUEST['size'] + 0 : 20;
-        $aPagination = Besearcher\Utils::paginate($aPage, $aSize, $aTasksCount);
-
-        $aTasksQueue = $aApp->getData()->findEnquedTasks($aPagination['start'], $aPagination['size']);
-
     } catch(Exception $e) {
         $aMessage['body'] = $e->getMessage();
     }
+
+    // Get pagination info
+    $aTasksCount = $aApp->getData()->queueSize();
+    $aPage = isset($_REQUEST['page']) ? $_REQUEST['page'] + 0 : 1;
+    $aSize = isset($_REQUEST['size']) ? $_REQUEST['size'] + 0 : 100;
+    $aPagination = Besearcher\Utils::paginate($aPage, $aSize, $aTasksCount);
+
+    $aTasksQueue = $aApp->getData()->findEnquedTasks($aPagination['start'], $aPagination['size']);
 
     Besearcher\View::render('queue', array(
         'message'       => $aMessage,
