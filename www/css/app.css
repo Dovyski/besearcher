@@ -19,3 +19,7 @@
 .navbar-header {
 	height: 80px;
 }
+
+#page-wrapper {
+	padding-bottom: 20px;
+}

@@ -20,6 +20,7 @@
                 <thead>
                     <tr>
                         <th><i class="fa fa-info-circle"></i></th>
+                        <th>Id</th>
                         <th>Hash-permutation</th>
                         <th>Creation</th>
                         <th>Start</th>
@@ -32,6 +33,7 @@
                         foreach($aResults as $aResult) {
                             echo '<tr>';
                                 echo '<td>'.Besearcher\View::prettyStatusName($aResult, true).'</td>';
+                                echo '<td>'.$aResult['id'].'</td>';
                                 echo '<td><a href="result.php?experiment_hash='.$aResult['experiment_hash'].'&permutation_hash='.$aResult['permutation_hash'].'" title="Click to view more information">'.substr($aResult['experiment_hash'], 0, 16).'-'.substr($aResult['permutation_hash'], 0, 16).'</a></td>';
                                 echo '<td>'.date('Y/m/d H:i:s', $aResult['creation_time']).'</td>';
                                 echo '<td>'.date('Y/m/d H:i:s', $aResult['exec_time_start']).'</td>';
@@ -54,7 +56,7 @@
         $('#dataTables-example').DataTable({
             responsive: true,
             pageLength: 100,
-            order: [[3, 'desc']]
+            order: [[4, 'desc']]
         });
     });
 </script>
