@@ -21,6 +21,7 @@ $aOptions = array(
     'to:',
     'subject:',
     'text:',
+    'file:',
     'verbose',
     'help'
 );
@@ -34,9 +35,8 @@ if($argc <= 1 || isset($aArgs['h']) || isset($aArgs['help'])) {
      echo " --ini=<path>         Path to the INI file being used by Besearcher.\n";
      echo " --to=<string>        Who will receive this e-mail.\n";
      echo " --subject=<string>   The message's subjectmail.\n";
-     echo " --text=<string>      The e-mail's message. If the provided text is a\n";
-     echo "                      a path to a valid file, the content of that file";
-     echo "                      will be used as text.";
+     echo " --text=<string>      The e-mail's message.\n";
+     echo " --file=<path>        Path to a file whose content will be used as text.\n";
      echo " --verbose, -v        Show verbose output.\n";
      echo " --help, -h           Show this help message.\n";
      echo "\n";
@@ -56,15 +56,21 @@ $aApp->init($aIniPath, '', true);
 $aTo = isset($aArgs['to']) ? $aArgs['to'] : '';
 $aSubject = isset($aArgs['subject']) ? $aArgs['subject'] : '';
 $aText = isset($aArgs['text']) ? $aArgs['text'] : '';
+$aTextFile = isset($aArgs['file']) ? $aArgs['file'] : '';
 $aVerbose = isset($aArgs['v']) || isset($aArgs['verbose']);
 
-if(file_exists($aText)) {
-    $aText = file_get_contents($aText);
+if(!empty($aTextFile)) {
+    if(!file_exists($aTextFile)) {
+        echo "Unable to load content of file: " . $aTextFile . "\n";
+        exit(3);
+    }
+    $aText = file_get_contents($aTextFile);
+    // TODO: delete the e-mail file?
 }
 
 if(empty($aTo) || empty($aText)) {
-    echo "Field to or text cannot be empty!" . "\n";
-    exit(3);
+    echo "Neither e-mail destination nor text can be empty!" . "\n";
+    exit(4);
 }
 
 $aConfig = $aApp->getINIValues();

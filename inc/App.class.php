@@ -152,8 +152,60 @@ class App {
 		}
 	}
 
-	private function handleAlertsAboutAnalytics($theMetric, $theChangedValues) {
-		// TODO: implement alert stuff
+	private function createAnalyticsAlertEmailText($theMetric, $theType, $theValue, $theResult) {
+		$aMessage =  "Hi!\n\n";
+		$aMessage .= "A new value has been found:\n\n";
+		$aMessage .= " - Metric: " . $theMetric . "\n";
+		$aMessage .= " - Value (".$theType."): " . $theValue . "\n";
+		$aMessage .= " - Experiment hash: " . $theResult['experiment_hash'] . "\n";
+		$aMessage .= " - Permutation hash: " . $theResult['permutation_hash'] . "\n";
+		$aMessage .= " - Params: " . $theResult['params'] . "\n";
+
+		return $aMessage;
+	}
+
+	private function sendEmail($theTo, $theSubject, $theMessage) {
+		$aMessagePath = $this->config('data_dir') . DIRECTORY_SEPARATOR . md5($theMessage) . '.email';
+		file_put_contents($aMessagePath, $theMessage);
+
+		$aCmd = 'php ' . BESEARCHER_CMD_DIR . 'mailer.php --ini="'.$this->mINIPath.'" --to="'.$theTo.'" --subject="'.$theSubject.'" --file="'.$aMessagePath.'"';
+		$this->mLog->debug($aCmd);
+
+		$this->asyncExec($aCmd);
+	}
+
+	private function handleAlertsAboutAnalytics($theMetric, $theChangedValues, $theAnalyticsItem) {
+		$aAlertSettings = $this->mINIValues['alerts'];
+		$aShouldAlert = isset($aAlertSettings['alert_when_analytics_change']) && $aAlertSettings['alert_when_analytics_change'];
+
+		if(!$aShouldAlert) {
+			return;
+		}
+
+		$aTo = $aAlertSettings['email'];
+
+		if(empty($aTo)) {
+			$this->mLog->warn('There is a new analytics alert to be sent by e-mail, but no e-mail was provided in the INI file. Please update the [alerts] section of configuration INI file.');
+			return;
+		}
+
+		$aMonitors = array('min', 'max');
+
+		foreach($aMonitors as $aType) {
+			$aKey = 'analytics_monitor_' . $aType;
+
+			if(isset($theChangedValues[$aType]) && isset($aAlertSettings[$aKey])) {
+				if(in_array($theMetric, $aAlertSettings[$aKey])) {
+					$aValue = $theChangedValues[$aType];
+					$aResult = $this->getData()->getResultByHashes($theAnalyticsItem['experiment_hash'], $theAnalyticsItem['permutation_hash']);
+
+					$aSubject = 'Yay, new value for ' . $theMetric . '!';
+					$aMessage =  $this->createAnalyticsAlertEmailText($theMetric, $aType, $aValue, $aResult);
+
+					$this->sendEmail($aTo, $aSubject, $aMessage);
+				}
+			}
+		}
 	}
 
 	private function updateAnalytics() {
@@ -189,7 +241,7 @@ class App {
 
 			if(count($aChangedValues) > 0) {
 				$this->getData()->updateAnalytics($aDiskEntry['id'], $aChangedValues);
-				$this->handleAlertsAboutAnalytics($aMetric, $aChangedValues);
+				$this->handleAlertsAboutAnalytics($aMetric, $aChangedValues, $aItem['max']);
 			}
 		}
 	}
