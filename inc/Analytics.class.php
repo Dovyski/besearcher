@@ -2,8 +2,41 @@
 
 namespace Besearcher;
 
+/**
+ * Perform some analytics on a set of results.
+ */
 class Analytics {
-	public static function compileMetricStats($theResults) {
+	private $mReport;
+	private $mStats;
+
+	public function __constructor() {
+		$mReport = array();
+	}
+
+	public function process(array $theResults) {
+		if(count($theResults) == 0) {
+			return;
+		}
+
+		$this->mStats = $this->compileMetricStats($theResults);
+		$this->mReport = $this->createReportFromMetricStats($this->mStats);
+
+		$aMetrics = $this->getMetrics();
+
+		// Sort everything from best to worst
+	    foreach($aMetrics as $aMetric) {
+	        usort($this->mStats[$aMetric], array($this, 'compareStats'));
+	    }
+	}
+
+	public function compareStats($theA, $theB) {
+        if ($theA['value'] == $theB['value']) {
+            return 0;
+        }
+        return ($theA['value'] < $theB['value']) ? 1 : -1;
+    }
+
+	private function compileMetricStats($theResults) {
 		$aStats = array();
 
 		foreach($theResults as $aResult) {
@@ -38,7 +71,7 @@ class Analytics {
 		return $aStats;
 	}
 
-	public static function compileAnalyticsFromMetricStats($theStats) {
+	private function createReportFromMetricStats($theStats) {
 		$aAnalytics = array();
 
 		foreach($theStats as $aMetric => $aItems) {
@@ -65,6 +98,18 @@ class Analytics {
 		}
 
 		return $aAnalytics;
+	}
+
+	public function getStats() {
+		return $this->mStats;
+	}
+
+	public function getReport() {
+		return $this->mReport;
+	}
+
+	public function getMetrics() {
+		return array_keys($this->mStats);
 	}
 }
 

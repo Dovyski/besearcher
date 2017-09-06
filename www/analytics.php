@@ -2,28 +2,18 @@
 <?php
     require_once(dirname(__FILE__) . '/inc/globals.php');
 
-    function compareStats($theA, $theB) {
-        if ($theA['value'] == $theB['value']) {
-            return 0;
-        }
-        return ($theA['value'] < $theB['value']) ? 1 : -1;
-    }
-
     Besearcher\Auth::allowAuthenticated();
 
     $aApp = Besearcher\WebApp::instance();
     $aResults = $aApp->getData()->findResults();
 
-    $aStats = Besearcher\Analytics::compileMetricStats($aResults);
-    $aAnalytics = Besearcher\Analytics::compileAnalyticsFromMetricStats($aStats);
+    $aAnalytics = new Besearcher\Analytics();
+    $aAnalytics->process($aResults);
+    $aReport = $aAnalytics->getReport();
+    $aStats = $aAnalytics->getStats();
 
     // Get a list of all available metrics
-    $aMetrics = array_keys($aStats);
-
-    // Sort everything from best to worst
-    foreach($aMetrics as $aMetric) {
-        usort($aStats[$aMetric], 'compareStats');
-    }
+    $aMetrics = $aAnalytics->getMetrics();
 
     $aJson = isset($_REQUEST['json']);
     $aView = $aJson ? 'json' : 'analytics';
@@ -32,13 +22,13 @@
     $aSelectedMetric = isset($_REQUEST['metric']) ? $_REQUEST['metric'] : '';
     if($aSelectedMetric != '' && in_array($aSelectedMetric, $aMetrics)) {
         $aMetrics = $aSelectedMetric;
-        $aAnalytics = $aAnalytics[$aSelectedMetric];
+        $aReport = $aReport[$aSelectedMetric];
         $aStats = $aStats[$aSelectedMetric];
     }
 
     Besearcher\View::render($aView, array(
         'metrics' => $aMetrics,
-        'summary' => $aAnalytics,
+        'summary' => $aReport,
         'values' => $aStats
     ));
 ?>
