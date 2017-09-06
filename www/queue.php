@@ -5,7 +5,6 @@
     $aApp = Besearcher\WebApp::instance();
 
     $aMessage = array('title' => 'Oops!', 'body' => '', 'type' => 'danger');
-    $aContext = $aApp->getContext()->values();
 
     try {
         $aAction = isset($_REQUEST['action']) ? $_REQUEST['action'] : '';
@@ -49,7 +48,6 @@
     Besearcher\View::render('queue', array(
         'message'       => $aMessage,
         'tasks_queue'   => $aTasksQueue,
-        'pagination'    => $aPagination,
-        'context'       => $aContext
+        'pagination'    => $aPagination
     ));
 ?>

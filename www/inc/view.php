@@ -18,6 +18,16 @@ class View {
 		return htmlspecialchars($theText);
 	}
 
+	public static function createResultLink($theExperimentHash, $thePermutationHash) {
+		$aShortExperimentHash = substr($theExperimentHash, 0, 8);
+		$aShortPermutationHash = substr($thePermutationHash, 0, 8);
+
+		$aText = $aShortExperimentHash . '-' . $aShortPermutationHash;
+		$aLink = '<a href="result.php?experiment_hash='.$theExperimentHash.'&permutation_hash='.$thePermutationHash.'" title="Click to view more information"><code>'.$aText.'</code></a></td>';
+
+		return $aLink;
+	}
+
 	public static function prettyStatusName($theResult, $theShowText = false) {
 		$aProgress 	 = $theResult['progress'];
 		$aRunning 	 = $theResult['running'];

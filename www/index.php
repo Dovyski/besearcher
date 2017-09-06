@@ -9,9 +9,18 @@
     $aINIPath = $aApp->getINIPath();
     $aINIValues = $aApp->getINIValues();
 
+    $aAppContext = $aApp->getContext()->values();
+    $aContext = array(
+        'status' => $aAppContext['status'],
+        'experiment_hash' => $aAppContext['experiment_hash'],
+        'queue_size' => $aApp->getData()->queueSize(),
+        'tasks_running' => count($aApp->getData()->findRunningTasks())
+    );
+
     Besearcher\View::render('index', array(
         'task_params' => $aTaskParams,
         'ini_path' => $aINIPath,
-        'ini' => $aINIValues
+        'ini' => $aINIValues,
+        'context' => $aContext
     ));
 ?>

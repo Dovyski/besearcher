@@ -76,7 +76,7 @@
                 <div class="navbar-default sidebar" role="navigation">
                     <div class="sidebar-nav navbar-collapse">
                         <ul class="nav" id="side-menu">
-                            <li><a href="index.php"><i class="fa fa-dashboard fa-fw"></i> Home</a></li>
+                            <li><a href="index.php"><i class="fa fa-dashboard fa-fw"></i> Dashboard</a></li>
                             <li><a href="results.php"><i class="fa fa-flask fa-fw"></i> Results</a></li>
                             <li><a href="queue.php"><i class="fa fa-tasks fa-fw"></i> Queue</a></li>
                             <li><a href="analytics.php"><i class="fa fa-line-chart fa-fw"></i> Analytics</a></li>

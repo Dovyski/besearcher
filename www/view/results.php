@@ -16,7 +16,7 @@
 
     <div class="row">
         <div class="col-lg-12">
-            <table width="100%" class="table table-striped table-bordered table-hover" id="dataTables-example">
+            <table width="100%" class="table table-striped table-bordered table-hover" id="results-table">
                 <thead>
                     <tr>
                         <th><i class="fa fa-info-circle"></i></th>
@@ -34,7 +34,7 @@
                             echo '<tr>';
                                 echo '<td>'.Besearcher\View::prettyStatusName($aResult, true).'</td>';
                                 echo '<td>'.$aResult['id'].'</td>';
-                                echo '<td><a href="result.php?experiment_hash='.$aResult['experiment_hash'].'&permutation_hash='.$aResult['permutation_hash'].'" title="Click to view more information">'.substr($aResult['experiment_hash'], 0, 16).'-'.substr($aResult['permutation_hash'], 0, 16).'</a></td>';
+                                echo '<td>'.Besearcher\View::createResultLink($aResult['experiment_hash'], $aResult['permutation_hash']).'</td>';
                                 echo '<td>'.date('Y/m/d H:i:s', $aResult['creation_time']).'</td>';
                                 echo '<td>'.date('Y/m/d H:i:s', $aResult['exec_time_start']).'</td>';
                                 echo '<td>'.$aResult['params'].'</td>';
@@ -53,7 +53,7 @@
 
 <script>
     $(document).ready(function() {
-        $('#dataTables-example').DataTable({
+        $('#results-table').DataTable({
             responsive: true,
             pageLength: 100,
             order: [[4, 'desc']]

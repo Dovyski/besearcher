@@ -23,3 +23,8 @@
 #page-wrapper {
 	padding-bottom: 20px;
 }
+
+h1 i.fa {
+	font-size: 0.6em;
+	color: #c1c1c1;
+}

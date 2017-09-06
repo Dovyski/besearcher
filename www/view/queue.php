@@ -7,9 +7,8 @@
 <div id="page-wrapper">
     <div class="row">
         <div class="col-lg-12">
-            <h1 class="page-header">Queue <i class="fa fa-question-circle" title="This page shows the internal data that Besearcher is using to process the tasks. You can change or cancel tasks, for instance."></i></h1>
+            <h1 class="page-header">Queue <i class="fa fa-question-circle" title="These are the tasks that are scheduled to be executed in the near future, but are currently waiting CPU time due to the value of max_parallel_tasks."></i></h1>
         </div>
-        <!-- /.col-lg-12 -->
     </div>
 
     <?php if(!empty($aData['message']['body'])) { ?>
@@ -20,41 +19,7 @@
         </div>
     <?php } ?>
 
-    <div class="row">
-        <div class="col-lg-12">
-            <h3>Besearcher context</h3>
-            <?php if(count($aData['context']) == 0) { ?>
-                <p>There are no settings available to edit.</p>
-
-            <?php } else { ?>
-                <table width="100%" class="table table-striped table-bordered table-hover">
-                    <thead>
-                        <tr>
-                            <th>Entry</th>
-                            <th>Value</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr><td>status</td><td><?php echo $aData['context']['status']; ?></td></tr>
-                        <tr><td>experiment_hash</td><td><?php echo $aData['context']['experiment_hash']; ?></td></tr>
-                    </tbody>
-                </table>
-            <?php } ?>
-        </div>
-    </div>
-
-
     <form action="queue.php" method="post">
-
-    <div class="row">
-        <div class="col-lg-11">
-            <h3>Queued tasks <i class="fa fa-question-circle" title="Tasks that are scheduled to be executed in the near future, but are currently waiting CPU time due to the value of max_parallel_tasks."></i></h3>
-        </div>
-
-        <div class="col-lg-1" style="padding-top: 25px; text-align: center;">
-            <p><?php echo count($aData['tasks_queue']) != 0 ? 'Size: ' . $aData['pagination']['total'] : ''; ?></p>
-        </div>
-    </div>
 
     <div class="row">
         <div class="col-lg-12">
@@ -62,7 +27,7 @@
                 <p>There are no tasks queued for execution.</p>
 
             <?php } else { ?>
-                <table width="100%" class="table table-striped table-bordered table-hover">
+                <table width="100%" class="table table-striped table-bordered table-hover" id="queue-table">
                     <thead>
                         <tr>
                             <th></th>
@@ -81,7 +46,7 @@
                                         echo '<input type="checkbox" name="task_'.$aNum.'" value="'.$aItem['id'].'" />';
                                     echo '</td>';
                                     echo '<td>'.$aItem['id'].'</td>';
-                                    echo '<td><a href="result.php?experiment_hash='.$aItem['experiment_hash'].'&permutation_hash='.$aItem['permutation_hash'].'" title="Click to view more information">'.substr($aItem['experiment_hash'], 0, 16).'-'.substr($aItem['permutation_hash'], 0, 16).'</a></td>';
+                                    echo '<td>'.Besearcher\View::createResultLink($aItem['experiment_hash'], $aItem['permutation_hash']).'</td>';
                                     echo '<td>'.date('Y/m/d H:i:s', $aItem['creation_time']).'</td>';
                                     echo '<td>'.$aItem['params'].'</td>';
                                 echo '</tr>';
@@ -135,5 +100,16 @@
     </form>
 </div>
 <!-- /#page-wrapper -->
+
+<script>
+    $(document).ready(function() {
+        $('#queue-table').DataTable({
+            responsive: true,
+            paging: false,
+            info: false,
+            searching: true
+        });
+    });
+</script>
 
 <?php require_once(dirname(__FILE__) . '/footer.php'); ?>
