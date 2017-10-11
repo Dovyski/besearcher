@@ -164,7 +164,7 @@ class App {
 		return $aMessage;
 	}
 
-	private function sendEmail($theTo, $theSubject, $theMessage) {
+	public function sendEmail($theTo, $theSubject, $theMessage) {
 		$aMessagePath = $this->config('data_dir') . DIRECTORY_SEPARATOR . md5($theMessage) . '.email';
 		file_put_contents($aMessagePath, $theMessage);
 
