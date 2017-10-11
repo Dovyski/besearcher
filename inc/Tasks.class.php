@@ -23,6 +23,14 @@ class Tasks {
 		return $aOk;
 	}
 
+	public function removeTask($theTaskId) {
+	    $aStmt = $this->mDb->getPDO()->prepare("DELETE FROM tasks WHERE id = :id");
+		$aStmt->bindParam(':id', $theTaskId);
+	    $aOk = $aStmt->execute();
+
+		return $aOk;
+	}
+
 	public function createResultEntryFromTask($theTask) {
 		$aExistingResult = $this->getResultByHashes($theTask['experiment_hash'], $theTask['permutation_hash']);
 
@@ -224,6 +232,17 @@ class Tasks {
 		$aResult = $aStmt->fetch(\PDO::FETCH_ASSOC);
 
 	    return $aResult;
+	}
+
+	public function getTaskByHashes($theExperimentHash, $thePermutationHash) {
+		$aStmt = $this->mDb->getPDO()->prepare("SELECT * FROM tasks WHERE experiment_hash = :experiment_hash AND permutation_hash = :permutation_hash");
+		$aStmt->bindParam(':experiment_hash', $theExperimentHash);
+		$aStmt->bindParam(':permutation_hash', $thePermutationHash);
+		$aStmt->execute();
+
+		$aTask = $aStmt->fetch(\PDO::FETCH_ASSOC);
+
+	    return $aTask;
 	}
 
 	public function findResults() {
