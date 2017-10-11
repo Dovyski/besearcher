@@ -17,10 +17,6 @@ require_once(dirname(__FILE__) . '/inc/Analytics.class.php');
 require_once(dirname(__FILE__) . '/inc/App.class.php');
 require_once(dirname(__FILE__) . '/inc/ResultOutputParser.class.php');
 
-define('BESEARCHER_HOME', dirname(__FILE__) . DIRECTORY_SEPARATOR);
-define('BESEARCHER_CMD_DIR', BESEARCHER_HOME . 'cmd' . DIRECTORY_SEPARATOR);
-define('BESEARCHER_RUNNER_CMD', 'php "' . BESEARCHER_CMD_DIR . 'runner.php"');
-
 $aOptions = array(
     "log:",
     "ini:",

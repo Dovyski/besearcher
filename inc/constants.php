@@ -5,6 +5,10 @@
  Author: Fernando Bevilacqua <fernando.bevilacqua@his.se>
  */
 
+define('BESEARCHER_HOME', dirname(__FILE__) . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR);
+define('BESEARCHER_CMD_DIR', BESEARCHER_HOME . 'cmd' . DIRECTORY_SEPARATOR);
+define('BESEARCHER_RUNNER_CMD', 'php "' . BESEARCHER_CMD_DIR . 'runner.php"');
+
 define('BESEARCHER_TAG',                    '[BSR]');
 define('BESEARCHER_TAG_TYPE_RESULT',        'result');
 define('BESEARCHER_TAG_TYPE_PROGRESS',      'progress');

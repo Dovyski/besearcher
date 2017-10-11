@@ -41,7 +41,6 @@ function confirmOperation($theText = "Operation can't be undone, proceed") {
 
 function migrateTaskResults($theDataDir, $theData, $theVerbose = true) {
     $aMigrated = 0;
-    $aId = 1;
     $aTasks = scandir($theDataDir);
 
     foreach($aTasks as $aItem) {
@@ -57,13 +56,41 @@ function migrateTaskResults($theDataDir, $theData, $theVerbose = true) {
                     throw new \Exception('unable to decode task JSON in ' . $aFile);
                 }
 
-                $aTaskInfo['id'] = $aId++; // TODO: get this id from somewhere?
+                $aHasTaskFinished = $aTaskInfo['exec_time_end'] > 0;
+
+                if(!$aHasTaskFinished) {
+                    // The task has not finished, so it will eventually be dequeued and processed
+                    // by Besearcher in the future. Let's skip its migration then.
+                    continue;
+                }
+
                 $aTaskInfo['experiment_hash'] = $aTaskInfo['hash'];
                 $aTaskInfo['permutation_hash'] = $aTaskInfo['permutation'];
 
-                $aOk = $theData->createResultEntryFromTask($aTaskInfo);
+                $aQueueTask = $theData->getTaskByHashes($aTaskInfo['experiment_hash'], $aTaskInfo['permutation_hash']);
 
-                if(!$aOk) {
+                if($aQueueTask === false) {
+                    // We can't locate the task in the queue. There is nothing we can do to guess its id.
+                    // End of the game.
+                    throw new \Exception('unable to locate task with experiment_hash='.$aTaskInfo['experiment_hash'].' and permutation_hash=' . $aTaskInfo['permutation_hash']);
+                }
+
+                // Bind the file content with the db content
+                $aTaskInfo['id'] = $aQueueTask['id'];
+
+                if($theVerbose) {
+                    echo ' adding task ' . $aTaskInfo['id'] . "\n";
+                }
+
+                // Remove the task from the queue because it was found on the disk, which
+                // means it was already executed.
+                $aOk1 = $theData->removeTask($aTaskInfo['id']);
+
+                // Create the result entry in the DB from the result we found on disk.
+                // This step is the actual migration from one format to another.
+                $aOk2 = $theData->createResultEntryFromTask($aTaskInfo);
+
+                if(!$aOk1 || !$aOk2) {
                     throw new \Exception('unable to create result entry for the task below.' . "\n" . print_r($aTaskInfo, true));
                 }
 
@@ -193,15 +220,14 @@ if(isset($aArgs['migrate'])) {
 
         echo "[OK]" . "\n";
 
-        if(file_exists($aTaskCmdResultFile)) {
-            // Setup task seems to be performed already. Let's mark the experiment as ready
-            echo "Setup task result found, marking experiment as ready." . "\n";
-            $aContext->set('experiment_ready', 1);
-        }
-
-        echo "Adding results to database... ";
-        $aFilesMigrated = migrateTaskResults($aDataDir, $aData);
+        echo "Setting up experiment... ";
+        // We need to setup the experiment to perform a migration, otherwise there is
+        // no way to tasks that will be performed.
+        $aApp->setupExperiment();
         echo "[OK]" . "\n";
+
+        echo "Adding results to database:" . "\n";
+        $aFilesMigrated = migrateTaskResults($aDataDir, $aData);
 
         echo "\n";
         echo "Migration finished successfully! Entries processed: " . $aFilesMigrated . ".\n";
@@ -250,6 +276,7 @@ if(isset($aArgs['reset'])) {
         confirmOperation();
     }
 
+    // TODO: re-work this. Should destroy all but the "results" table.
     $aApp->getDb()->destroy();
     echo "Ok, besearcher was reset successfully!\n";
 }

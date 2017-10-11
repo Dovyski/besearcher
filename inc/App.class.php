@@ -464,17 +464,27 @@ class App {
 	}
 
 	private function createExperimentTasks($theHash) {
-	    $aTasks = array();
 	    $aPermutations = $this->generateTaskCmdPermutations();
 
-	    if(count($aPermutations) > 0) {
-	        foreach($aPermutations as $aPermutation) {
-				$aTask = $this->createTask($theHash, $aPermutation);
-	            $aTasks[] = $this->mTasks->enqueueTask($aTask);
-	        }
-	    }
+	    if(count($aPermutations) <= 0) {
+			return;
+		}
 
-	    return $aTasks;
+		// Use a transaction to speed up the enqueueing of several tasks
+		$aPDO = $this->mDb->getPDO();
+		$aPDO->beginTransaction();
+
+        foreach($aPermutations as $aPermutation) {
+			$aTask = $this->createTask($theHash, $aPermutation);
+            $aOk = $this->mTasks->enqueueTask($aTask);
+
+			if(!$aOk) {
+				$aPDO->rollBack();
+				throw \Exception('Unable to enqueue task: ' . print_r($aTask, true));
+			}
+        }
+
+		$aPDO->commit();
 	}
 
 	private function runTask($theTask, $theMaxParallel) {
@@ -514,19 +524,19 @@ class App {
 	    }
 	}
 
-	private function setupExperiment() {
+	public function setupExperiment() {
 		$aHash = $this->config('experiment_hash', $this->mContext->get('ini_hash'));
 		$aMessage = $this->config('experiment_description', '');
 
 		if($this->mContext->get('experiment_ready')) {
 			$this->mLog->info("Skipping experiment setup, it was already performed (experiment_hash=" . $aHash . ", experiment_description=" . trim($aMessage) . ")");
-			return;
+			return true;
 		}
 
 		$this->mLog->info("Setting up experiment: experiment_hash=" . $aHash . ", experiment_description=" . trim($aMessage));
 		$this->mLog->info("Creating experiment tasks");
 
-	    $aTasks = $this->createExperimentTasks($aHash);
+	    $this->createExperimentTasks($aHash);
 
 	    // Create a folder to house the results of the tasks
 	    // originated from the present experiment
@@ -534,6 +544,8 @@ class App {
 
 		$this->mLog->info('Experiment "' . $aHash . '" setup up successfully!');
 		$this->mContext->set('experiment_ready', 1);
+
+		return true;
 	}
 
 	private function monitorRunningTasks() {
