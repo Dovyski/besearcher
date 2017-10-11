@@ -93,12 +93,20 @@ $aIsForce = isset($aArgs['f']) || isset($aArgs['force']);
 if(isset($aArgs['status'])) {
     $aQueueSize = $aData->queueSize();
     $aRunningTasks = count($aData->findRunningTasks());
+    $aStatus = $aContext->get('status');
+
     echo "Besearcher summary:\n";
-    echo " Status: ".$aContext->get('status')."\n";
+    echo " Status: ".(empty($aStatus) ? "***UNKNOWN***" : $aStatus)."\n";
+    echo " INI file: ".$aIniPath."\n";
     echo " Experiment hash: ".$aContext->get('experiment_hash')."\n";
     echo " Experiment description: ".trim($aApp->config('experiment_description'))."\n";
+    echo " Experiment ready: ".$aApp->config('experiment_ready')."\n";
     echo " Tasks waiting in queue: ". $aQueueSize."\n";
     echo " Tasks running: ". $aRunningTasks."\n";
+
+    if(empty($aStatus)) {
+        echo "WARNING: Besearcher has never run using the provided INI file." . "\n";
+    }
 }
 
 if(isset($aArgs['pause']) || isset($aArgs['resume']) || isset($aArgs['stop'])) {
