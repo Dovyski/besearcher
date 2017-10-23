@@ -257,6 +257,10 @@ class App {
 		$aUpdated = 0;
 		$this->mLog->debug('Updating progress of '.$aCount.' running results.');
 
+		// Use a transaction to speed things up and ensure a coherent update
+		$aPDO = $this->mDb->getPDO();
+		$aPDO->beginTransaction();
+
 	    foreach($aRunningResults as $aResult) {
 	        $aParser = new ResultOutputParser($aResult);
 			$aTags = $aParser->getTags();
@@ -278,6 +282,8 @@ class App {
 			$this->mLog->debug('Result id='.$aResult['id'].' is '.sprintf('%.2f%%', $aProgress * 100).' complete.');
 			$aUpdated++;
 	    }
+
+		$aPDO->commit();
 
 		return $aUpdated;
 	}
