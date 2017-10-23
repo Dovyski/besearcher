@@ -40,25 +40,13 @@ class Context {
 	public function save() {
 		$this->ensureHasDb();
 
-		$aSql =
-	        "UPDATE
-	            context
-	        SET
-	            ini_hash = :ini_hash,
-				experiment_hash = :experiment_hash,
-	            experiment_ready = :experiment_ready,
-	            status = :status
-	        WHERE
-	            1";
+	    $aOk = $this->mDb->update('context', array(
+			'ini_hash'         => $this->mValues['ini_hash'],
+			'experiment_hash'  => $this->mValues['experiment_hash'],
+			'experiment_ready' => $this->mValues['experiment_ready'],
+			'status'           => $this->mValues['status']
+		));
 
-	    $aStmt = $this->mDb->getPDO()->prepare($aSql);
-
-	    $aStmt->bindParam(':ini_hash',         $this->mValues['ini_hash']);
-		$aStmt->bindParam(':experiment_hash',  $this->mValues['experiment_hash']);
-	    $aStmt->bindParam(':experiment_ready', $this->mValues['experiment_ready']);
-	    $aStmt->bindParam(':status',           $this->mValues['status']);
-
-	    $aOk = $aStmt->execute();
 	    return $aOk;
 	}
 

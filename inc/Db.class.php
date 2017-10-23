@@ -81,7 +81,8 @@ class Db {
 			$aWhere = $aIdFieldName." = :" . $aIdFieldName;
 		}
 
-		$aStmt = $this->mPDO->prepare("UPDATE ".$theTable." SET ".implode(', ', $aParts)." WHERE ".$aWhere);
+		$aSql = "UPDATE ".$theTable." SET ".implode(', ', $aParts)." WHERE ".$aWhere;
+		$aStmt = $this->mPDO->prepare($aSql);
 
 		foreach($aFields as $aField) {
 			$aStmt->bindParam(':' . $aField, $theKeyValuePairs[$aField]);
