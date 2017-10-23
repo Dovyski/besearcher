@@ -54,7 +54,7 @@ class Context {
 		$this->ensureHasDb();
 
 		$aStmt = $this->mDb->getPDO()->prepare("SELECT * FROM context WHERE 1");
-		$aStmt->execute();
+		$this->mDb->execute($aStmt);
 		$aValues = $aStmt->fetch(\PDO::FETCH_ASSOC);
 
 		return $aValues;

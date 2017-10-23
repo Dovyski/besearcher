@@ -62,6 +62,20 @@ class Db {
 		}
 	}
 
+	public function execute(\PDOStatement $theStmt, $theToleratedError = '10 disk I/O error', $theTries = 1) {
+		try {
+			$aOk = $theStmt->execute();
+			return $aOk;
+		} catch (\Exception $e) {
+			if($theTries > 0 && stripos($e->getMessage(), $theToleratedError) !== false) {
+				usleep(300000); // wait for 0.3 seconds
+				return $this->execute($theStmt, $theToleratedError, $theTries - 1);
+			} else {
+				throw $e;
+			}
+		}
+	}
+
 	public function update($theTable, array $theKeyValuePairs, array $theIdInfo = array()) {
 		$aFields = array_keys($theKeyValuePairs);
 		$aParts = array();
