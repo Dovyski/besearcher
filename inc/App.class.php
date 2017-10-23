@@ -290,8 +290,14 @@ class App {
 
 	public function shutdown() {
 		$this->mLog->info('Besearcher is done. Over and out!');
+
 		$this->mLog->shutdown();
 		$this->mDb->shutdown();
+
+		$this->mContext = null;
+		$this->mTasks = null;
+		$this->mLog = null;
+		$this->mDb = null;
 	}
 
 	public function run() {
