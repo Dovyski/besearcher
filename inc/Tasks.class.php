@@ -282,12 +282,12 @@ class Tasks {
 	}
 
 	public function updateAnalytics($theId, $theKeyValuePairs) {
-		$aOk = $this->mDb->update('analytics', $theId, $theKeyValuePairs);
+		$aOk = $this->mDb->update('analytics', $theKeyValuePairs, array('id' => $theId));
 		return $aOk;
 	}
 
 	public function updateResult($theId, $theKeyValuePairs) {
-		$aOk = $this->mDb->update('results', $theId, $theKeyValuePairs);
+		$aOk = $this->mDb->update('results', $theKeyValuePairs, array('id' => $theId));
 		return $aOk;
 	}
 

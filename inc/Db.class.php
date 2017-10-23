@@ -62,7 +62,7 @@ class Db {
 		}
 	}
 
-	public function update($theTable, $theId, $theKeyValuePairs) {
+	public function update($theTable, array $theKeyValuePairs, array $theIdInfo = array()) {
 		$aFields = array_keys($theKeyValuePairs);
 		$aParts = array();
 
@@ -70,13 +70,27 @@ class Db {
 			$aParts[] = $aField . ' = ' . ':' . $aField;
 		}
 
-		$aStmt = $this->mPDO->prepare("UPDATE ".$theTable." SET ".implode(', ', $aParts)." WHERE id = :id");
+		$aWhere = "1";
+		$aIdFieldName = null;
+		$aIdFieldValue = null;
+		$aHasIdValue = count($theIdInfo) == 1;
+
+		if($aHasIdValue) {
+			$aIdFieldName = array_keys($theIdInfo)[0];
+			$aIdFieldValue = array_values($theIdInfo)[0];
+			$aWhere = $aIdFieldName." = :" . $aIdFieldName;
+		}
+
+		$aStmt = $this->mPDO->prepare("UPDATE ".$theTable." SET ".implode(', ', $aParts)." WHERE ".$aWhere);
 
 		foreach($aFields as $aField) {
 			$aStmt->bindParam(':' . $aField, $theKeyValuePairs[$aField]);
 		}
 
-		$aStmt->bindParam(':id', $theId);
+		if($aHasIdValue) {
+			$aStmt->bindParam(':' . $aIdFieldName, $aIdFieldValue);
+		}
+
 		$aOk = $aStmt->execute();
 
 		return $aOk;
