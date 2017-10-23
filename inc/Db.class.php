@@ -62,6 +62,19 @@ class Db {
 		}
 	}
 
+	private function getIdParts(array $theIdInfo) {
+		$aRet = array('name' => '', 'value' => '');
+
+		if(count($theIdInfo) != 1) {
+			return $aRet;
+		}
+
+		$aRet['name'] = array_keys($theIdInfo)[0];
+		$aRet['value'] = array_values($theIdInfo)[0];
+
+		return $aRet;
+	}
+
 	public function update($theTable, array $theKeyValuePairs, array $theIdInfo = array()) {
 		$aFields = array_keys($theKeyValuePairs);
 		$aParts = array();
@@ -71,14 +84,11 @@ class Db {
 		}
 
 		$aWhere = "1";
-		$aIdFieldName = null;
-		$aIdFieldValue = null;
-		$aHasIdValue = count($theIdInfo) == 1;
+		$aIdParts = $this->getIdParts($theIdInfo);
+		$aHasId = $aIdParts['name'] != '';
 
-		if($aHasIdValue) {
-			$aIdFieldName = array_keys($theIdInfo)[0];
-			$aIdFieldValue = array_values($theIdInfo)[0];
-			$aWhere = $aIdFieldName." = :" . $aIdFieldName;
+		if($aHasId) {
+			$aWhere = $aIdParts['name']." = :" . $aIdParts['name'];
 		}
 
 		$aSql = "UPDATE ".$theTable." SET ".implode(', ', $aParts)." WHERE ".$aWhere;
@@ -88,8 +98,8 @@ class Db {
 			$aStmt->bindParam(':' . $aField, $theKeyValuePairs[$aField]);
 		}
 
-		if($aHasIdValue) {
-			$aStmt->bindParam(':' . $aIdFieldName, $aIdFieldValue);
+		if($aHasId) {
+			$aStmt->bindParam(':' . $aIdParts['name'], $aIdParts['value']);
 		}
 
 		$aOk = $aStmt->execute();
