@@ -51,6 +51,7 @@ try {
 
     if($aLogger != null) {
         $aLogger->error($e->getMessage());
+        $aLogger->debug($e->getTraceAsString());
     }
 
     echo $e->getMessage() . "\n";
