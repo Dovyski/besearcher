@@ -258,8 +258,7 @@ class App {
 		$this->mLog->debug('Updating progress of '.$aCount.' running results.');
 
 		// Use a transaction to speed things up and ensure a coherent update
-		$aPDO = $this->mDb->getPDO();
-		$aPDO->beginTransaction();
+		$this->mDb->begin();
 
 	    foreach($aRunningResults as $aResult) {
 	        $aParser = new ResultOutputParser($aResult);
@@ -283,7 +282,7 @@ class App {
 			$aUpdated++;
 	    }
 
-		$aPDO->commit();
+		$this->mDb->commit();
 
 		return $aUpdated;
 	}
@@ -483,20 +482,19 @@ class App {
 		}
 
 		// Use a transaction to speed up the enqueueing of several tasks
-		$aPDO = $this->mDb->getPDO();
-		$aPDO->beginTransaction();
+		$this->mDb->begin();
 
         foreach($aPermutations as $aPermutation) {
 			$aTask = $this->createTask($theHash, $aPermutation);
             $aOk = $this->mTasks->enqueueTask($aTask);
 
 			if(!$aOk) {
-				$aPDO->rollBack();
+				$this->mDb->rollback();
 				throw \Exception('Unable to enqueue task: ' . print_r($aTask, true));
 			}
         }
 
-		$aPDO->commit();
+		$this->mDb->commit();
 	}
 
 	private function runTask($theTask, $theMaxParallel) {

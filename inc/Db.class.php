@@ -14,6 +14,19 @@ class Db {
 		}
 	}
 
+	public function begin() {
+		// TODO: keep track of being in a transaction
+		$this->mPDO->beginTransaction();
+	}
+
+	public function rollback() {
+		$this->mPDO->rollBack();
+	}
+
+	public function commit() {
+		$this->mPDO->commit();
+	}
+
 	public function shutdown() {
 		$mPDO = null;
 	}
