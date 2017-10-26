@@ -73,44 +73,58 @@ if(empty($aTo) || empty($aText)) {
     exit(4);
 }
 
-$aConfig = $aApp->getINIValues();
-$aConfig = $aConfig['alerts'];
+$aINI = $aApp->getINIValues();
+$aConfig = $aINI['email'];
 
-$aMailer = new PHPMailer\PHPMailer\PHPMailer();
-$aMailer->isSMTP();
+if($aConfig['use_smtp']) {
+    if($aVerbose) {
+        echo ' Sending e-mail using SMTP (host=' . $aConfig['smtp_host'] . ', user='.$aConfig['smtp_user'] . ")\n";
+    }
 
-//Enable SMTP debugging
-// 0 = off (for production use)
-// 1 = client messages
-// 2 = client and server messages
-$aMailer->SMTPDebug = $aVerbose ? 2 : 0;
+    $aMailer = new PHPMailer\PHPMailer\PHPMailer();
+    $aMailer->isSMTP();
 
-$aMailer->Host = gethostbyname($aConfig['smtp_host']);
-$aMailer->Port = 587;
-$aMailer->SMTPSecure = 'tls';
-$aMailer->SMTPAuth = true;
+    //Enable SMTP debugging
+    // 0 = off (for production use)
+    // 1 = client messages
+    // 2 = client and server messages
+    $aMailer->SMTPDebug = $aVerbose ? 2 : 0;
 
-$aMailer->Username = $aConfig['smtp_user'];
-$aMailer->Password = $aConfig['smtp_password'];
+    $aMailer->Host = gethostbyname($aConfig['smtp_host']);
+    $aMailer->Port = 587;
+    $aMailer->SMTPSecure = 'tls';
+    $aMailer->SMTPAuth = true;
 
-$aMailer->setFrom($aConfig['sender_email'], $aConfig['sender_name']);
-$aMailer->addAddress($aTo);
+    $aMailer->Username = $aConfig['smtp_user'];
+    $aMailer->Password = $aConfig['smtp_password'];
 
-$aSubjectTag = isset($aConfig['subject_tag']) ? $aConfig['subject_tag'] . ' ' : '';
-$aMailer->Subject = $aSubjectTag . $aSubject;
+    $aMailer->setFrom($aConfig['sender_email'], $aConfig['sender_name']);
+    $aMailer->addAddress($aTo);
 
-$aFooter = isset($aConfig['text_footer']) ? $aConfig['text_footer'] : '';
+    $aSubjectTag = isset($aConfig['subject_tag']) ? $aConfig['subject_tag'] . ' ' : '';
+    $aMailer->Subject = $aSubjectTag . $aSubject;
 
-if($aFooter != '') {
-    $aFooter = "\n\n" . str_replace('\\n', "\n", $aFooter);
+    $aFooter = isset($aConfig['text_footer']) ? $aConfig['text_footer'] : '';
+
+    if($aFooter != '') {
+        $aFooter = "\n\n" . str_replace('\\n', "\n", $aFooter);
+    }
+
+    $aMailer->Body = $aText . $aFooter;
+
+    if (!$aMailer->send()) {
+        echo "Something went wrong: " . $aMailer->ErrorInfo . "\n";
+    } else {
+        echo "Success, message sent!" . "\n";
+    }
 }
 
-$aMailer->Body = $aText . $aFooter;
+if($aConfig['use_email_api']) {
+    if($aVerbose) {
+        echo ' Sending e-mail using REST API (endpoint=' . $aConfig['email_api_endpoint'] . ")\n";
+    }
 
-if (!$aMailer->send()) {
-    echo "Something went wrong: " . $aMailer->ErrorInfo . "\n";
-} else {
-    echo "Success, message sent!" . "\n";
+    // TODO: implement this
 }
 
 exit(0);

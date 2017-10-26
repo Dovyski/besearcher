@@ -242,16 +242,25 @@ if(isset($aArgs['migrate'])) {
 }
 
 if(isset($aArgs['test-email'])) {
-    echo "Please input the info requested below." . "\n";
+    $aINI = $aApp->getINIValues();
+
+    echo "E-mail sending options:" . "\n";
+    echo ' - REST API: ' . ($aINI['email']['use_email_api'] ? 'in use' : 'disabled') . ' (endpoint=' . $aINI['email']['email_api_endpoint'] . ")\n";
+    echo ' - SMTP: ' . ($aINI['email']['use_smtp'] ? 'in use' : 'disabled') . ' (host=' . $aINI['email']['smtp_host'] . ', user='.$aINI['email']['smtp_user'] . ")\n";
+
+    echo "Please input the test e-mail details:" . "\n";
 
     echo "To (e.g. test@domain.com): "; fscanf(STDIN, "%s", $aTo);
     echo "Subject: "; fscanf(STDIN, "%s", $aSubject);
     echo "Message: "; fscanf(STDIN, "%s", $aMessage);
 
+    echo "\n";
+    echo "Trying to send a test e-mail... ";
+
     $aApp->sendEmail($aTo, $aSubject, $aMessage);
 
-    echo "\n";
-    echo "Ok, sent! You should receive the e-mail in a few minutes. If you don't, something is not working." . "\n";
+    echo 'Ok, sent!' . "\n";
+    echo "You should receive the e-mail in a few minutes. If you don't, something is not working." . "\n";
 }
 
 if(isset($aArgs['pause']) || isset($aArgs['resume']) || isset($aArgs['stop'])) {
