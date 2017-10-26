@@ -43,11 +43,6 @@ if($argc <= 1 || isset($aArgs['h']) || isset($aArgs['help'])) {
      exit(1);
 }
 
-if(!class_exists('PHPMailer\PHPMailer\PHPMailer')) {
-    echo 'PHPMailer has not been installed. Run "composer install" in the folder "inc" of the project.';
-    exit(2);
-}
-
 $aIniPath = isset($aArgs['ini']) ? $aArgs['ini'] : '';
 
 $aApp = new Besearcher\App();
@@ -78,7 +73,12 @@ $aConfig = $aINI['email'];
 
 if($aConfig['use_smtp']) {
     if($aVerbose) {
-        echo ' Sending e-mail using SMTP (host=' . $aConfig['smtp_host'] . ', user='.$aConfig['smtp_user'] . ")\n";
+        echo 'Sending e-mail using SMTP (host=' . $aConfig['smtp_host'] . ', user='.$aConfig['smtp_user'] . ")\n";
+    }
+
+    if(!class_exists('PHPMailer\PHPMailer\PHPMailer')) {
+        echo 'PHPMailer has not been installed. Run "composer install" in the folder "inc" of the project.';
+        exit(2);
     }
 
     $aMailer = new PHPMailer\PHPMailer\PHPMailer();
@@ -121,10 +121,30 @@ if($aConfig['use_smtp']) {
 
 if($aConfig['use_email_api']) {
     if($aVerbose) {
-        echo ' Sending e-mail using REST API (endpoint=' . $aConfig['email_api_endpoint'] . ")\n";
+        echo 'Sending e-mail using REST API (endpoint=' . $aConfig['email_api_endpoint'] . ")\n";
     }
 
-    // TODO: implement this
+    $aCh = curl_init();
+
+    curl_setopt($aCh, CURLOPT_URL, $aConfig['email_api_endpoint']);
+    curl_setopt($aCh, CURLOPT_POST, 1);
+    curl_setopt($aCh, CURLOPT_POSTFIELDS, array('to' => $aTo, 'subject' => $aSubject, 'text' => $aText));
+    curl_setopt($aCh, CURLOPT_RETURNTRANSFER, true);
+
+    $aJSONResponse = curl_exec($aCh);
+    curl_close($aCh);
+
+    $aResponse = json_decode($aJSONResponse);
+
+    if($aResponse !== false) {
+        if($aResponse->success) {
+            echo "Success, message sent!" . "\n";
+        } else {
+            echo "Something went wrong: " . $aResponse->error . "\n";
+        }
+    } else {
+        echo 'Unable to parse response' . "\n";
+    }
 }
 
 exit(0);
