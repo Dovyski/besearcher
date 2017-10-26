@@ -130,13 +130,14 @@ if($aConfig['use_email_api']) {
     curl_setopt($aCh, CURLOPT_POST, 1);
     curl_setopt($aCh, CURLOPT_POSTFIELDS, array('to' => $aTo, 'subject' => $aSubject, 'text' => $aText));
     curl_setopt($aCh, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($aCh, CURLOPT_SSL_VERIFYPEER, false); // TODO: fix this with https://github.com/paragonie/certainty
 
     $aJSONResponse = curl_exec($aCh);
     curl_close($aCh);
 
     $aResponse = json_decode($aJSONResponse);
 
-    if($aResponse !== false) {
+    if($aResponse !== false && !empty($aResponse)) {
         if($aResponse->success) {
             echo "Success, message sent!" . "\n";
         } else {
