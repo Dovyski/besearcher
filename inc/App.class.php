@@ -261,25 +261,34 @@ class App {
 		$this->mDb->begin();
 
 	    foreach($aRunningResults as $aResult) {
-	        $aParser = new ResultOutputParser($aResult);
-			$aTags = $aParser->getTags();
-	        $aProgress = $aParser->calculateTaskProgress();
+			try {
+		        $aParser = new ResultOutputParser($aResult);
+				$aTags = $aParser->getTags();
+		        $aProgress = $aParser->calculateTaskProgress();
 
-			// Let's get the most recent info from the disk to confirm
-			// the result is still running. If it is not, i.e. it finished
-			// while we parsed the log, let's just ignore it.
-			if($this->mTasks->isResultFinished($aResult['id'])) {
-				continue;
+				// Ensure we never face a negative progress.
+				$aProgress = $aProgress < 0 ? 0 : $aProgress;
+
+				// Let's get the most recent info from the disk to confirm
+				// the result is still running. If it is not, i.e. it finished
+				// while we parsed the log, let's just ignore it.
+				if($this->mTasks->isResultFinished($aResult['id'])) {
+					continue;
+				}
+
+		        $this->mTasks->updateResult($aResult['id'], array(
+		            'progress' => $aProgress,
+		            'log_file_tags' => serialize($aTags)
+		        ));
+
+		        $aParser = null;
+				$this->mLog->debug('Result id='.$aResult['id'].' is '.sprintf('%.2f%%', $aProgress * 100).' complete.');
+				$aUpdated++;
+			} catch(\Exception $e)  {
+				// Something wrong happened, but we are not running critial services here.
+				// Let's just issue a warning and hope for the best.
+				$this->mLog->warn('Unable to update progress of result with id=' . $aResult['id'] . '. ' . $e->getMessage());
 			}
-
-	        $this->mTasks->updateResult($aResult['id'], array(
-	            'progress' => $aProgress,
-	            'log_file_tags' => serialize($aTags)
-	        ));
-
-	        $aParser = null;
-			$this->mLog->debug('Result id='.$aResult['id'].' is '.sprintf('%.2f%%', $aProgress * 100).' complete.');
-			$aUpdated++;
 	    }
 
 		$this->mDb->commit();
