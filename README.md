@@ -3,7 +3,7 @@
 Besearcher
 ======================
 
-Besearcher (*bot researcher*) is a tool to help researchers automate and keep track of software-based experiments. It automatically monitors a git repository and performs a pre-defined command for each new commit. It is also possible to keep track of commands (running, finished or aborted) and the output they produced.  
+Besearcher (*bot researcher*) is a multiplatform tool to help researchers automate and keep track of software-based experiments. The main idea to define a command, its parameters and the possible values of those parameters. Besearcher will then generates all permutations of that command and its parameter values. It will execute each one of them, keeping track of their status (running, finished or aborted) and the output they produced.
 
 ## Table of content
 
@@ -19,15 +19,17 @@ Besearcher (*bot researcher*) is a tool to help researchers automate and keep tr
 
 ## Features
 
-Besearcher was created out of a need from a scientific project, so its design values reproducibility and trackability of results. It is easy to use, has minimal dependencies (PHP and Git) and focus on automating repetitive and boring tasks. It also has an (optional) web dashboard that allows users to easily and quickly monitor tasks:
+Besearcher was created out of a need from a scientific project, so its design values reproducibility and trackability of results. It is easy to use, has minimal dependencies (PHP) and focus on automating repetitive and boring tasks. It also has an (optional) web dashboard that allows users to easily and quickly monitor tasks:
 
-[![Besearcher web dashboard - home](www/img/screenshots/besearcher-home.png)](./www/img/screenshots/besearcher-home.png)
+[![Besearcher web dashboard - home](www/img/screenshots/besearcher-home.png?20171115)](./www/img/screenshots/besearcher-home.png)
 
-[![Besearcher web dashboard - tasks](www/img/screenshots/besearcher-tasks.png)](./www/img/screenshots/besearcher-tasks.png)
+[![Besearcher web dashboard - tasks](www/img/screenshots/besearcher-tasks.png?20171115)](./www/img/screenshots/besearcher-tasks.png)
 
-[![Besearcher web dashboard - completed sucessful task](www/img/screenshots/besearcher-result-complete.png)](./www/img/screenshots/besearcher-result-complete.png)
+[![Besearcher web dashboard - completed sucessful task](www/img/screenshots/besearcher-result-complete.png?20171115)](./www/img/screenshots/besearcher-result-complete.png)
 
-[![Besearcher web dashboard - task with a problem](www/img/screenshots/besearcher-result-error.png)](./www/img/screenshots/besearcher-result-error.png)
+[![Besearcher web dashboard - queue problem](www/img/screenshots/besearcher-queue.png?20171115)](./www/img/screenshots/besearcher-queue.png)
+
+[![Besearcher web dashboard - analytics problem](www/img/screenshots/besearcher-analytics.png?20171115)](./www/img/screenshots/besearcher-analytics.png)
 
 ## Getting started
 
@@ -67,19 +69,13 @@ copy besearcher\www\config.ini-example besearcher\www\config.ini
 
 Besearcher has two configuration files: `besearcher\config.ini` which controls the behavior of Besearcher, and `besearcher\www\config.ini` which controls the web dashboard.
 
-Let's start with the first one. Open `besearcher\config.ini` in your editor of choice. Search for the line with the directive `watch_dir` and inform the **absolute** path of a cloned git repository that Besearcher will monitor. For example:
-
-```
-watch_dir = "c:\experiment\"
-```
-
-Next search for the line with the directive `data_dir` and inform the **absolute** path of a directory that Besearcher can use to store task results and internal data. For example:
+Let's start with the first one. Open `besearcher\config.ini` in your editor of choice. Search for the line with the directive `data_dir` and inform the **absolute** path of a directory that Besearcher can use to store task results and internal data. For example:
 
 ```
 data_dir = "c:\experiment\besearcher\"
 ```
 
-Finally search for the line with the directive `task_cmd`, which is the command Besearcher will execute everytime a new commit arrives in `watch_dir`:
+Then search for the line with the directive `task_cmd`, which is the command Besearcher will use to create permutation and execute them:
 
 ```
 task_cmd = "test.exe --blah={@data} {@debug} --input={@files}"
@@ -124,9 +120,37 @@ Go to the folder where Besearcher was installed and run:
 php besearcher.php --ini=config.ini
 ```
 
-Besearcher will continue to run and watch the directory in the `config.ini` file. While running, Besearcher will execute the command specified in `task_cmd` for every new commit that arrives in the watched directory.
+Besearcher will continue to run, outputing log messages to `stdout`. While running, Besearcher will execute all permutations created from the command specified in `task_cmd`.
 
-Please check the file [config.ini-example](config.ini-example) for more usage information.
+Since Besearcher might run for a long time to a command with severl permutations, you can control it in the command line using the `bc` tool. Assuming you are in the folder where Besearcher was intalled, just run:
+
+```
+cmd\bc --ini=config.ini OPTION
+```
+
+where `OPTION` is one of the many available options in `bc`. Below are a few examples of how you can control a running instance of Beseacher.
+
+Show a summary (running tasks, results, etc)
+```
+cmd\bc --ini=config.ini --status
+```
+
+Pause the creation of new tasks:
+```
+cmd\bc --ini=config.ini --pause
+```
+
+Resume creation of new tasks:
+```
+cmd\bc --ini=config.ini --resume
+```
+
+Stop Besearcher:
+```
+cmd\bc --ini=config.ini --stop
+```
+
+Run `cmd\bc --help` for a list of all available options. Additionally check the file [config.ini-example](config.ini-example) for more usage information.
 
 ## License
 
