@@ -29,7 +29,7 @@ class ResultOutputParser {
 
 	private function run() {
 		if(!file_exists($this->mResult['log_file'])) {
-			throw new \Exception('Log file does not exists:' . $this->mResult['log_file']);
+			throw new \Exception('Log file does not exists: ' . $this->mResult['log_file']);
 		}
 
         // Find special marks in the log file that inform

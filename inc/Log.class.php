@@ -20,15 +20,19 @@ class Log {
 
 	public function __construct($thePathLogFile, $theSilent = false) {
 		$this->mSilent = $theSilent;
-		$aStdOut = defined('STDOUT') ? STDOUT : null;
-		$this->mStream = empty($thePathLogFile) ? $aStdOut : fopen($thePathLogFile, 'a');
+		$this->mStream = empty($thePathLogFile) ? $this->getStdout() : fopen($thePathLogFile, 'a');
 		$this->setLevel(Log::DEBUG);
 	}
 
 	public function shutdown() {
-		if($this->mStream != null) {
+		if($this->mStream != null && $this->mStream != $this->getStdout()) {
 		    fclose($this->mStream);
 		}
+	}
+
+	private function getStdout() {
+		$aStdOut = defined('STDOUT') ? STDOUT : null;
+		return $aStdOut;
 	}
 
 	public function setLevel($theValue) {
