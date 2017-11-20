@@ -36,6 +36,7 @@ class Db {
 		$this->mPDO->exec("DROP TABLE results");
 		$this->mPDO->exec("DROP TABLE context");
 		$this->mPDO->exec("DROP TABLE analytics");
+		$this->mPDO->exec("DROP TABLE users");
 		$this->createTables();
 	}
 

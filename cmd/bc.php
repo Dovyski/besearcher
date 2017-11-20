@@ -7,43 +7,12 @@
  */
 
 require_once(dirname(__FILE__) . '/../inc/constants.php');
+require_once(dirname(__FILE__) . '/../inc/CmdUtils.class.php');
 require_once(dirname(__FILE__) . '/../inc/Db.class.php');
 require_once(dirname(__FILE__) . '/../inc/Context.class.php');
 require_once(dirname(__FILE__) . '/../inc/Tasks.class.php');
 require_once(dirname(__FILE__) . '/../inc/Log.class.php');
-require_once(dirname(__FILE__) . '/../inc/Users.class.php');
 require_once(dirname(__FILE__) . '/../inc/App.class.php');
-
-function manageUsers(Besearcher\App & $theApp, $theArgs) {
-    $aUsersManager = new Besearcher\Users($theApp->getDb());
-    $aDidSomething = false;
-
-    if(isset($theArgs['user-list'])) {
-        $aUsers = $aUsersManager->findAll();
-        if(count($aUsers) > 0) {
-            echo "Id | Name           | Login" . "\n";
-            foreach($aUsers as $aUser) {
-                echo "No users found. You can add new users by using the --user-add paramater." . "\n";
-                echo $aUser['id'] . ' ' . $aUser['name'] . ' ' . $aUser['login'] . "\n";
-            }
-        } else {
-            echo "No users found. You can add new users using --user-add." . "\n";
-        }
-
-        $aDidSomething = true;
-
-    } else if(isset($theArgs['user-add'])) {
-        $aDidSomething = true;
-
-    } else if(isset($theArgs['user-remove'])) {
-        $aDidSomething = true;
-
-    } else if(isset($theArgs['user-edit'])) {
-        $aDidSomething = true;
-    }
-
-    return $aDidSomething;
-}
 
 function deleteFilesList($theList, $theExitCode = 1, $theVerbose = false) {
     foreach($theList as $aPath) {
@@ -60,20 +29,6 @@ function deleteFilesList($theList, $theExitCode = 1, $theVerbose = false) {
             }
         }
     }
-}
-
-function confirmOperation($theText = "Operation can't be undone, proceed") {
-    echo $theText . " (y/n)? ";
-    $aAnswer = readInput();
-
-    if(strtolower($aAnswer) == 'n') {
-        exit(0);
-    }
-}
-
-function readInput($theScanfString = '%s') {
-    fscanf(STDIN, $theScanfString, $aValue);
-    return $aValue;
 }
 
 function migrateTaskResults($theDataDir, $theData, $theVerbose = true) {
@@ -162,10 +117,6 @@ $aOptions = array(
     "reload",
     "reset",
     "migrate",
-    "user-list",
-    "user-add",
-    "user-remove:",
-    "user-edit:",
     "test-email",
     "verbose",
     "force",
@@ -192,10 +143,6 @@ if(isset($aArgs['h']) || isset($aArgs['help']) || $argc == 1) {
      echo " --reset              Delete *ALL* control settings, like records of enqued\n";
      echo "                      tasks. Result files created by previous completed tasks\n";
      echo "                      are preserved.\n";
-     echo " --user-list          List all existing users able to acess the web dashboard.\n";
-     echo " --user-add           Add a new user able to access the web dashboard.\n";
-     echo " --user-remove=<id>   Remove dashboard user with id <id>.\n";
-     echo " --user-edit=<id>     Edit infos of dashboard user with id <id>.\n";
      echo " --test-email         Send a test e-mail to check if e-mail messages are working.\n";
      echo " --force, -f          Perform operations without asking for confirmation.\n";
      echo " --verbose, -v        Print extra info for performed actions.\n";
@@ -217,8 +164,6 @@ $aData = $aApp->getData();
 $aIsVerbose = isset($aArgs['v']) || isset($aArgs['verbose']);
 $aIsForce = isset($aArgs['f']) || isset($aArgs['force']);
 
-$aDidSomething = false;
-
 if(isset($aArgs['status'])) {
     $aQueueSize = $aData->queueSize();
     $aRunningTasks = count($aData->findRunningTasks());
@@ -236,8 +181,6 @@ if(isset($aArgs['status'])) {
     if(empty($aStatus)) {
         echo "WARNING: Besearcher has never run using the provided INI file." . "\n";
     }
-
-    $aDidSomething = true;
 }
 
 if(isset($aArgs['migrate'])) {
@@ -283,8 +226,6 @@ if(isset($aArgs['migrate'])) {
         echo "\n";
         echo "Migration finished successfully! Entries processed: " . $aFilesMigrated . ".\n";
 
-        $aDidSomething = true;
-
     } catch (\Exception $e) {
         echo "[ERROR]\n\n";
         echo "Migration was interrupted: " . $e->getMessage() . "\n";
@@ -312,8 +253,6 @@ if(isset($aArgs['test-email'])) {
 
     echo 'Ok, sent!' . "\n";
     echo "You should receive the e-mail in a few minutes. If you don't, something is not working." . "\n";
-
-    $aDidSomething = true;
 }
 
 if(isset($aArgs['pause']) || isset($aArgs['resume']) || isset($aArgs['stop'])) {
@@ -326,7 +265,7 @@ if(isset($aArgs['pause']) || isset($aArgs['resume']) || isset($aArgs['stop'])) {
 
     if(isset($aArgs['stop'])) {
         if(!$aIsForce && $aRunningTasks > 0) {
-            confirmOperation('Stop and cancel '.$aRunningTasks.' unfinished tasks');
+            Besearcher\CmdUtils::confirmOperation('Stop and cancel '.$aRunningTasks.' unfinished tasks');
         }
         // TODO: cancel running tasks
         $aStatus = BESEARCHER_STATUS_STOPPING;
@@ -335,43 +274,29 @@ if(isset($aArgs['pause']) || isset($aArgs['resume']) || isset($aArgs['stop'])) {
 
     $aApp->setStatus($aStatus);
     echo "Ok, besearcher will ".$aText.".\n";
-
-    $aDidSomething = true;
 }
 
 if(isset($aArgs['reload'])) {
     if(!$aIsForce) {
-        confirmOperation();
+        Besearcher\CmdUtils::confirmOperation();
     }
 
     $aContext->set('experiment_hash', '');
     $aContext->set('experiment_ready', 0);
 
     echo "Ok, besearcher was reloaded successfully!\n";
-    $aDidSomething = true;
 }
 
 if(isset($aArgs['reset'])) {
     if(!$aIsForce) {
-        confirmOperation();
+        Besearcher\CmdUtils::confirmOperation();
     }
 
     // TODO: re-work this. Should destroy all but the "results" table.
     $aApp->getDb()->destroy();
     echo "Ok, besearcher was reset successfully!\n";
-
-    $aDidSomething = true;
 }
 
-if(isset($aArgs['user-list']) || isset($aArgs['user-add']) || isset($aArgs['user-remove']) || isset($aArgs['user-edit'])) {
-    $aDidSomething = manageUsers($aApp, $aArgs);
-}
-
-if($aDidSomething) {
-    exit(0);
-} else {
-    echo "Invalid parameters were supplied. Have you forgot to input any value?" . "\n";
-    exit(2);
-}
+exit(0);
 
 ?>
