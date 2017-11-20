@@ -11,12 +11,25 @@ require_once(dirname(__FILE__) . '/../inc/Db.class.php');
 require_once(dirname(__FILE__) . '/../inc/Context.class.php');
 require_once(dirname(__FILE__) . '/../inc/Tasks.class.php');
 require_once(dirname(__FILE__) . '/../inc/Log.class.php');
+require_once(dirname(__FILE__) . '/../inc/Users.class.php');
 require_once(dirname(__FILE__) . '/../inc/App.class.php');
 
-function manageUsers($theArgs) {
+function manageUsers(Besearcher\App & $theApp, $theArgs) {
+    $aUsersManager = new Besearcher\Users($theApp->getDb());
     $aDidSomething = false;
 
     if(isset($theArgs['user-list'])) {
+        $aUsers = $aUsersManager->findAll();
+        if(count($aUsers) > 0) {
+            echo "Id | Name           | Login" . "\n";
+            foreach($aUsers as $aUser) {
+                echo "No users found. You can add new users by using the --user-add paramater." . "\n";
+                echo $aUser['id'] . ' ' . $aUser['name'] . ' ' . $aUser['login'] . "\n";
+            }
+        } else {
+            echo "No users found. You can add new users using --user-add." . "\n";
+        }
+
         $aDidSomething = true;
 
     } else if(isset($theArgs['user-add'])) {
@@ -51,11 +64,16 @@ function deleteFilesList($theList, $theExitCode = 1, $theVerbose = false) {
 
 function confirmOperation($theText = "Operation can't be undone, proceed") {
     echo $theText . " (y/n)? ";
-    fscanf(STDIN, "%s", $aAnswer);
+    $aAnswer = readInput();
 
     if(strtolower($aAnswer) == 'n') {
         exit(0);
     }
+}
+
+function readInput($theScanfString = '%s') {
+    fscanf(STDIN, $theScanfString, $aValue);
+    return $aValue;
 }
 
 function migrateTaskResults($theDataDir, $theData, $theVerbose = true) {
@@ -346,7 +364,7 @@ if(isset($aArgs['reset'])) {
 }
 
 if(isset($aArgs['user-list']) || isset($aArgs['user-add']) || isset($aArgs['user-remove']) || isset($aArgs['user-edit'])) {
-    $aDidSomething = manageUsers($aArgs);
+    $aDidSomething = manageUsers($aApp, $aArgs);
 }
 
 if($aDidSomething) {
