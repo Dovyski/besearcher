@@ -12,16 +12,21 @@ class Auth {
 	}
 
 	public static function credentialsMatch($theUser, $thePassword) {
-		$aUsersManager = new Users(WebApp::instance()->getDb());
-		$aUser = $aUsersManager->getByLogin($theUser);
+		$aUser = WebApp::users()->getByLogin($theUser);
 		$aValid = $aUser !== false && password_verify($thePassword, $aUser['password']);
 
 		return $aValid;
 	}
 
-	public static function login($theUserData) {
+	public static function login($theUserLogin) {
+		$aUser = WebApp::users()->getByLogin($theUserLogin);
+
+		if($aUser == false) {
+			throw new \Exception('Unable to authenticate invalid user.');
+		}
+
 		$_SESSION['authenticaded'] = true;
-		$_SESSION['user'] = $theUserData;
+		$_SESSION['user'] = $aUser['id'];
 	}
 
 	public static function allowAuthenticated() {
@@ -39,7 +44,13 @@ class Auth {
 	}
 
 	public static function user() {
-		return isset($_SESSION['user']) ? $_SESSION['user'] : '';
+		$aUser = false;
+
+		if(isset($_SESSION['user'])) {
+			$aUser = WebApp::users()->getById($_SESSION['user']);
+		}
+
+		return $aUser;
 	}
 
 	public static function logout() {

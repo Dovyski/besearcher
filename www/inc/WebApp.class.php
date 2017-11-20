@@ -4,6 +4,7 @@ namespace Besearcher;
 
 class WebApp {
 	private static $mInstance;
+	private static $mUsers;
 
 	public static function init($theINIPath) {
 		$aINI = @parse_ini_file($theINIPath);
@@ -18,10 +19,16 @@ class WebApp {
 
 		self::$mInstance = new App();
 		self::$mInstance->init($aINI['besearcher_ini_file'], '', true);
+
+		self::$mUsers = new Users(self::$mInstance->getDb());
 	}
 
 	public static function instance() {
 		return self::$mInstance;
+	}
+
+	public static function users() {
+		return self::$mUsers;
 	}
 }
 
