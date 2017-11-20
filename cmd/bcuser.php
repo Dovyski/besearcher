@@ -15,35 +15,36 @@ require_once(dirname(__FILE__) . '/../inc/Log.class.php');
 require_once(dirname(__FILE__) . '/../inc/Users.class.php');
 require_once(dirname(__FILE__) . '/../inc/App.class.php');
 
-function collectUserInfoFromInput() {
+function readNotEmptyStringFromInput($theText = 'Input value: ', $theError = 'Invalid value!') {
+    $aValue = null;
     do {
-        echo 'Name (e.g. John Doe): '; $aName = readInput();
-        $aInvalid = empty($aName);
+        echo $theText;
+        $aValue = Besearcher\CmdUtils::readInput();
+        $aInvalid = empty($aValue);
+
         if($aInvalid) {
-            echo 'Invalid name!' . "\n";
+            echo $theError . "\n";
         }
     } while($aInvalid);
 
+    return $aValue;
+}
+
+function collectUserInfoFromInput() {
+    $aName = readNotEmptyStringFromInput('Name (e.g. John Doe): ', 'Invalid name!');
     do {
-        echo 'Login (lower case, no spaces, e.g. johndoe): '; $aLogin = readInput();
-        var_dump(stripos($aLogin, ' '));
-        vaR_dump($aLogin);
+        echo 'Login (lower case, no spaces, e.g. johndoe): '; $aLogin = Besearcher\CmdUtils::readInput();
         $aInvalid = empty($aLogin) || stripos($aLogin, ' ') !== false;
         if($aInvalid) {
             echo 'Invalid login!' . "\n";
         }
     } while($aInvalid);
 
-    do {
-        echo 'Password: '; $aPassword = readInput();
-        $aInvalid = empty($aLogin);
-        if($aInvalid) {
-            echo 'Invalid password!' . "\n";
-        }
-    } while($aInvalid);
+    $aEmail = readNotEmptyStringFromInput('Email: ', 'Invalid e-mail!');
+    $aPassword = readNotEmptyStringFromInput('Password: ', 'Invalid password!');
 
     do {
-        echo 'Re-type password: '; $aPassword2 = readInput();
+        echo 'Re-type password: '; $aPassword2 = Besearcher\CmdUtils::readInput();
         $aInvalid = $aPassword != $aPassword2;
 
         if($aInvalid) {
@@ -51,8 +52,37 @@ function collectUserInfoFromInput() {
         }
     } while($aInvalid);
 
-    $aUser = array('name' => $aName, 'login' => $aLogin, 'password' => $aPassword);
+    $aUser = array('name' => $aName, 'email' => $aEmail, 'login' => $aLogin, 'password' => $aPassword);
     return $aUser;
+}
+
+function listUsers(Besearcher\Users & $theUserManager) {
+    $aUsers = $theUserManager->findAll();
+
+    if(count($aUsers) > 0) {
+        echo "Id | Name           | Login      | E-mail" . "\n";
+        foreach($aUsers as $aUser) {
+            echo "No users found. You can add new users by using the --user-add paramater." . "\n";
+            echo $aUser['id'] . ' ' . $aUser['name'] . ' ' . $aUser['login'] . "\n";' ' . $aUser['login'] . "\n";
+        }
+    } else {
+        echo "You have no users yet. Add new users using --add." . "\n";
+    }
+}
+
+function addUser(Besearcher\Users & $theUserManager) {
+    echo 'Adding new user. Please inform user info below.' . "\n";
+
+    $aUser = collectUserInfoFromInput();
+    $aHashedPassword = password_hash($aUser['password'], PASSWORD_DEFAULT);
+
+    $aOk = $theUserManager->create($aUser['name'], $aUser['email'], $aUser['login'], $aHashedPassword);
+
+    if($aOk) {
+        echo 'User created successfully!' . "\n";
+    } else {
+        echo 'Unable to create user. Please try again.' . "\n";
+    }
 }
 
 $aOptions = array(
@@ -91,29 +121,10 @@ $aUsersManager = new Besearcher\Users($aApp->getDb());
 $aIsForce = isset($aArgs['f']) || isset($aArgs['force']);
 
 if(isset($aArgs['list'])) {
-    $aUsers = $aUsersManager->findAll();
-    if(count($aUsers) > 0) {
-        echo "Id | Name           | Login" . "\n";
-        foreach($aUsers as $aUser) {
-            echo "No users found. You can add new users by using the --user-add paramater." . "\n";
-            echo $aUser['id'] . ' ' . $aUser['name'] . ' ' . $aUser['login'] . "\n";
-        }
-    } else {
-        echo "You have no users yet. Add new users using --add." . "\n";
-    }
+    listUsers($aUsersManager);
 
 } else if(isset($aArgs['add'])) {
-    echo 'Adding new user. Please inform user info below.' . "\n";
-    $aUser = collectUserInfoFromInput();
-    var_dump($aUser);
-
-    $aOk = true;
-
-    if($aOk) {
-        echo 'User created successfully!' . "\n";
-    } else {
-        echo 'Unable to create user. Please try again.' . "\n";
-    }
+    addUser($aUsersManager);
 
 } else if(isset($aArgs['remove'])) {
 

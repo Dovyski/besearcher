@@ -23,49 +23,31 @@ class Users {
 		return $aOk;
 	}
 
-	public function create($theName, $theLogin, $thePassword) {
-		$aSql =
-		"INSERT INTO
-			tasks (
-				cmd,
-				log_file,
-				working_dir,
-				experiment_hash,
-				permutation_hash,
-				params,
-				creation_time,
-				priority
-			)
-		VALUES (
-			:cmd,
-			:log_file,
-			:working_dir,
-			:experiment_hash,
-			:permutation_hash,
-			:params,
-			:creation_time,
-			:priority
-		)";
+	public function getById($theUserId) {
+		$aStmt = $this->mDb->getPDO()->prepare('SELECT * FROM users WHERE id = :id');
+		$aStmt->bindParam(':id', $theUserId);
+        $aStmt->execute();
 
+        $aUser = $aStmt->fetch(\PDO::FETCH_ASSOC);
+
+		return $aUser;
+	}
+
+	public function create($theName, $theEmail, $theLogin, $thePassword) {
+		$aSql = "INSERT INTO users (name, email, login, password) VALUES (:name, :email, :login, :password)";
 		$aStmt = $this->mDb->getPDO()->prepare($aSql);
-		$aNow = time();
-		$aPriority = 10;
 
-		$aStmt->bindParam(':cmd', $theTask['cmd']);
-		$aStmt->bindParam(':log_file', $theTask['log_file']);
-		$aStmt->bindParam(':working_dir', $theTask['working_dir']);
-		$aStmt->bindParam(':experiment_hash', $theTask['experiment_hash']);
-		$aStmt->bindParam(':permutation_hash', $theTask['permutation_hash']);
-		$aStmt->bindParam(':params', $theTask['params']);
-		$aStmt->bindParam(':creation_time', $aNow);
-		$aStmt->bindParam(':priority', $aPriority);
+		$aStmt->bindParam(':name', $theName);
+		$aStmt->bindParam(':email', $theEmail);
+		$aStmt->bindParam(':login', $theLogin);
+		$aStmt->bindParam(':password', $thePassword);
 
 		$aOk = $aStmt->execute();
 		return $aOk;
 	}
 
 	public function findAll($theSimplified = true) {
-		$aStmt = $this->mDb->getPDO()->prepare('SELECT '.($theSimplified ? 'name,login' : '*').' FROM users WHERE id > 0');
+		$aStmt = $this->mDb->getPDO()->prepare('SELECT '.($theSimplified ? 'id,name,login,email' : '*').' FROM users WHERE id > 0');
         $aStmt->execute();
 		$aUsers = array();
 
@@ -74,16 +56,6 @@ class Users {
         }
 
 		return $aUsers;
-	}
-
-	public function createAnalytics($theMetric, $theMin, $theMax) {
-		$aNow = time();
-		$aStmt = $this->mDb->getPDO()->prepare("INSERT INTO analytics (metric, min, max, last_update) VALUES (:metric, :min, :max, :last_update) ");
-		$aStmt->bindParam(':metric', $theMetric);
-		$aStmt->bindParam(':min', $theMin);
-		$aStmt->bindParam(':max', $theMax);
-		$aStmt->bindParam(':last_update', $aNow);
-		$aStmt->execute();
 	}
 
 	public function update($theUserId, $theKeyValuePairs) {
