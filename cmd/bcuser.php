@@ -56,14 +56,33 @@ function collectUserInfoFromInput() {
     return $aUser;
 }
 
+function fitString($theString, $theLength = 30, $thePaddingChar = ' ') {
+    $aLength = strlen($theString);
+    $aDiff = $theLength - $aLength;
+
+    if($aDiff < 0) {
+        $aOut = substr($theString, 0, $theLength - 1);
+
+    } else {
+        $aOut = $theString;
+
+        for($i = 0; $i < $aDiff - 1; $i++) {
+            $aOut .= $thePaddingChar;
+        }
+    }
+
+    return $aOut;
+}
+
 function listUsers(Besearcher\Users & $theUserManager) {
     $aUsers = $theUserManager->findAll();
 
     if(count($aUsers) > 0) {
-        echo "Id | Name           | Login      | E-mail" . "\n";
+        echo fitString('Id', 4) . '  ' . fitString('Login', 20) . '  ' . fitString('Name', 20) . '  '  . fitString('E-mail', 45) . "\n";
+        echo str_repeat('-', 85) . "\n";
+
         foreach($aUsers as $aUser) {
-            echo "No users found. You can add new users by using the --user-add paramater." . "\n";
-            echo $aUser['id'] . ' ' . $aUser['name'] . ' ' . $aUser['login'] . "\n";' ' . $aUser['login'] . "\n";
+            echo fitString($aUser['id'], 4) . '  ' . fitString($aUser['login'], 20) . '  ' . fitString($aUser['name'], 20) . '  '  . fitString($aUser['email'], 45) . "\n";
         }
     } else {
         echo "You have no users yet. Add new users using --add." . "\n";
