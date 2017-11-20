@@ -11,26 +11,10 @@ class Auth {
 		session_name(self::$mSessionName);
 	}
 
-	public static function isValidUser($theUser, $thePassword) {
-		// TODO: get this value from INI?
-		$aPasswordFile = dirname(__FILE__) . '/../.htpasswd';
-		$aValid = false;
-
-		if(file_exists($aPasswordFile)) {
-			$aValues = file($aPasswordFile);
-			foreach($aValues as $aRow) {
-				$aParts = explode(':', trim($aRow), 2);
-				$aUser = @$aParts[0];
-				$aHash = @$aParts[1];
-
-				if($aUser == $theUser && password_verify($thePassword, $aHash)) {
-					$aValid = true;
-				}
-			}
-		} else {
-			// If no password file is provided, allow anyone to login
-			$aValid = true;
-		}
+	public static function credentialsMatch($theUser, $thePassword) {
+		$aUsersManager = new Users(WebApp::instance()->getDb());
+		$aUser = $aUsersManager->getByLogin($theUser);
+		$aValid = $aUser !== false && password_verify($thePassword, $aUser['password']);
 
 		return $aValid;
 	}

@@ -33,6 +33,16 @@ class Users {
 		return $aUser;
 	}
 
+	public function getByLogin($theUserLogin) {
+		$aStmt = $this->mDb->getPDO()->prepare('SELECT * FROM users WHERE login = :login');
+		$aStmt->bindParam(':login', $theUserLogin);
+        $aStmt->execute();
+
+        $aUser = $aStmt->fetch(\PDO::FETCH_ASSOC);
+
+		return $aUser;
+	}
+
 	public function create($theName, $theEmail, $theLogin, $thePassword) {
 		$aSql = "INSERT INTO users (name, email, login, password) VALUES (:name, :email, :login, :password)";
 		$aStmt = $this->mDb->getPDO()->prepare($aSql);

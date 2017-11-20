@@ -60,4 +60,8 @@ CREATE TABLE `users` (
 
 --split
 
+CREATE UNIQUE INDEX idx_login ON users (login);
+
+--split
+
 INSERT INTO `context` (ini_hash, experiment_hash, status) VALUES ('', '', '');
