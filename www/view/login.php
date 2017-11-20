@@ -36,7 +36,7 @@
                 <div class="login-panel panel panel-default">
                     <div class="panel-heading"><strong>Manage users</strong></div>
                     <div class="panel-body">
-                        You have to manage users via command line. To add a new user, run the command <code>php BESEARCHER_HOME\cmd\bcuser.php --ini=INI_PATH --add</code>, where <code>BESEARCHER_HOME</code> is the folder where besearcher is installed, e.g. <code>c:\besearcher\</code> and <code>INI_PATH</code> is the path to your configuration INI file, e.g. <code>c:\besearcher\config.ini</code>.
+                        You have to manage users via <em>command line</em>. To add a new user, run the command <code>php BESEARCHER_HOME\cmd\bcuser.php --ini=INI_PATH --add</code>, where <code>BESEARCHER_HOME</code> is the folder where besearcher is installed, e.g. <code>c:\besearcher\</code>, and <code>INI_PATH</code> is the path to your configuration INI file, e.g. <code>c:\besearcher\config.ini</code>.
                     </div>
                 </div>
             </div>
