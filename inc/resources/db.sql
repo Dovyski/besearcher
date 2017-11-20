@@ -50,4 +50,13 @@ CREATE TABLE `analytics` (
 
 --split
 
+CREATE TABLE `users` (
+	`id`	INTEGER PRIMARY KEY AUTOINCREMENT,
+	`name`	TEXT NOT NULL,
+	`login`	TEXT NOT NULL,
+	`password`	TEXT NOT NULL
+);
+
+--split
+
 INSERT INTO `context` (ini_hash, experiment_hash, status) VALUES ('', '', '');
