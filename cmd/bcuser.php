@@ -104,6 +104,30 @@ function addUser(Besearcher\Users & $theUserManager) {
     }
 }
 
+function removeUser(Besearcher\Users & $theUserManager, $theUserId) {
+    $aUser = $theUserManager->getById($theUserId);
+
+    if($aUser == false) {
+        echo 'Unable to find user with id: ' . $theUserId . "\n";
+        exit(3);
+    } else {
+        echo 'Removing user:' . "\n";
+        echo ' Name: ' . $aUser['name']. "\n";
+        echo ' E-mail: ' . $aUser['email']. "\n";
+        echo ' Login: ' . $aUser['login']. "\n";
+
+        Besearcher\CmdUtils::confirmOperation();
+
+        $aOk = $theUserManager->removeById($theUserId);
+
+        if($aOk) {
+            echo 'User removed successfully!' . "\n";
+        } else {
+            echo 'Unable to remove user. Please try again.' . "\n";
+        }
+    }
+}
+
 $aOptions = array(
     "ini:",
     "list",
@@ -146,6 +170,7 @@ if(isset($aArgs['list'])) {
     addUser($aUsersManager);
 
 } else if(isset($aArgs['remove'])) {
+    removeUser($aUsersManager, $aArgs['remove']);
 
 } else if(isset($aArgs['edit'])) {
 
