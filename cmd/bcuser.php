@@ -16,12 +16,12 @@ require_once(dirname(__FILE__) . '/../inc/Log.class.php');
 require_once(dirname(__FILE__) . '/../inc/Users.class.php');
 require_once(dirname(__FILE__) . '/../inc/App.class.php');
 
-function readNotEmptyStringFromInput($theText = 'Input value: ', $theError = 'Invalid value!') {
+function readStringFromInput($theText = 'Input value: ', $theError = 'Invalid value!', $theAllowEmpty = false) {
     $aValue = null;
     do {
         echo $theText;
         $aValue = Besearcher\CmdUtils::readInput();
-        $aInvalid = empty($aValue);
+        $aInvalid = empty($aValue) && !$theAllowEmpty;
 
         if($aInvalid) {
             echo $theError . "\n";
@@ -31,27 +31,36 @@ function readNotEmptyStringFromInput($theText = 'Input value: ', $theError = 'In
     return $aValue;
 }
 
-function collectUserInfoFromInput() {
-    $aName = readNotEmptyStringFromInput('Name (e.g. John Doe): ', 'Invalid name!');
+function getExistingValue($theFieldName, array $theArray) {
+    $aString = isset($theArray[$theFieldName]) ? (' [current: ' . $theArray[$theFieldName] . ']') : '';
+    return $aString;
+}
+
+function collectUserInfoFromInput(array $theExistingValues = array(), $theAllowEmpty = false) {
+    $aName = readStringFromInput('Name (e.g. John Doe)' . getExistingValue('name', $theExistingValues) . ': ', 'Invalid name!', $theAllowEmpty);
+
     do {
-        echo 'Login (lower case, no spaces, e.g. johndoe): '; $aLogin = Besearcher\CmdUtils::readInput();
-        $aInvalid = empty($aLogin) || stripos($aLogin, ' ') !== false;
+        echo 'Login (lower case, no spaces, e.g. johndoe)'.getExistingValue('login', $theExistingValues).': '; $aLogin = Besearcher\CmdUtils::readInput();
+        $aInvalid = (empty($aLogin) && !$theAllowEmpty) || stripos($aLogin, ' ') !== false;
+
         if($aInvalid) {
             echo 'Invalid login!' . "\n";
         }
     } while($aInvalid);
 
-    $aEmail = readNotEmptyStringFromInput('Email: ', 'Invalid e-mail!');
-    $aPassword = readNotEmptyStringFromInput('Password: ', 'Invalid password!');
+    $aEmail = readStringFromInput('Email'.getExistingValue('email', $theExistingValues).': ', 'Invalid e-mail!', $theAllowEmpty);
+    $aPassword = readStringFromInput('Password: ', 'Invalid password!', $theAllowEmpty);
 
-    do {
-        echo 'Re-type password: '; $aPassword2 = Besearcher\CmdUtils::readInput();
-        $aInvalid = $aPassword != $aPassword2;
+    if($theAllowEmpty && !empty($aPassword) || !$theAllowEmpty) {
+        do {
+            echo 'Re-type password: '; $aPassword2 = Besearcher\CmdUtils::readInput();
+            $aInvalid = $aPassword != $aPassword2;
 
-        if($aInvalid) {
-            echo 'Password don\'t match!' . "\n";
-        }
-    } while($aInvalid);
+            if($aInvalid) {
+                echo 'Password don\'t match!' . "\n";
+            }
+        } while($aInvalid);
+    }
 
     $aUser = array('name' => $aName, 'email' => $aEmail, 'login' => $aLogin, 'password' => $aPassword);
     return $aUser;
@@ -98,10 +107,52 @@ function addUser(Besearcher\Users & $theUserManager) {
 
     $aOk = $theUserManager->create($aUser['name'], $aUser['email'], $aUser['login'], $aHashedPassword);
 
+    echo "\n";
+
     if($aOk) {
         echo 'User created successfully!' . "\n";
     } else {
         echo 'Unable to create user. Please try again.' . "\n";
+    }
+}
+
+function editUser(Besearcher\Users & $theUserManager, $theUserId) {
+    $aUser = $theUserManager->getById($theUserId);
+
+    if($aUser == false) {
+        echo 'Unable to find user with id: ' . $theUserId . "\n";
+        exit(3);
+    } else {
+        echo 'Editing user with id:' . $theUserId . '. Leave fields blank to keep its current value.'. "\n";
+
+        $aUserInput = collectUserInfoFromInput($aUser, true);
+        $aUpdate = array();
+
+        foreach($aUser as $aField => $aValue) {
+            if(isset($aUserInput[$aField]) && !empty($aUserInput[$aField])) {
+                $aUpdate[$aField] = $aUserInput[$aField];
+
+                if($aField == 'password') {
+                    $aUpdate[$aField] = password_hash($aUpdate[$aField], PASSWORD_DEFAULT);
+                }
+            }
+        }
+
+        $aUpdateRequired = count($aUpdate) > 0;
+
+        if($aUpdateRequired) {
+            $aOk = $theUserManager->update($aUser['id'], $aUpdate);
+        }
+
+        echo "\n";
+
+        if(!$aUpdateRequired) {
+            echo 'No changes were provided. User info remains the same.' . "\n";
+        } else if($aOk) {
+            echo 'User updated successfully!' . "\n";
+        } else {
+            echo 'Unable to update user. Please try again.' . "\n";
+        }
     }
 }
 
@@ -180,6 +231,7 @@ if(isset($aArgs['list'])) {
     removeUser($aUsersManager, $aArgs['remove']);
 
 } else if(isset($aArgs['edit'])) {
+    editUser($aUsersManager, $aArgs['edit']);
 
 } else {
     echo "Invalid command line parameters. Have you forgot to input any value?" . "\n";
