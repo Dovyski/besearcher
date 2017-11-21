@@ -14,21 +14,21 @@ cron_jobs_interval = 10
 ; commands, as well as internal info.
 data_dir = "C:\wamp\www\besearcher\data\"
 
-; A unique string, containing only letters and numbers, no spaces or punctuation
-; punctuation marks, that will be used to control the tasks. If nothing is specified,
-; a hash of this INI file will be computed as used.
+; A unique string, containing only letters and numbers, no spaces nor
+; punctuation marks, that will be used to control the tasks. If nothing is
+; specified, a hash of this INI file will be computed and used instead.
 experiment_hash =
 
 ; An optional message that describes this experiment.
-experiment_description = Edit your config.ini file to change this description.
+experiment_description = "Edit your config.ini file to change this description."
 
 ; If set to true, a task will only be executed if it has no existing result
 ; files related to it (task was already executed in the past). If set to false,
-; all tasks will be executed, no matter if there are indications it has
+; all tasks will be executed, no matter if there are indications that it has
 ; alreaby been executed.
 skip_performed_tasks = false
 
-; Max number of concurrents tasks to be executed
+; Max number of concurrent tasks to be executed
 max_parallel_tasks = 5
 
 ; Command to be executed for this experiment.
@@ -39,20 +39,22 @@ max_parallel_tasks = 5
 ; [BSR] {"type": "progress", "data": 0.1}
 ; [BSR] {"type": "result", "name": "Accuracy", "data": 0.1}
 ;
+; The command below can be parametrized using the values in the [task_params]
+; section. Check that section for more info.
 task_cmd = "php {@besearcher_cmd_dir}dummy.php {@domain} {@jumps}"
 
 ; Command to be executed once as a preparation for "task_cmd"
 ; to be executed. While "task_cmd" is executed for every new
-; commit that arrives, "setup_cmd" is executed only once.
+; permutation, "setup_cmd" is executed only once.
 ; This command is useful to create datasets that are needed by the
 ; task command, for instance. Besearcher will check the return
 ; status of this command to determine if everything is good to
 ; continue. If the command returns a non-zero value, Besearcher
-; assumes a problem occured and it interrups the execution of
+; assumes a problem occured and interrups the execution of
 ; the task commands until the problem is solved.
 setup_cmd = "ping google.com"
 
-; An absolute path to the directory to be used as the working
+; Absolute path to the directory to be used as the working
 ; directory for issued commands.
 task_cmd_working_dir = "C:\wamp\www\besearcher\"
 
@@ -60,9 +62,10 @@ task_cmd_working_dir = "C:\wamp\www\besearcher\"
 ; This section contains the values that will be used
 ; to parametrize the task indicated by "task_cmd".
 ; Before executing the task_cmd string, besearcher will
-; replace a few strings with the values informed in this
-; section. Any param under this section can be used as {@name}.
-; For instance, the following configuration:
+; replace its generated permutation strings with the values
+; informed in this section. Any param under this section
+; can be used as {@name} in the "task_cmd" string. For instance,
+; the following configuration:
 ;
 ; task_cmd = test.exe --blah={@data} {@debug} --input={@files}
 ;
@@ -89,7 +92,7 @@ task_cmd_working_dir = "C:\wamp\www\besearcher\"
 ; all evailable expresions:
 ;
 ; START..END:INC
-;   This expresions can be used with arrays with a single element and they
+;   This expresions can be used with arrays containing a single element and they
 ;   generate a set of numbers from START to END, incremented acording to INC.
 ;   E.g.
 ;      values[] = 0..3:1
@@ -100,7 +103,7 @@ task_cmd_working_dir = "C:\wamp\www\besearcher\"
 ;      values[] = 3
 ;
 ; perm:MIN:value,value2,...,valueN
-;   This expresions can be used with arrays with a single element and they
+;   This expresions can be used with arrays containing a single element and they
 ;   generate all combinations of the provided values, excluding groups
 ;   with less than MIN elements.
 ;   E.g.
@@ -110,42 +113,61 @@ task_cmd_working_dir = "C:\wamp\www\besearcher\"
 ;      values[] = v0,v2
 ;      values[] = v0,v1
 ;      values[] = v0,v1,v2
-;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 [task_cmd_params]
 domain[] = "google.com"
 domain[] = "google.se"
 jumps = 5
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; This section control the process of sending e-mails to
-; alert you about important events.
-;
+; This section controls how Besearcher should send e-mails.
+; Select, for instance, an SMTP server that will be used to
+; dispatch e-mails.
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+[email]
+
+; Configuration params to customize e-mails sent by Besearcher
+sender_email = besearcher@besearcher.com
+sender_name = Besearcher
+subject_tag = [BESEARCHER]
+text_footer = ----\nThis message was automatically sent by Besearcher.
+
+; Settings to instruct Besearcher to use a REST API to send e-mails.
+; This is useful when Besearcher don't have access to a SMTP server,
+; for instance.
+; Recommended service: https://github.com/Dovyski/pigeon
+use_email_api = false
+email_api_endpoint =
+
+; SMTP settings that will be used to send the e-mails. It is possible
+; to set "use_smtp" to false to instruct Besearcher not to use SMTP.
+use_smtp = false
+smtp_host = smtp.gmail.com
+smtp_user =
+smtp_password =
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; This section controls the process of sending e-mails to
+; alert about important events.
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 [alerts]
 
 ; Destination e-mail that will receive all messages
 email =
 
-; If Besearcher should alert you about changes of metric values in the
+; If Besearcher should alert about changes of metric values in the
 ; analytics page.
 alert_when_analytics_change = 1
 
 ; Informs Besearcher which metrics and how it should monitor them.
-; You can use "analytics_monitor_min" to tell Besearcher to send an
+; Use "analytics_monitor_min" to tell Besearcher to send an
 ; e-mail if the min value of a metric has changed, or "analytics_monitor_max"
 ; to alert if the max value of a matric has changed.
-; E.g.
-;    analytics_monitor_min[] = Accuracy
+;   E.g.
+;      analytics_monitor_min[] = Accuracy
+;
 ; will send an e-mail every time the min value of the metric "Accuracy" changes.
-; You can monitor several metrics at the same time, e.g.:
+; It is possible to monitor several metrics at the same time, e.g.:
 ;    analytics_monitor_min[] = Accuracy
 ;    analytics_monitor_max[] = Accuracy
 ;    analytics_monitor_max[] = Precision
-
-; Below are the SMTP settings that will be used to send the e-mails
-smtp_host = smtp.gmail.com
-smtp_user =
-smtp_password =
-sender_email = besearcher@besearcher.com
-sender_name = Besearcher
-subject_tag = [BESEARCHER]
-text_footer = ----\nThis message was automatically sent by Besearcher.
