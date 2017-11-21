@@ -158,9 +158,15 @@ if(isset($aArgs['h']) || isset($aArgs['help']) || $argc == 1) {
 
 $aIniPath = isset($aArgs['ini']) ? $aArgs['ini'] : '';
 
-$aApp = new Besearcher\App();
-$aApp->init($aIniPath, '', true);
-$aUsersManager = new Besearcher\Users($aApp->getDb());
+try {
+    $aApp = new Besearcher\App();
+    $aApp->init($aIniPath, '', true);
+    $aUsersManager = new Besearcher\Users($aApp->getDb());
+
+} catch (\Exception $e) {
+    echo $e->getMessage();
+    exit(1);
+}
 
 $aIsForce = isset($aArgs['f']) || isset($aArgs['force']);
 

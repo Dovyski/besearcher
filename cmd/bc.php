@@ -156,8 +156,13 @@ if(isset($aArgs['h']) || isset($aArgs['help']) || $argc == 1) {
 
 $aIniPath = isset($aArgs['ini']) ? $aArgs['ini'] : '';
 
-$aApp = new Besearcher\App();
-$aApp->init($aIniPath, '', true);
+try {
+    $aApp = new Besearcher\App();
+    $aApp->init($aIniPath, '', true);
+} catch (\Exception $e) {
+    echo $e->getMessage();
+    exit(1);
+}
 
 $aContext = $aApp->getContext();
 $aData = $aApp->getData();
