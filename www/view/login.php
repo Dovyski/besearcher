@@ -9,7 +9,7 @@
             <div class="col-md-4 col-md-offset-4">
                 <div class="login-panel panel panel-default">
                     <div class="panel-heading">
-                        <img src="img/logo/logo-text.png" title="Besearcher logo" style="width: auto; height: 50px;"/>
+                        <img src="img/logo/logo-text.png" title="Besearcher logo" style="width: 100%; height: auto;"/>
                     </div>
                     <div class="panel-body">
                         <?php if(!empty($aData['error'])) { ?>
