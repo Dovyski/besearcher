@@ -109,7 +109,7 @@ class Analytics {
 	}
 
 	public function getMetrics() {
-		return array_keys($this->mStats);
+		return !is_array($this->mStats) ? array() : array_keys($this->mStats);
 	}
 }
 
