@@ -33,13 +33,11 @@ Besearcher was created out of a need from a scientific project, so its design va
 
 ## Getting started
 
-These instructions will get you a copy of Besearcher up and running on your machine.
-
-### Prerequisites
+### 0. Prerequisites
 
 You need [PHP](http://php.net) and [Git](https://git-for-windows.github.io/) available in the command line to run Besearcher. If you intend to use the web dashboard (recommended), you need a web server with PHP support. [Wamp](http://www.wampserver.com/en/) is an easy choice.
 
-### Installing
+### 1. Installing
 
 Go to the folder where you want to install Besearcher, e.g. `c:\`:
 
@@ -65,11 +63,11 @@ If you intend to use the web dashboard, you also need a configuration file for i
 copy besearcher\www\config.ini-example besearcher\www\config.ini
 ```
 
-### Configuring
+### 2. Configuring
 
 Besearcher has two configuration files: `besearcher\config.ini` which controls the behavior of Besearcher, and `besearcher\www\config.ini` which controls the web dashboard.
 
-Let's start with the first one. Open `besearcher\config.ini` in your editor of choice. Search for the line with the directive `data_dir` and inform the **absolute** path of a directory that Besearcher can use to store task results and internal data. For example:
+Let's start with the first one. Open `besearcher\config.ini` in your editor of choice. Search for the line with the directive `data_dir` and inform the **absolute** path of a directory that Besearcher can use to store results and internal data. E.g.:
 
 ```
 data_dir = "c:\experiment\besearcher\"
@@ -102,6 +100,8 @@ test.exe --blah=hi -d --input=2
 
 In that case, `{@data}` is replaced by the value of the param named `data` within the `[task_cmd_params]` section, as well as `{@debug}` is replaced by the value of the param `debug` (which is `-d`). The value of `{@files}` will be replaced by `1` and by `2`, because `{@files}` was defined as an array. If more than one param is defined as an array, Besearcher will generate all possible permutations with the informed param values.
 
+### 3. (Optional) Configuring web dashboard
+
 Now let's configure the web dashboard, if you are using it. Open `besearcher\www\config.ini` in your editor of choice. Set the directive `besearcher_ini_file` to the path of the `config.ini` file being used by Besearcher.
 
 For example, if besearcher is installed in `c:\besearcher`, the path to the configuration INI file will be:  
@@ -114,6 +114,7 @@ In order to make the web dashboard available in the browser, you need to create 
 
 ## Usage
 
+### 1. Running Besearcher
 Go to the folder where Besearcher was installed and run:
 
 ```
@@ -122,7 +123,12 @@ php besearcher.php --ini=config.ini
 
 Besearcher will continue to run, outputing log messages to `stdout`. While running, Besearcher will execute all permutations created from the command specified in `task_cmd`.
 
-Since Besearcher might run for a long time to a command with severl permutations, you can control it in the command line using the `bc` tool. Assuming you are in the folder where Besearcher was intalled, just run:
+
+### 2. Control a running instance of Besearcher
+
+Besearcher might run for a long time if the issued command has several permutations. Because of that, you can control a running instance of Besearcher via command line using the `bc` tool.
+
+Assuming you are in the folder where Besearcher was intalled, just run:
 
 ```
 cmd\bc --ini=config.ini OPTION
@@ -152,9 +158,21 @@ cmd\bc --ini=config.ini --stop
 
 Run `cmd\bc --help` for a list of all available options. Additionally check the file [config.ini-example](config.ini-example) for more usage information.
 
+### 3. (Optional) Manage web dashboard users
+
+If you configured the web dashboard of Besearcher, you need to create user(s) to access the dashboard. That is done via command line using the `bcuser` tool.
+
+Assuming you are in the folder where Besearcher was intalled, you can add users by running the command:
+
+```
+cmd\bcuser --ini=config.ini --add
+```
+
+Run `cmd\bcuser -h` for a complete list of all available options in `bcuser`.
+
 ## License
 
-Researcher is licensed under the terms of the [MIT](https://choosealicense.com/licenses/mit/) Open Source
+Besearcher is licensed under the terms of the [MIT](https://choosealicense.com/licenses/mit/) Open Source
 license and is available for free.
 
 ## Changelog
