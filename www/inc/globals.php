@@ -21,8 +21,13 @@ $aINIPath = dirname(__FILE__) . '/../config.ini';
 
 try {
 	Besearcher\WebApp::init($aINIPath);
+
 } catch(Exception $e) {
-	Besearcher\View::render('error', array('error' => $aError, 'ini' => $aINIPath));
+	Besearcher\View::render('error', array(
+		'error'      => $e->getMessage(),
+		'ini'        => $aINIPath,
+		'hideNavbar' => true
+	));
 	exit();
 }
 
