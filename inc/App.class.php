@@ -803,11 +803,17 @@ class App {
 	private function ensureExperimentHashIsNotEmpty() {
 	    $aExperimentHash = $this->mContext->get('experiment_hash');
 
-	    // If we don't have any information regarding the last commit, we use
-	    // the one provided in the ini file.
+	    // If we don't have any information regarding the experiment hash,
+	    // we use a fake one
 	    if(empty($aExperimentHash)) {
 	        $aExperimentHash = $this->config('experiment_hash', '');
-	        $this->mLog->info("Replacing experiment hash with info from INI: " . $aExperimentHash);
+
+			if(empty($aExperimentHash)) {
+				$aINIHash = $this->mContext->get('ini_hash');
+	        	$this->mLog->warn("INI file has an empty \"experiment_hash\", so the hash from the INI file itself will be used (" . $aINIHash . "). Please edit your config INI file and provide a valid \"experiment_hash\" so you can better track your experiment.");
+				$aExperimentHash = $aINIHash;
+			}
+
 			$this->setExperimentHash($aExperimentHash);
 	    }
 	}
