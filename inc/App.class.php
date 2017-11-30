@@ -336,7 +336,14 @@ class App {
 	}
 
 	private function asyncExec($theCmd) {
-		$aFinalCmd = 'start "Job" /b cmd.exe /c "'.$theCmd.'"';
+		$aIsWindows = strtoupper(substr(PHP_OS, 0, 3)) === 'WIN';
+
+		if($aIsWindows) {
+			$aFinalCmd = 'start "Job" /b cmd.exe /c "'.$theCmd.'"';
+		} else {
+			$aFinalCmd = $theCmd.' &';
+		}
+
 		pclose(popen($aFinalCmd, 'r'));
 	}
 
