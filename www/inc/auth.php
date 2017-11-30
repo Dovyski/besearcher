@@ -4,9 +4,11 @@ namespace Besearcher;
 
 class Auth {
 	private static $mSessionName;
+	private static $mRequireAuth;
 
-	public static function init($theSessionName) {
+	public static function init($theSessionName, $theRequireAuth = false) {
 		self::$mSessionName = $theSessionName;
+		self::$mRequireAuth = $theRequireAuth;
 		session_start();
 		session_name(self::$mSessionName);
 	}
@@ -59,7 +61,7 @@ class Auth {
 	}
 
 	public static function isAuthenticated() {
-		return isset($_SESSION['authenticaded']) && $_SESSION['authenticaded'];
+		return !self::$mRequireAuth || (isset($_SESSION['authenticaded']) && $_SESSION['authenticaded']);
 	}
 }
 

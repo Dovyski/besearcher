@@ -4,3 +4,9 @@
 ; Besearcher. The INI file contains information regarding
 ; the folder where all the processed data is.
 besearcher_ini_file = "C:\wamp\www\besearcher\config.ini"
+
+; Control if the access to the web dashboard requires authentication
+; (login and password) or not. By default, no authentication is required,
+; so anyone with access to the web dashboard URL will be able to see
+; tasks, results, etc.
+require_auth = false

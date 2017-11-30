@@ -5,21 +5,22 @@ namespace Besearcher;
 class WebApp {
 	private static $mInstance;
 	private static $mUsers;
+	private static $mINI;
 
 	public static function init($theINIPath) {
-		$aINI = @parse_ini_file($theINIPath);
+		self::$mINI = @parse_ini_file($theINIPath);
 
-		if($aINI === false) {
+		if(self::$mINI === false) {
 			throw new \Exception('There is a syntax error in the web dashboard configuration file or it does not exist. Path to the file is: <code>'.$theINIPath.'</code>');
 		}
 
-		if(!isset($aINI['besearcher_ini_file'])) {
+		if(!isset(self::$mINI['besearcher_ini_file'])) {
 			throw new \Exception('Unable to find the <code>besearcher_ini_file</code> directive in the web dashboard configuration file <code>'.$theINIPath.'</code>. Please check the content of this file is correct.');
 		}
 
 		try {
 			self::$mInstance = new App();
-			self::$mInstance->init($aINI['besearcher_ini_file'], '', true);
+			self::$mInstance->init(self::$mINI['besearcher_ini_file'], '', true);
 			self::$mUsers = new Users(self::$mInstance->getDb());
 
 		} catch (\Exception $e) {
@@ -33,6 +34,10 @@ class WebApp {
 
 	public static function users() {
 		return self::$mUsers;
+	}
+
+	public static function config($theKey, $theDefault = null) {
+		return isset(self::$mINI[$theKey]) ? self::$mINI[$theKey] : $theDefault;
 	}
 }
 

@@ -32,6 +32,7 @@ try {
 }
 
 // Start the authentication mechanism
-Besearcher\Auth::init('besearchersid');
+$aRequireAuth = Besearcher\WebApp::config('require_auth', false);
+Besearcher\Auth::init('besearchersid', $aRequireAuth);
 
 ?>
