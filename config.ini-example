@@ -8,7 +8,7 @@ log_level = 1
 refresh_interval = 1
 
 ; Number of seconds to wait between internal cron jobs, such as e-mails
-cron_jobs_interval = 10
+cron_jobs_interval = 300
 
 ; Directory the app will use to store results produced by issued
 ; commands, as well as internal info.
@@ -54,7 +54,7 @@ task_cmd = "php {@besearcher_cmd_dir}dummy.php {@domain} {@jumps}"
 ; continue. If the command returns a non-zero value, Besearcher
 ; assumes a problem occured and interrups the execution of
 ; the task commands until the problem is solved.
-setup_cmd = "ping google.com"
+setup_cmd = ""
 
 ; Absolute path to the directory to be used as the working
 ; directory for issued commands.
