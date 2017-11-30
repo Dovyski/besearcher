@@ -52,10 +52,10 @@ try {
     if($aLogger != null) {
         $aLogger->error($e->getMessage());
         $aLogger->debug($e->getTraceAsString());
+    } else {
+        echo $e->getMessage() . "\n";
+        echo $e->getTraceAsString() . "\n";
     }
-
-    echo $e->getMessage() . "\n";
-    echo $e->getTraceAsString() . "\n";
     exit(2);
 }
 
