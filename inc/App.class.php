@@ -35,8 +35,12 @@ class App {
 
 	        $this->mContext->set('ini_hash', $aContentHash);
 	        $this->loadINI($this->mINIPath);
-
 			$this->mLog->setLevel($this->config('log_level'));
+
+			$aConfigExperimentHash = $this->config('experiment_hash');
+			if(!empty($aConfigExperimentHash) && $aConfigExperimentHash != $this->mContext->get('experiment_hash')) {
+				$this->mLog->warn('It is not possible to change "experiment_hash" in the INI file while besearcher is running. Stop then start besearcher again to load the new experiment_hash value.');
+			}
 	    }
 	}
 
@@ -448,7 +452,7 @@ class App {
 		$aSpecialTokens['{@besearcher_time}'] = time();
 		$aSpecialTokens['{@besearcher_os}'] = PHP_OS;
 		$aSpecialTokens['{@ini_data_dir}'] = $this->config('data_dir');
-		$aSpecialTokens['{@ini_experiment_hash}'] = $this->config('experiment_hash');
+		$aSpecialTokens['{@ini_experiment_hash}'] = $this->mContext->get('experiment_hash');
 		$aSpecialTokens['{@ini_experiment_description}'] = $this->config('experiment_description');
 
 		$aString = str_ireplace(array_keys($aSpecialTokens), array_values($aSpecialTokens), $theString);
@@ -544,12 +548,16 @@ class App {
 	}
 
 	public function setupExperiment() {
-		$aHash = $this->config('experiment_hash', $this->mContext->get('ini_hash'));
+		$aHash = $this->mContext->get('experiment_hash');
 		$aMessage = $this->config('experiment_description', '');
 
 		if($this->mContext->get('experiment_ready')) {
 			$this->mLog->info("Skipping experiment setup, it was already performed (experiment_hash=" . $aHash . ", experiment_description=" . trim($aMessage) . ")");
 			return true;
+		}
+
+		if(empty($aHash)) {
+			throw new \Exception('Empty experiment hash. Check if your INI file has a valid "experiment_hash" entry.');
 		}
 
 		$this->mLog->info("Setting up experiment: experiment_hash=" . $aHash . ", experiment_description=" . trim($aMessage));

@@ -15,9 +15,11 @@ cron_jobs_interval = 10
 data_dir = "C:\wamp\www\besearcher\data\"
 
 ; A unique string, containing only letters and numbers, no spaces nor
-; punctuation marks, that will be used to control the tasks. If nothing is
-; specified, a hash of this INI file will be computed and used instead.
-experiment_hash =
+; punctuation marks, that will be used to identify the experiment and
+; control some data files. Each one of your experiments should have its own
+; hash, so you can track them individually. If nothing is specified,
+; the md5 of this INI file will be used as experiment hash.
+experiment_hash = "f692c011132399849af0b9127e2b8541575f9ff2"
 
 ; An optional message that describes this experiment.
 experiment_description = "Edit your config.ini file to change this description."
