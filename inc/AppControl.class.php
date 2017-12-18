@@ -9,8 +9,7 @@ namespace Besearcher;
 class AppControl {
 	const CMD_RERUN_RESULT = 1;
 
-	private $mDb;
-	private $mLog;
+	private $mApp;
 
 	private function commandConstantToString($theCmdConstant) {
 		$aNames = array(
@@ -21,13 +20,12 @@ class AppControl {
 		return $aName;
 	}
 
-	public function __construct(Db $theDb, Log $theLog = null) {
-		$this->mDb = $theDb;
-		$this->mLog = $theLog;
+	public function __construct(App $theApp) {
+		$this->mApp = $theApp;
 	}
 
 	public function enqueue($theCommand, array $theParams = array()) {
-		$aStmt = $this->mDb->getPDO()->prepare("INSERT INTO control (cmd, params) VALUES (:cmd, :params)");
+		$aStmt = $this->mApp->getDb()->getPDO()->prepare("INSERT INTO control (cmd, params) VALUES (:cmd, :params)");
 
 		$aSerializedParams = serialize($theParams);
 
@@ -49,22 +47,22 @@ class AppControl {
 			return;
 		}
 
-		$this->mLog->debug('About to process app control commands.');
+		$this->mApp->getLogger()->debug('About to process app control commands.');
 
 		foreach($aCommands as $aCmdId => $aCmd) {
 			$aOk = $this->runCommand($aCmd);
 			$aCmdDebugInfo = '(id=' . $aCmdId . ', cmd=' . $this->commandConstantToString($aCmd['cmd']) . ')';
 
 			if($aOk) {
-				$this->mLog->debug('Successfully performed app command! ' . $aCmdDebugInfo);
+				$this->mApp->getLogger()->debug('Successfully performed app command! ' . $aCmdDebugInfo);
 			} else {
-				$this->mLog->warn('Problem with app command! ' . $aCmdDebugInfo);
+				$this->mApp->getLogger()->warn('Problem with app command! ' . $aCmdDebugInfo);
 			}
 
 			$aDeleted = $this->deleteEnqueuedCommand($aCmdId);
 
 			if(!$aDeleted) {
-				$this->mLog->error('Unable to delete app command ' . $aCmdDebugInfo);
+				$this->mApp->getLogger()->error('Unable to delete app command ' . $aCmdDebugInfo);
 			}
 		}
 	}
@@ -74,12 +72,12 @@ class AppControl {
 		$aParams = @unserialize($theCmd['params']);
 
 		if($aParams === false) {
-			$this->mLog->error('Unable to unserialize app command (id=' . $theCmd['id'] . ')');
+			$this->mApp->getLogger()->error('Unable to unserialize app command (id=' . $theCmd['id'] . ')');
 			return;
 		}
 
 		$aCmdDebugInfo = '(id=' . $theCmd['id'] . ', cmd=' . $this->commandConstantToString($theCmd['cmd']) . ', params=' . print_r($aParams, true) . ')';
-		$this->mLog->debug('Running app command ' . $aCmdDebugInfo);
+		$this->mApp->getLogger()->debug('Running app command ' . $aCmdDebugInfo);
 
 		switch($theCmd['cmd']) {
 			case AppControl::CMD_RERUN_RESULT: $aOk = $this->cmdRerunResult($aParams); break;
@@ -90,12 +88,12 @@ class AppControl {
 
 	private function cmdRerunResult(array $theParams) {
 		// TODO: implement method
-		$this->mLog->debug('cmdRerunResult('.print_r($theParams, true).')');
+		$this->mApp->getLogger()->debug('cmdRerunResult('.print_r($theParams, true).')');
 		return true;
 	}
 
 	private function deleteEnqueuedCommand($theCmdId) {
-		$aStmt = $this->mDb->getPDO()->prepare("DELETE FROM control WHERE id = :id");
+		$aStmt = $this->mApp->getDb()->getPDO()->prepare("DELETE FROM control WHERE id = :id");
 		$aStmt->bindParam(':id', $theCmdId);
 	    $aOk = $aStmt->execute();
 
@@ -103,8 +101,8 @@ class AppControl {
 	}
 
 	private function findEnquedCommands() {
-		$aStmt = $this->mDb->getPDO()->prepare("SELECT * FROM control");
-		$this->mDb->execute($aStmt);
+		$aStmt = $this->mApp->getDb()->getPDO()->prepare("SELECT * FROM control");
+		$this->mApp->getDb()->execute($aStmt);
 
 		$aCmds = array();
 

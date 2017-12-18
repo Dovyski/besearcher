@@ -95,7 +95,7 @@ class App {
 		$this->mDb = new Db($aDbPath);
 		$this->mContext = new Context($this->mDb, $this->mLog, array('status' => BESEARCHER_STATUS_STOPED));
 		$this->mTasks = new Tasks($this->mDb);
-		$this->mControl = new AppControl($this->mDb, $this->mLog);
+		$this->mControl = new AppControl($this);
 
 		$this->mRunningTasksCount = 0;
 		$this->scheduleNextCronJob();
