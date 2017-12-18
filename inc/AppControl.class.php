@@ -12,9 +12,30 @@ class AppControl {
 	private $mDb;
 	private $mLog;
 
+	private function commandConstantToString($theCmdConstant) {
+		$aNames = array(
+			AppControl::CMD_RERUN_RESULT => 'CMD_RERUN_RESULT'
+		);
+
+		$aName = isset($aNames[$theCmdConstant]) ? $aNames[$theCmdConstant] : '***UNKNOWN_APP_CMD***';
+		return $aName;
+	}
+
 	public function __construct(Db $theDb, Log $theLog = null) {
 		$this->mDb = $theDb;
 		$this->mLog = $theLog;
+	}
+
+	public function enqueue($theCommand, array $theParams = array()) {
+		$aStmt = $this->mDb->getPDO()->prepare("INSERT INTO control (cmd, params) VALUES (:cmd, :params)");
+
+		$aSerializedParams = serialize($theParams);
+
+		$aStmt->bindParam(':cmd', $theCommand);
+		$aStmt->bindParam(':params', $aSerializedParams);
+		$aOk = $aStmt->execute();
+
+		return $aOk;
 	}
 
 	public function update() {
@@ -28,38 +49,40 @@ class AppControl {
 			return;
 		}
 
-		$this->mLog->debug('Processing app control commands');
+		$this->mLog->debug('About to process app control commands.');
 
 		foreach($aCommands as $aCmdId => $aCmd) {
 			$aOk = $this->runCommand($aCmd);
+			$aCmdDebugInfo = '(id=' . $aCmdId . ', cmd=' . $this->commandConstantToString($aCmd['cmd']) . ')';
 
 			if($aOk) {
-				$this->mLog->debug('App command performed successfully! (cmd=' . $aCmd['cmd'] . ', params=' . $aCmd['params'] . ')');
+				$this->mLog->debug('Successfully performed app command! ' . $aCmdDebugInfo);
 			} else {
-				$this->mLog->warn('Problem with app command (cmd=' . $aCmd['cmd'] . ', params=' . $aCmd['params'] . ')');
+				$this->mLog->warn('Problem with app command! ' . $aCmdDebugInfo);
 			}
 
 			$aDeleted = $this->deleteEnqueuedCommand($aCmdId);
 
 			if(!$aDeleted) {
-				$this->mLog->error('Unable to delete app command with id=' . $aCmdId);
+				$this->mLog->error('Unable to delete app command ' . $aCmdDebugInfo);
 			}
 		}
 	}
 
 	private function runCommand($theCmd) {
-		$this->mLog->info('Running app command (cmd=' . $theCmd['cmd'] . ', params=' . $theCmd['params'] . ')');
-
 		$aOk = false;
 		$aParams = @unserialize($theCmd['params']);
 
 		if($aParams === false) {
-			$this->mLog->error('Unable to unserialize app command (cmd=' . $theCmd['cmd'] . ', params=' . $theCmd['params'] . ')');
+			$this->mLog->error('Unable to unserialize app command (id=' . $theCmd['id'] . ')');
 			return;
 		}
 
+		$aCmdDebugInfo = '(id=' . $theCmd['id'] . ', cmd=' . $this->commandConstantToString($theCmd['cmd']) . ', params=' . print_r($aParams, true) . ')';
+		$this->mLog->debug('Running app command ' . $aCmdDebugInfo);
+
 		switch($theCmd['cmd']) {
-			case CMD_RERUN_RESULT: $aOk = cmdRerunResult(); break;
+			case AppControl::CMD_RERUN_RESULT: $aOk = $this->cmdRerunResult($aParams); break;
 		}
 
 		return $aOk;
@@ -67,7 +90,7 @@ class AppControl {
 
 	private function cmdRerunResult(array $theParams) {
 		// TODO: implement method
-		$this->mLog->debug('cmdRerunResult()' . print_r($theParams, true));
+		$this->mLog->debug('cmdRerunResult('.print_r($theParams, true).')');
 		return true;
 	}
 
