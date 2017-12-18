@@ -400,6 +400,25 @@ class App {
 	    $this->mLog->info("Experiment hash changed to " . $theHash);
 	}
 
+	public function rerunResult($theResultId) {
+		$aResult = $this->getData()->getResultById($theResultId);
+
+		if($aResult == false) {
+			throw new \Exception('Unable to re-run result with id=' . $theResultId);
+		}
+
+		// Re-enqueue the result (turn it into a task)
+		$aOk = $this->getData()->createTaskFromResultId($theResultId);
+
+		// If everything went well, delete any existing log files associated
+		// with this result
+		if($aOk) {
+			@unlink($aResult['log_file']);
+		}
+
+		return $aOk;
+	}
+
 	private function createTask($theExperimentHash, $thePermutation) {
 	    $aUid = $theExperimentHash . '-' . $thePermutation['hash'];
 

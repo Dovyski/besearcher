@@ -89,7 +89,7 @@ class AppControl {
 	private function cmdRerunResult(array $theParams) {
 		// TODO: check if param exists in a better way
 		$aResultId = $theParams['id'];
-		$aOk = $this->mApp->getData()->createTaskFromResultId($aResultId);
+		$aOk = $this->mApp->rerunResult($aResultId);
 
 		return $aOk;
 	}
