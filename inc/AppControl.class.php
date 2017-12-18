@@ -50,7 +50,9 @@ class AppControl {
 		$this->mApp->getLogger()->debug('About to process app control commands.');
 
 		foreach($aCommands as $aCmdId => $aCmd) {
+			$aDeleted = $this->deleteEnqueuedCommand($aCmdId);
 			$aOk = $this->runCommand($aCmd);
+
 			$aCmdDebugInfo = '(id=' . $aCmdId . ', cmd=' . $this->commandConstantToString($aCmd['cmd']) . ')';
 
 			if($aOk) {
@@ -58,8 +60,6 @@ class AppControl {
 			} else {
 				$this->mApp->getLogger()->warn('Problem with app command! ' . $aCmdDebugInfo);
 			}
-
-			$aDeleted = $this->deleteEnqueuedCommand($aCmdId);
 
 			if(!$aDeleted) {
 				$this->mApp->getLogger()->error('Unable to delete app command ' . $aCmdDebugInfo);
@@ -87,9 +87,11 @@ class AppControl {
 	}
 
 	private function cmdRerunResult(array $theParams) {
-		// TODO: implement method
-		$this->mApp->getLogger()->debug('cmdRerunResult('.print_r($theParams, true).')');
-		return true;
+		// TODO: check if param exists in a better way
+		$aResultId = $theParams['id'];
+		$aOk = $this->mApp->getData()->createTaskFromResultId($aResultId);
+
+		return $aOk;
 	}
 
 	private function deleteEnqueuedCommand($theCmdId) {

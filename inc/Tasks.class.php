@@ -31,6 +31,28 @@ class Tasks {
 		return $aOk;
 	}
 
+	public function createTaskFromResultId($theResultId) {
+		$aResult = $this->getResultById($theResultId);
+
+		if($aResult == false) {
+			throw new \Exception('Unknown result with id=' . $theResultId);
+		}
+
+		// Do the whole operation as a transaction
+		$this->mDb->begin();
+
+		$aOk = $this->enqueueTask($aResult, 0, $aResult['creation_time']);
+		$aOk2 = $this->removeResult($theResultId);
+
+		if(!$aOk || !$aOk2) {
+			$this->mDb->rollback();
+			return false;
+		}
+
+		$this->mDb->commit();
+		return true;
+	}
+
 	public function createResultEntryFromTask($theTask) {
 		$aExistingResult = $this->getResultByHashes($theTask['experiment_hash'], $theTask['permutation_hash']);
 
@@ -99,10 +121,11 @@ class Tasks {
 		return $aOk;
 	}
 
-	public function enqueueTask($theTask) {
+	public function enqueueTask($theTask, $thePriority = 10, $theCreationTime = -1) {
 		$aSql =
 		"INSERT INTO
 			tasks (
+				id,
 				cmd,
 				log_file,
 				working_dir,
@@ -113,6 +136,7 @@ class Tasks {
 				priority
 			)
 		VALUES (
+			:id,
 			:cmd,
 			:log_file,
 			:working_dir,
@@ -124,17 +148,18 @@ class Tasks {
 		)";
 
 		$aStmt = $this->mDb->getPDO()->prepare($aSql);
-		$aNow = time();
-		$aPriority = 10;
+		$aTaskId = isset($theTask['id']) ? $theTask['id'] : NULL;
+		$aCreationTime = $theCreationTime <= 0 ? time() : $theCreationTime;
 
+		$aStmt->bindParam(':id', $aTaskId);
 		$aStmt->bindParam(':cmd', $theTask['cmd']);
 		$aStmt->bindParam(':log_file', $theTask['log_file']);
 		$aStmt->bindParam(':working_dir', $theTask['working_dir']);
 		$aStmt->bindParam(':experiment_hash', $theTask['experiment_hash']);
 		$aStmt->bindParam(':permutation_hash', $theTask['permutation_hash']);
 		$aStmt->bindParam(':params', $theTask['params']);
-		$aStmt->bindParam(':creation_time', $aNow);
-		$aStmt->bindParam(':priority', $aPriority);
+		$aStmt->bindParam(':creation_time', $aCreationTime);
+		$aStmt->bindParam(':priority', $thePriority);
 
 		$aOk = $aStmt->execute();
 		return $aOk;

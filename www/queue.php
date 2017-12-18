@@ -24,7 +24,7 @@
             }
 
             if($aAction == 'prioritize' || $aAction == 'deprioritize') {
-                $aPriority = $aAction == 'prioritize' ? 0 : 10;
+                $aPriority = $aAction == 'prioritize' ? 5 : 10;
                 $aApp->getData()->updateTasksPriority($aSelected, $aPriority);
 
             } else if ($aAction == 'delete') {
