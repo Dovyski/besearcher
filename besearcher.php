@@ -12,6 +12,7 @@ require_once(dirname(__FILE__) . '/inc/constants.php');
 require_once(dirname(__FILE__) . '/inc/Db.class.php');
 require_once(dirname(__FILE__) . '/inc/Log.class.php');
 require_once(dirname(__FILE__) . '/inc/Context.class.php');
+require_once(dirname(__FILE__) . '/inc/AppControl.class.php');
 require_once(dirname(__FILE__) . '/inc/Tasks.class.php');
 require_once(dirname(__FILE__) . '/inc/Analytics.class.php');
 require_once(dirname(__FILE__) . '/inc/App.class.php');

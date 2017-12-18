@@ -7,6 +7,7 @@ class App {
 	private $mLog;
 	private $mTasks;
 	private $mContext;
+	private $mControl;
 	private $mINIPath;
 	private $mINIValues;
 	private $mRunningTasksCount;
@@ -94,6 +95,7 @@ class App {
 		$this->mDb = new Db($aDbPath);
 		$this->mContext = new Context($this->mDb, $this->mLog, array('status' => BESEARCHER_STATUS_STOPED));
 		$this->mTasks = new Tasks($this->mDb);
+		$this->mControl = new AppControl($this->mDb, $this->mLog);
 
 		$this->mRunningTasksCount = 0;
 		$this->scheduleNextCronJob();
@@ -619,7 +621,9 @@ class App {
 			$this->checkSetupTaskProcedures();
 		}
 
-	    $this->monitorRunningTasks();
+		$this->monitorRunningTasks();
+	    $this->getControl()->update();
+
 	    return true;
 	}
 
@@ -860,6 +864,10 @@ class App {
 
 	public function getData() {
 		return $this->mTasks;
+	}
+
+	public function getControl() {
+		return $this->mControl;
 	}
 
 	public function getINIPath() {

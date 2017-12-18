@@ -60,6 +60,14 @@ CREATE TABLE `users` (
 
 --split
 
+CREATE TABLE `control` (
+	`id`	INTEGER PRIMARY KEY AUTOINCREMENT,
+	`cmd`	INTEGER NOT NULL,
+	`params`	TEXT NOT NULL DEFAULT ''
+);
+
+--split
+
 CREATE UNIQUE INDEX idx_login ON users (login);
 
 --split
