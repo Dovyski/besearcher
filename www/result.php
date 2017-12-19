@@ -8,10 +8,28 @@
 
     $aApp = Besearcher\WebApp::instance();
     $aResult = $aApp->getData()->getResultByHashes($aExperimentHash, $aPermutationHash);
-    $aError = '';
+    $aInvalid = '';
 
     if($aResult == false) {
-        $aError = 'Unknown result with experiment hash ' . Besearcher\view::out($aExperimentHash) . ' and permutation hash ' . $aPermutationHash;
+        $aInvalid = 'Unknown result with experiment hash <code>' . Besearcher\view::out($aExperimentHash) . '</code> and permutation hash <code>' . $aPermutationHash . '</code>. The task associated with this result is probably still in the <a href="queue.php">queue</a> waiting to be processed.';
+
+        Besearcher\View::render('result', array(
+            'result' => null,
+            'invalid' => $aInvalid,
+        ));
+
+        exit();
+    }
+
+    $aMessage = '';
+    $aMessageType = 'success';
+
+    $aShouldReRun = isset($_REQUEST['rerun']);
+
+    if($aShouldReRun) {
+        $aOk = $aApp->rerunResult($aResult['id']);
+        $aMessageType = !$aOk ? 'danger' : 'success';
+        $aMessage = $aOk ? '<strong>All good!</strong> Result will re-run in the next batch of tasks.' : '<strong>Oops!</strong> Unable to re-run result. Is it a valid one?';
     }
 
     $aLogPath = @$aResult['log_file'];
@@ -36,6 +54,7 @@
         'result' => $aResult,
         'meta' => $aMeta,
         'log_content' => $aLogContent,
-        'error' => $aError,
+        'message' => $aMessage,
+        'message_type' => $aMessageType
     ));
 ?>

@@ -6,21 +6,27 @@
 <?php require_once(dirname(__FILE__) . '/header.php'); ?>
 
 <div id="page-wrapper">
-    <?php if(!empty($aData['error'])) { ?>
+    <?php if(!empty($aData['invalid'])) { ?>
     <div class="row" style="padding-top: 20px;">
         <div class="col-lg-12">
-            <div class="alert alert-warning" role="alert"><strong>Oops!</strong> <?php echo $aData['error']; ?></div>
+            <div class="alert alert-warning" role="alert"><strong>Oops!</strong> <?php echo $aData['invalid']; ?></div>
         </div>
     </div>
     <?php } else { ?>
+
+    <?php if(!empty($aData['message'])) { ?>
+        <div class="row" style="padding-top: 20px;">
+            <div class="col-lg-12">
+                <div class="alert alert-<?php echo $aData['message_type']; ?>" role="alert"><?php echo $aData['message']; ?></div>
+            </div>
+        </div>
+    <?php } ?>
 
     <div class="row">
         <div class="col-lg-12">
             <h1 class="page-header">Result</h1>
         </div>
-        <!-- /.col-lg-12 -->
     </div>
-    <!-- /.row -->
 
     <div class="row">
         <div class="col-lg-12">
@@ -31,6 +37,7 @@
                         <th>Start</th>
                         <th>End</th>
                         <th>Status</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -40,21 +47,20 @@
                             echo '<td>'.date('Y/m/d H:i:s', $aResult['exec_time_start']).'</td>';
                             echo '<td>'.($aResult['exec_time_end'] != 0 ? date('Y/m/d H:i:s', $aResult['exec_time_end']) : '-').'</td>';
                             echo '<td>'.Besearcher\View::prettyStatusName($aResult, true).'</td>';
+                            echo '<td><a href="javascript:void(0);" id="rerun-action" data-rerun-url="result.php?experiment_hash='.$aResult['experiment_hash'].'&permutation_hash='.$aResult['permutation_hash'].'&rerun=1"><i class="fa fa-refresh"></i> Re-run</a></td>';
                         echo '</tr>';
                     ?>
                 </tbody>
             </table>
-            <!-- /.table-responsive -->
         </div>
-        <!-- /.col-lg-12 -->
     </div>
-    <!-- /.row -->
 
     <div class="row">
         <div class="col-lg-12">
             <table width="100%" class="table table-striped table-bordered table-hover">
                 <thead>
                     <tr>
+                        <th>Id</th>
                         <th>Experiment hash</th>
                         <th>Permutation hash</th>
                     </tr>
@@ -62,17 +68,15 @@
                 <tbody>
                     <?php
                         echo '<tr>';
+                            echo '<td>'.$aResult['id'].'</td>';
                             echo '<td>'.$aResult['experiment_hash'].'</td>';
                             echo '<td>'.$aResult['permutation_hash'].'</td>';
                         echo '</tr>';
                     ?>
                 </tbody>
             </table>
-            <!-- /.table-responsive -->
         </div>
-        <!-- /.col-lg-12 -->
     </div>
-    <!-- /.row -->
 
     <div class="row">
         <div class="col-lg-12">
@@ -92,11 +96,8 @@
                     ?>
                 </tbody>
             </table>
-            <!-- /.table-responsive -->
         </div>
-        <!-- /.col-lg-12 -->
     </div>
-    <!-- /.row -->
 
     <div class="row">
         <div class="col-lg-12">
@@ -108,11 +109,8 @@
                     <tr><td><?php echo $aResult['params']; ?></td></tr>
                 </tbody>
             </table>
-            <!-- /.table-responsive -->
         </div>
-        <!-- /.col-lg-12 -->
     </div>
-    <!-- /.row -->
 
     <div class="row">
         <div class="col-lg-12">
@@ -142,14 +140,11 @@
                         ?>
                     </tbody>
                 </table>
-                <!-- /.table-responsive -->
             <?php } else { ?>
                 <p>No meta information was found in the command output. Check out <em><a href="#">Besearcher log marks</a></em> to learn how to generate meta information.</p>
             <?php } ?>
         </div>
-        <!-- /.col-lg-12 -->
     </div>
-    <!-- /.row -->
 
     <div class="row">
         <div class="col-lg-12">
@@ -165,6 +160,17 @@
     <?php } ?>
 </div>
 <!-- /#page-wrapper -->
+
+<script>
+    $(document).ready(function() {
+        $('#rerun-action').click(function() {
+            if(!confirm('Re-running this result will remove all its existing data files. Proceed?')) {
+                return;
+            }
+            window.location.href = $(this).data('rerun-url');
+        });
+    });
+</script>
 
 <?php
     require_once(dirname(__FILE__) . '/footer.php');

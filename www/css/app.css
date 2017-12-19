@@ -28,3 +28,7 @@ h1 i.fa {
 	font-size: 0.6em;
 	color: #c1c1c1;
 }
+
+.page-header {
+	margin-top: 15px;
+}
