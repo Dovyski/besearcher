@@ -21,7 +21,15 @@ define('BESERCHER_WEB_SCRIPT_START_TIME', microtime(true));
 $aINIPath = dirname(__FILE__) . '/../config.ini';
 
 try {
-	Besearcher\WebApp::init($aINIPath);
+	// Load essential web app configuration info
+	Besearcher\WebApp::bootstrap($aINIPath);
+
+	// Start the authentication mechanism
+	$aRequireAuth = Besearcher\WebApp::config('require_auth', false);
+	Besearcher\Auth::init('besearchersid', $aRequireAuth);
+
+	// Init everything else
+	Besearcher\WebApp::init();
 
 } catch(Exception $e) {
 	Besearcher\View::render('error', array(
@@ -31,9 +39,5 @@ try {
 	));
 	exit();
 }
-
-// Start the authentication mechanism
-$aRequireAuth = Besearcher\WebApp::config('require_auth', false);
-Besearcher\Auth::init('besearchersid', $aRequireAuth);
 
 ?>

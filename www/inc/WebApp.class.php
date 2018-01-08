@@ -8,14 +8,17 @@ class WebApp {
 	private static $mINI;
 	private static $mActiveBesearcherINIPath;
 
-	public static function init($theINIPath) {
+	public static function bootstrap($theINIPath) {
 		self::loadWebAppINI($theINIPath);
+	}
 
+	public static function init() {
 		try {
+			self::initBesearcherINIPaths();
+
 			self::$mInstance = new App();
 			self::$mInstance->init(self::getBesearcherINIPath(), '', true);
 			self::$mUsers = new Users(self::$mInstance->getDb());
-
 		} catch (\Exception $e) {
 			throw new \Exception('Unable to initialize web dashboard. ' . $e->getMessage() . '. <pre style="margin-top:10px;">' . $e->getTraceAsString() . '</pre>');
 		}
@@ -43,8 +46,6 @@ class WebApp {
 		if(!isset(self::$mINI['besearcher_ini_file'])) {
 			throw new \Exception('Unable to find the <code>besearcher_ini_file</code> directive in the web dashboard configuration file <code>'.$theINIPath.'</code>. Please check the content of this file is correct.');
 		}
-
-		self::initBesearcherINIPaths();
 	}
 
 	private static function initBesearcherINIPaths() {
@@ -55,15 +56,28 @@ class WebApp {
 			self::$mINI['besearcher_ini_file'] = array(self::$mINI['besearcher_ini_file']);
 		}
 
-		// By default, the first entry in the array is the active besearcher INI file.
-		self::$mActiveBesearcherINIPath = 0;
+		// If the user has selected a particular experiment for visualization,
+		// we ensure that experiment is the one active now.
+		$aExperimentNum = isset($_SESSION['experiment']) ? $_SESSION['experiment'] : 0;
+		self::setActiveBesearcherINIPath($aExperimentNum);
 	}
 
-	private static function getBesearcherINIPath() {
+	public static function setActiveBesearcherINIPath($thePathNum) {
+		if($thePathNum < 0 || $thePathNum >= count(self::$mINI['besearcher_ini_file'])) {
+			throw new \Exception('Informed Besearcher INI path entry <code>'.$thePathNum.'</code> is invalid.');
+		}
+
+		if(self::$mActiveBesearcherINIPath != $thePathNum) {
+			self::$mActiveBesearcherINIPath = $thePathNum;
+			$_SESSION['experiment'] = $thePathNum;
+		}
+	}
+
+	public static function getBesearcherINIPath() {
 		return self::$mINI['besearcher_ini_file'][self::$mActiveBesearcherINIPath];
 	}
 
-	private static function findBesearcherINIPaths() {
+	public static function findBesearcherINIPaths() {
 		return self::$mINI['besearcher_ini_file'];
 	}
 }

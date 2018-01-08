@@ -59,6 +59,16 @@
                 <!-- /.navbar-header -->
 
                 <ul class="nav navbar-top-links navbar-right">
+                    <li class="dropdown">
+                        <a class="dropdown-toggle" data-toggle="dropdown" href="#">
+                             <code><?php echo Besearcher\WebApp::getBesearcherINIPath(); ?>  </code> <i class="fa fa-flask fa-fw"></i> <i class="fa fa-caret-down"></i>
+                        </a>
+                        <ul class="dropdown-menu dropdown-user">
+                            <?php foreach(Besearcher\WebApp::findBesearcherINIPaths() as $aNum => $aPath) { ?>
+                                <li><a href="experiments.php?select=<?php echo $aNum; ?>"><i class="fa fa-file-text fa-fw"></i> <?php echo $aPath; ?></a></li>
+                            <?php } ?>
+                        </ul>
+                    </li>
                     <?php
                         $aUser = Besearcher\Auth::user();
                         if($aUser != false) {
@@ -71,7 +81,6 @@
                             <ul class="dropdown-menu dropdown-user">
                                 <li><a href="logout.php"><i class="fa fa-sign-out fa-fw"></i> Logout</a></li>
                             </ul>
-                            <!-- /.dropdown-user -->
                         </li>
                     <?php }  ?>
                     <!-- /.dropdown -->
