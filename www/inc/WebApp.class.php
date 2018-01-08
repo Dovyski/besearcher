@@ -67,10 +67,8 @@ class WebApp {
 			throw new \Exception('Informed Besearcher INI path entry <code>'.$thePathNum.'</code> is invalid.');
 		}
 
-		if(self::$mActiveBesearcherINIPath != $thePathNum) {
-			self::$mActiveBesearcherINIPath = $thePathNum;
-			$_SESSION['experiment'] = $thePathNum;
-		}
+		self::$mActiveBesearcherINIPath = $thePathNum;
+		$_SESSION['experiment'] = $thePathNum;
 	}
 
 	public static function getBesearcherINIPath() {
