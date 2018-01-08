@@ -29,6 +29,7 @@
                     <tbody>
                         <tr><td>Status</td><td><?php echo $aData['context']['status']; ?></td></tr>
                         <tr><td>Experiment hash</td><td><?php echo $aData['context']['experiment_hash']; ?></td></tr>
+                        <tr><td>Experiment description</td><td><?php echo $aData['context']['experiment_description']; ?></td></tr>
                         <tr><td><a href="queue.php">Tasks in queue</a></td><td><?php echo $aData['context']['queue_size']; ?></td></tr>
                         <tr><td><a href="results.php">Results in the making</a></td><td><?php echo $aData['context']['tasks_running']; ?></td></tr>
                     </tbody>

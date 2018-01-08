@@ -13,6 +13,7 @@
     $aContext = array(
         'status' => $aAppContext['status'],
         'experiment_hash' => $aAppContext['experiment_hash'],
+        'experiment_description' => $aINIValues['experiment_description'],
         'queue_size' => $aApp->getData()->queueSize(),
         'tasks_running' => count($aApp->getData()->findRunningTasks())
     );
