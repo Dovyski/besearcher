@@ -80,40 +80,6 @@
 
     <div class="row">
         <div class="col-lg-12">
-            <table width="100%" class="table table-striped table-bordered table-hover">
-                <thead>
-                    <tr>
-                        <th style="width: 95%;">Command</th>
-                        <th style="width: 5%;">Return</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php
-                        echo '<tr>';
-                            echo '<td>'.$aResult['cmd'].'</td>';
-                            echo '<td>'.$aResult['cmd_return_code'].'</td>';
-                        echo '</tr>';
-                    ?>
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <div class="row">
-        <div class="col-lg-12">
-            <table width="100%" class="table table-striped table-bordered table-hover">
-                <thead>
-                    <tr><th>Params string</th></tr>
-                </thead>
-                <tbody>
-                    <tr><td><?php echo $aResult['params']; ?></td></tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <div class="row">
-        <div class="col-lg-12">
             <strong>Summary</strong> <i class="fa fa-question-circle" title="This table shows a summary of the meta information found in the command output and the params used in such command."></i>
         </div>
     </div>
@@ -146,7 +112,7 @@
                                 echo '<tr>';
                                     echo '<td><i class="fa fa-sliders" title="This is a parameter used in the command that produced this result."></i> <em>param</em></td>';
                                     echo '<td>'.$aName.'</td>';
-                                    echo '<td>'.$aValue.'</td>';
+                                    echo '<td>'.str_replace(',', ', ', $aValue).'</td>';
                                 echo '</tr>';
                             }
                         }
@@ -155,6 +121,40 @@
                             echo '<tr><td colspan="3" class="warning"><i class="fa fa-warning"></i> No meta information was found in the command output. Check out <em><a href="#">Besearcher log marks</a></em> to learn how to generate meta information.</td></tr>';
                         }
                     ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-12">
+            <table width="100%" class="table table-striped table-bordered table-hover">
+                <thead>
+                    <tr>
+                        <th style="width: 95%;">Command</th>
+                        <th style="width: 5%;">Return</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php
+                        echo '<tr>';
+                            echo '<td>'.$aResult['cmd'].'</td>';
+                            echo '<td>'.$aResult['cmd_return_code'].'</td>';
+                        echo '</tr>';
+                    ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-12">
+            <table width="100%" class="table table-striped table-bordered table-hover">
+                <thead>
+                    <tr><th>Params string</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td><?php echo $aResult['params']; ?></td></tr>
                 </tbody>
             </table>
         </div>
