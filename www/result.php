@@ -50,8 +50,15 @@
         }
     }
 
+    $aResultParams = array();
+
+    if(!empty($aResult['params'])) {
+        $aResultParams = Besearcher\Utils::splitParamsString($aResult['params']);
+    }
+
     Besearcher\View::render('result', array(
         'result' => $aResult,
+        'params' => $aResultParams,
         'meta' => $aMeta,
         'log_content' => $aLogContent,
         'message' => $aMessage,

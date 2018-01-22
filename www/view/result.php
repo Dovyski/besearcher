@@ -103,7 +103,7 @@
         <div class="col-lg-12">
             <table width="100%" class="table table-striped table-bordered table-hover">
                 <thead>
-                    <tr><th>Params</th></tr>
+                    <tr><th>Params string</th></tr>
                 </thead>
                 <tbody>
                     <tr><td><?php echo $aResult['params']; ?></td></tr>
@@ -114,35 +114,49 @@
 
     <div class="row">
         <div class="col-lg-12">
-            <strong>Meta</strong>
+            <strong>Summary</strong> <i class="fa fa-question-circle" title="This table shows a summary of the meta information found in the command output and the params used in such command."></i>
         </div>
     </div>
     <div class="row">
         <div class="col-lg-12">
-            <?php if(count($aData['meta']) > 0) { ?>
-                <table width="100%" class="table table-striped table-bordered table-hover">
-                    <thead>
-                        <tr>
-                            <th>Type</th>
-                            <th>Name</th>
-                            <th>Data</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php
+            <table width="100%" class="table table-striped table-bordered table-hover">
+                <thead>
+                    <tr>
+                        <th style="width: 10%;">Type</th>
+                        <th style="width: 10%;">Name</th>
+                        <th style="width: 80%;">Data</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php
+                        if(count($aData['meta']) > 0) {
                             foreach($aData['meta'] as $aItem) {
                                 echo '<tr>';
-                                    echo '<td>'.$aItem['type'].'</td>';
+                                    echo '<td><i class="fa fa-tag" title="This is a meta information found in the command output."></i> <code>'.$aItem['type'].'</code></td>';
                                     echo '<td>'.$aItem['name'].'</td>';
                                     echo '<td>'.print_r($aItem['data'], true).'</td>';
                                 echo '</tr>';
                             }
-                        ?>
-                    </tbody>
-                </table>
-            <?php } else { ?>
-                <p>No meta information was found in the command output. Check out <em><a href="#">Besearcher log marks</a></em> to learn how to generate meta information.</p>
-            <?php } ?>
+                        }
+                    ?>
+                    <tr><td colspan="3"></td></tr>
+                    <?php
+                        if(count($aData['params']) > 0) {
+                            foreach($aData['params'] as $aName => $aValue) {
+                                echo '<tr>';
+                                    echo '<td><i class="fa fa-sliders" title="This is a parameter used in the command that produced this result."></i> <em>param</em></td>';
+                                    echo '<td>'.$aName.'</td>';
+                                    echo '<td>'.$aValue.'</td>';
+                                echo '</tr>';
+                            }
+                        }
+
+                        if(count($aData['meta']) == 0) {
+                            echo '<tr><td colspan="3" class="warning"><i class="fa fa-warning"></i> No meta information was found in the command output. Check out <em><a href="#">Besearcher log marks</a></em> to learn how to generate meta information.</td></tr>';
+                        }
+                    ?>
+                </tbody>
+            </table>
         </div>
     </div>
 

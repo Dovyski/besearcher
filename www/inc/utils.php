@@ -23,6 +23,21 @@ class Utils {
 
 		return $aRet;
 	}
+
+	public static function splitParamsString($theParamsString) {
+		$aResult = array();
+		$aNameValuePairs = explode(', ', $theParamsString);
+
+		foreach($aNameValuePairs as $aEntry) {
+			$aParts = explode('=', $aEntry);
+			$aName = $aParts[0];
+			$aValue = $aParts[1];
+
+			$aResult[$aName] = $aValue;
+		}
+
+		return $aResult;
+	}
 }
 
 ?>
