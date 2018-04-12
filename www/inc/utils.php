@@ -38,6 +38,31 @@ class Utils {
 
 		return $aResult;
 	}
+
+	public static function humanReadableTime($theSeconds) {
+		$aOut = array();
+		$aParts = array();
+
+		$s = $theSeconds % 60;
+		$m = floor(($theSeconds % 3600) / 60);
+		$h = floor(($theSeconds % 86400) / 3600);
+		$d = floor(($theSeconds % 2592000) / 86400);
+		$o = floor($theSeconds / 2592000);
+
+		$aOut['months'] = $o;
+		$aOut['days'] = $d;
+		$aOut['h'] = $h;
+		$aOut['min'] = $m;
+		$aOut['sec'] = $s;
+
+		foreach($aOut as $aName => $aValue) {
+			if($aValue > 0) {
+				$aParts[] = $aValue . ' ' . $aName;
+			}
+		}
+
+		return implode(', ', $aParts);
+	}
 }
 
 ?>
