@@ -57,18 +57,24 @@
     }
 
     $aResultFinished = $aResult['exec_time_end'] != 0;
+    $aElapsed = 0;
     $aCompletionTime = 0;
 
     if(!$aResultFinished) {
         $aElapsed = time() - $aResult['exec_time_start'];
-        $aEstimatedDuration = $aElapsed / $aResult['progress'];
+        $aProgress = max($aResult['progress'], 0.001);
+        $aEstimatedDuration = $aElapsed / $aProgress;
         $aCompletionTime = $aEstimatedDuration - $aElapsed;
+    } else {
+        $aCompletionTime = 0;
+        $aElapsed = $aResult['exec_time_end'] - $aResult['exec_time_start'];
     }
 
     Besearcher\View::render('result', array(
         'result' => $aResult,
         'finished' => $aResultFinished,
         'completion_time' => $aCompletionTime,
+        'elapsed_time' => $aElapsed,
         'params' => $aResultParams,
         'meta' => $aMeta,
         'log_content' => $aLogContent,

@@ -36,6 +36,7 @@
                         <th>Creation</th>
                         <th>Start</th>
                         <th>End</th>
+                        <th>Total time</th>
                         <th>Status</th>
                         <th>Actions</th>
                     </tr>
@@ -45,7 +46,8 @@
                         echo '<tr>';
                             echo '<td>'.date('Y/m/d H:i:s', $aResult['creation_time']).'</td>';
                             echo '<td>'.date('Y/m/d H:i:s', $aResult['exec_time_start']).'</td>';
-                            echo '<td>'.($aData['finished'] ? date('Y/m/d H:i:s', $aResult['exec_time_end']) : '<span class="status-running"><i class="fa fa-clock-o"></i> ' . Besearcher\Utils::humanReadableTime($aData['completion_time']) . '</span>').'</td>';
+                            echo '<td>'.($aData['finished'] ? date('Y/m/d H:i:s', $aResult['exec_time_end']) : '<span class="status-running"><i class="fa fa-clock-o"></i> ~ ' . Besearcher\Utils::humanReadableTime($aData['completion_time']) . '</span>').'</td>';
+                            echo '<td><i class="fa fa-clock-o"></i> ' . Besearcher\Utils::humanReadableTime($aData['elapsed_time']) .'</td>';
                             echo '<td>'.Besearcher\View::prettyStatusName($aResult, true).'</td>';
                             echo '<td><a href="javascript:void(0);" id="rerun-action" data-rerun-url="result.php?experiment_hash='.$aResult['experiment_hash'].'&permutation_hash='.$aResult['permutation_hash'].'&rerun=1"><i class="fa fa-refresh"></i> Re-run</a></td>';
                         echo '</tr>';
