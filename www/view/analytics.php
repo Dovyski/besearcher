@@ -1,5 +1,6 @@
 <?php
     $aData = Besearcher\View::data();
+    $aParams = $aData['params'];
     $aSummary = $aData['summary'];
     $aValues = $aData['values'];
 ?>
@@ -24,6 +25,11 @@
     </div>
     <?php } else { ?>
 
+    <div class="row">
+        <div class="col-lg-12">
+            <h3 class="page-header"><i class="fa fa-list-ul"></i> Metrics ranking</h3>
+        </div>
+    </div>
     <div class="row">
         <div class="col-lg-12">
             <table width="100%" class="table table-striped table-bordered table-hover">
@@ -55,6 +61,42 @@
             <!-- /.table-responsive -->
         </div>
         <!-- /.col-lg-12 -->
+    </div>
+    <!-- /.row -->
+
+    <div class="row">
+        <div class="col-lg-12">
+            <h3 class="page-header"><i class="fa fa-th"></i> Experiment report</h3>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-lg-12">
+            <form id="form-experiment-report" method="get" action="analytics.php">
+                <div class="form-row">
+                    <?php
+                        foreach($aParams as $aName) {
+                            echo '<div class="form-group">';
+                              echo '<label for="report-param-'.$aName.'"><i class="fa fa-sliders"></i> '.$aName.'</label>';
+                              echo '<select id="report-param-'.$aName.'" class="form-control" name="'.$aName.'">';
+                                    echo '<option value="__ANY__">*ANY*</option>';
+                                    foreach($aParams as $aName) {
+                                        echo '<option value="'.$aName.'">'.$aName.'</option>';
+                                    }
+                              echo '</select>';
+                            echo '</div>';
+                        }
+                    ?>
+                    <div class="col-md-3">
+                        <button type="submit" class="btn btn-primary" id="experiment-report-submit">Apply</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="row" style="padding-top: 30px;" >
+        <div class="col-lg-12" id="experiment-report-table" style="display: none;">
+        </div>
     </div>
     <!-- /.row -->
     <?php } ?>

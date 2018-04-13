@@ -55,30 +55,51 @@ function onMetricDataFail(theJqXHR, theTextStatus, theErrorThrown) {
     console.error('onFail()', theErrorThrown);
 }
 
+function handleShowStats() {
+	var aContainerId = $(this).data('container');
+	var aContainerRowId = 'row' + aContainerId;
+	var aMetric = $(this).data('metric');
+
+	var aOpen = $('#' + aContainerRowId).data('open');
+
+	if(aOpen) {
+		$('#' + aContainerRowId).slideUp().data('open', false);
+		return;
+	}
+
+	$('#' + aContainerRowId).css({height: MAX_CHART_HEIGHT}).slideDown().data('open', true);
+	$('#' + aContainerId).html('<i class="fa fa-circle-o-notch fa-spin"></i> Loading...');
+
+	$.ajax({
+		url: 'analytics.php',
+		data: {metric: aMetric, json: true},
+		dataType: 'json'
+	}).done(function(theData) {
+		renderMetric(theData, aMetric, aContainerId);
+	}).fail(onMetricDataFail);
+}
+
+function renderExperimentReport(theData) {
+	$('#experiment-report-table').html('Something').show();
+}
+
+function handleExperimentReportSubmit() {
+	$('#experiment-report-table').html('<i class="fa fa-circle-o-notch fa-spin"></i> Loading...').show();
+
+	$.ajax({
+		url: 'analytics.php',
+		data: {metric: 'Accuracy'},
+		dataType: 'html'
+	}).done(function(theData) {
+		renderExperimentReport(theData);
+	}).fail(onMetricDataFail);
+
+	return false;
+}
+
 $(function() {
-	$('.show-stats').click(function() {
-		var aContainerId = $(this).data('container');
-		var aContainerRowId = 'row' + aContainerId;
-		var aMetric = $(this).data('metric');
-
-		var aOpen = $('#' + aContainerRowId).data('open');
-
-		if(aOpen) {
-			$('#' + aContainerRowId).slideUp().data('open', false);
-			return;
-		}
-
-		$('#' + aContainerRowId).css({height: MAX_CHART_HEIGHT}).slideDown().data('open', true);
-		$('#' + aContainerId).html('<i class="fa fa-circle-o-notch fa-spin"></i> Loading...');
-
-		$.ajax({
-			url: 'analytics.php',
-			data: {metric: aMetric, json: true},
-			dataType: 'json'
-		}).done(function(theData) {
-			renderMetric(theData, aMetric, aContainerId);
-		}).fail(onMetricDataFail);
-	})
+	$('.show-stats').click(handleShowStats);
+	$('#form-experiment-report').submit(handleExperimentReportSubmit);
 })
 
 // Load the Visualization API and the corechart package.

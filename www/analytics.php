@@ -28,6 +28,7 @@
 
     Besearcher\View::render($aView, array(
         'metrics' => $aMetrics,
+        'params' => $aMetrics,
         'summary' => $aReport,
         'values' => $aStats
     ));
