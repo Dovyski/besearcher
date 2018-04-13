@@ -80,15 +80,15 @@ function handleShowStats() {
 }
 
 function renderExperimentReport(theData) {
-	$('#experiment-report-table').html('Something').show();
+	$('#experiment-report-table').html(theData).show();
 }
 
 function handleExperimentReportSubmit() {
 	$('#experiment-report-table').html('<i class="fa fa-circle-o-notch fa-spin"></i> Loading...').show();
 
 	$.ajax({
-		url: 'analytics.php',
-		data: {metric: 'Accuracy'},
+		url: 'ajax-experiment-report.php',
+		data: $('#form-experiment-report').serialize(),
 		dataType: 'html'
 	}).done(function(theData) {
 		renderExperimentReport(theData);

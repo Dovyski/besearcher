@@ -74,13 +74,14 @@
             <form id="form-experiment-report" method="get" action="analytics.php">
                 <div class="form-row">
                     <?php
-                        foreach($aParams as $aName) {
+                        foreach($aParams as $aName => $aValues) {
                             echo '<div class="form-group">';
                               echo '<label for="report-param-'.$aName.'"><i class="fa fa-sliders"></i> '.$aName.'</label>';
                               echo '<select id="report-param-'.$aName.'" class="form-control" name="'.$aName.'">';
-                                    echo '<option value="__ANY__">*ANY*</option>';
-                                    foreach($aParams as $aName) {
-                                        echo '<option value="'.$aName.'">'.$aName.'</option>';
+                                    echo '<option value=""></option>';
+                                    foreach($aValues as $aValue) {
+                                        $aIsSelected = isset($_REQUEST[$aName]) && $_REQUEST[$aName] == $aValue;
+                                        echo '<option value="'.$aValue.'" '.($aIsSelected ? 'selected' : '').'>'.$aValue.'</option>';
                                     }
                               echo '</select>';
                             echo '</div>';
@@ -95,7 +96,7 @@
     </div>
 
     <div class="row" style="padding-top: 30px;" >
-        <div class="col-lg-12" id="experiment-report-table" style="display: none;">
+        <div class="col-lg-12" id="experiment-report-table">
         </div>
     </div>
     <!-- /.row -->

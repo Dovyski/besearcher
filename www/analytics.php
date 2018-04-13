@@ -26,9 +26,11 @@
         $aStats = $aStats[$aSelectedMetric];
     }
 
+    $aTaskCmdParams = $aApp->config('task_cmd_params');
+
     Besearcher\View::render($aView, array(
         'metrics' => $aMetrics,
-        'params' => $aMetrics,
+        'params' => $aTaskCmdParams,
         'summary' => $aReport,
         'values' => $aStats
     ));
