@@ -1,31 +1,45 @@
 <?php
     $aData = Besearcher\View::data();
     $aFilter = $aData['filter'];
+    $aEntries = $aData['entries'];
 ?>
 
-<table width="100%" class="table table-striped table-bordered table-hover">
-    <thead>
-        <tr>
-            <th>Metric</th>
-            <th>Min</th>
-            <th>Max</th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-        <?php
-            $aNum = 0;
-            foreach($aSummary as $aMetric => $aEntry) {
-                $aContainer = 'metric'.$aNum;
-                echo '<tr>';
-                    echo '<td>'.$aMetric.'</td>';
-                    echo '<td><a href="result.php?experiment_hash='.$aEntry['min']['experiment_hash'].'&permutation_hash='.$aEntry['min']['permutation_hash'].'" title="Click to view more information">'.$aEntry['min']['value'].'</a></td>';
-                    echo '<td><a href="result.php?experiment_hash='.$aEntry['max']['experiment_hash'].'&permutation_hash='.$aEntry['max']['permutation_hash'].'" title="Click to view more information">'.$aEntry['max']['value'].'</a></td>';
-                    echo '<td><a href="#" class="show-stats" data-container="'.$aContainer.'" data-metric="'.$aMetric.'" title="Click to view statistics" ><i class="fa fa-bar-chart"></i></a></td>';
-                echo '</tr>';
-                echo '<tr id="row'.$aContainer.'" style="display:none;" data-open="false"><td colspan="4"><div id="'.$aContainer.'"></div></td></tr>';
-                $aNum++;
-            }
-        ?>
-    </tbody>
+<table width="100%" class="table-bordered">
+    <tr>
+        <?php foreach($aEntries as $aNum => $aEntry) { ?>
+            <td style="width: 400px;">
+                <table style="width: 400px;" class="table table-striped table-bordered table-hover">
+                    <thead>
+                        <tr>
+                            <th style="width: 50%">Name</th>
+                            <th style="width: 50%">Data</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php
+                            if(count($aEntry['meta']) > 0) {
+                                foreach($aEntry['meta'] as $aItem) {
+                                    echo '<tr>';
+                                        echo '<td><code><i class="fa fa-tag"></i> '.$aItem['name'].'</code></td>';
+                                        echo '<td>'.print_r($aItem['data'], true).'</td>';
+                                    echo '</tr>';
+                                }
+                            }
+                        ?>
+                        <tr><td colspan="2"></td></tr>
+                        <?php
+                            if(count($aEntry['params']) > 0) {
+                                foreach($aEntry['params'] as $aName => $aValue) {
+                                    echo '<tr>';
+                                        echo '<td><code><i class="fa fa-sliders"></i> '.$aName.'</code></td>';
+                                        echo '<td>'.str_replace(',', ', ', $aValue).'</td>';
+                                    echo '</tr>';
+                                }
+                            }
+                        ?>
+                    </tbody>
+                </table>
+            </td>
+        <?php } ?>
+    </tr>
 </table>

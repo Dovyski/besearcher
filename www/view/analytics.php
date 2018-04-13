@@ -95,7 +95,7 @@
         </div>
     </div>
 
-    <div class="row" style="padding-top: 30px;" >
+    <div class="row" style="padding-top: 30px; overflow: scroll;">
         <div class="col-lg-12" id="experiment-report-table">
         </div>
     </div>
