@@ -25,11 +25,19 @@
         }
 
         if(count($aFilter) > 0) {
+            $aShouldSkip = false;
+
             foreach($aFilter as $aName => $aValue) {
                 $aResultMatchesFilter = $aResultParams[$aName] == $aValue;
+
                 if(!$aResultMatchesFilter) {
-                    continue;
+                    $aShouldSkip = true;
+                    break;
                 }
+            }
+
+            if($aShouldSkip) {
+                continue;
             }
         }
 

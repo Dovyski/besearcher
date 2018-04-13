@@ -36,6 +36,11 @@
                                     echo '</tr>';
                                 }
                             }
+
+                            echo '<tr>';
+                                echo '<td><code><i class="fa fa-link"></i> Hashes</code></td>';
+                                echo '<td>'.Besearcher\View::createResultLink($aEntry['result']['experiment_hash'], $aEntry['result']['permutation_hash']).'</td>';
+                            echo '</tr>';
                         ?>
                     </tbody>
                 </table>

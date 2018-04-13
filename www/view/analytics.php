@@ -88,7 +88,7 @@
                         }
                     ?>
                     <div class="col-md-3">
-                        <button type="submit" class="btn btn-primary" id="experiment-report-submit">Apply</button>
+                        <button type="submit" class="btn btn-primary" id="experiment-report-submit">View report</button>
                     </div>
                 </div>
             </form>
