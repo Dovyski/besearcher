@@ -27,6 +27,7 @@
                 <p>There are no tasks queued for execution.</p>
 
             <?php } else { ?>
+                <p> Estimated time to complete everything: <span class="status-running"><i class="fa fa-clock-o" title="Estimation is calculated based on the average time of completed results."></i> <?php echo $aData['completion_time'] > 0 ? Besearcher\Utils::humanReadableTime($aData['completion_time']) : 'unknown'; ?></span>.</p>
                 <table width="100%" class="table table-striped table-bordered table-hover" id="queue-table">
                     <thead>
                         <tr>
