@@ -44,29 +44,7 @@
     $aPagination = Besearcher\Utils::paginate($aPage, $aSize, $aTasksCount);
 
     $aTasksQueue = $aApp->getData()->findEnquedTasks($aPagination['start'], $aPagination['size']);
-    $aResults = $aApp->getData()->findResults();
-
-    $aTotalTimeResults = 0;
-    $aFinishedResults = 0;
-    $aExpectedTimeComplete = 0;
-
-    if(count($aResults) > 0) {
-        foreach($aResults as $aResult) {
-            $aFinished = $aResult['exec_time_end'] != 0;
-
-            if($aFinished) {
-                $aFinishedResults++;
-                $aElapsed = $aResult['exec_time_end'] - $aResult['exec_time_start'];
-                $aTotalTimeResults += $aElapsed;
-            }
-        }
-    }
-
-    if($aFinishedResults > 0) {
-        $aResultMeanTime = $aTotalTimeResults / $aFinishedResults;
-        $aExpectedWorkTime = $aResultMeanTime * count($aTasksQueue);
-        $aExpectedTimeComplete = $aExpectedWorkTime / $aApp->config('max_parallel_tasks');
-    }
+    $aExpectedTimeComplete = Besearcher\WebApp::calculateEstimatedTimeFinishExperiment(false);
 
     Besearcher\View::render('queue', array(
         'message'         => $aMessage,

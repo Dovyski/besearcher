@@ -78,6 +78,41 @@ class WebApp {
 	public static function findBesearcherINIPaths() {
 		return self::$mINI['besearcher_ini_file'];
 	}
+
+	public static function calculateEstimatedTimeFinishExperiment($theIncludeRunningTasks = true) {
+		$aResults = self::instance()->getData()->findResults();
+
+		$aTotalTimeResults = 0;
+		$aFinishedResults = 0;
+		$aExpectedTimeComplete = 0;
+
+		if(count($aResults) > 0) {
+			foreach($aResults as $aResult) {
+				$aFinished = $aResult['exec_time_end'] != 0;
+
+				if($aFinished) {
+					$aFinishedResults++;
+					$aElapsed = $aResult['exec_time_end'] - $aResult['exec_time_start'];
+					$aTotalTimeResults += $aElapsed;
+				}
+			}
+		}
+
+		if($aFinishedResults > 0) {
+			$aTasksCount = self::instance()->getData()->queueSize();
+
+			if($theIncludeRunningTasks) {
+				$aRunningTasks = self::instance()->getData()->findRunningTasks();
+				$aTasksCount += count($aRunningTasks);
+			}
+
+			$aResultMeanTime = $aTotalTimeResults / $aFinishedResults;
+			$aExpectedWorkTime = $aResultMeanTime * $aTasksCount;
+			$aExpectedTimeComplete = $aExpectedWorkTime / self::instance()->config('max_parallel_tasks');
+		}
+
+		return $aExpectedTimeComplete;
+	}
 }
 
 ?>

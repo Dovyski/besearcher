@@ -32,6 +32,7 @@
                         <tr><td>Experiment description</td><td><?php echo $aData['context']['experiment_description']; ?></td></tr>
                         <tr><td><a href="queue.php">Tasks in queue</a></td><td><?php echo $aData['context']['queue_size']; ?></td></tr>
                         <tr><td><a href="results.php">Results in the making</a></td><td><?php echo $aData['context']['tasks_running']; ?></td></tr>
+                        <tr><td>Estimated completion time</td><td><span class="status-running"><i class="fa fa-clock-o" title="Estimation is calculated based on the average time of completed results."></i> <?php echo $aData['context']['completion_time'] > 0 ? Besearcher\Utils::humanReadableTime($aData['context']['completion_time']) : 'unknown'; ?></span></td></tr>
                     </tbody>
                 </table>
             <?php } ?>

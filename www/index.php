@@ -15,7 +15,8 @@
         'experiment_hash' => $aAppContext['experiment_hash'],
         'experiment_description' => $aINIValues['experiment_description'],
         'queue_size' => $aApp->getData()->queueSize(),
-        'tasks_running' => count($aApp->getData()->findRunningTasks())
+        'tasks_running' => count($aApp->getData()->findRunningTasks()),
+        'completion_time' => Besearcher\WebApp::calculateEstimatedTimeFinishExperiment()
     );
 
     Besearcher\View::render('index', array(
