@@ -14,8 +14,14 @@ class View {
 		return self::$mData;
 	}
 
-	public static function out($theText) {
-		return htmlspecialchars($theText);
+	public static function out($theText, $theTextLimit = 0, $theTextBreaker = "\n") {
+		$aFilter = htmlspecialchars($theText);
+
+		if($theTextLimit > 0) {
+			$aFilter = wordwrap($aFilter, $theTextLimit, $theTextBreaker, TRUE);
+		}
+
+		return $aFilter;
 	}
 
 	public static function createResultLink($theExperimentHash, $thePermutationHash) {
@@ -51,6 +57,20 @@ class View {
 		}
 
 		return $aRet;
+	}
+
+	public static function prettifyTaskCmd($theTaskCmd, array $theTaskParams) {
+		$aKeys = array_keys($theTaskParams);
+		$aFind = array();
+		$aReplace = array();
+
+		foreach($aKeys as $aEntry) {
+			$aFind[] = '{@'.$aEntry.'}';
+			$aReplace[] = '<a href="#task_param_'.$aEntry.'"><code>{@'.$aEntry.'}</code></a>';
+		}
+
+		$aOut = str_replace($aFind, $aReplace, $theTaskCmd);
+		return $aOut;
 	}
 }
 
